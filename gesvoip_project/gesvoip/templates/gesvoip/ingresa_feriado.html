@@ -1,0 +1,14 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Ingresar Feriado - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Ingresar Feriado</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="ingresaFeriado" name="ingresaFeriado" class="formulario" method="post">
+    <label for="fechaIngreso">Ingrese fecha</label>
+    <input type="text" name="fechaIngreso" id="fechaIngreso" autofocus required />
+
+    <input type="submit" name="enviar" value="Enviar" />
+    <input type="reset" name="reset" value="Restablecer" />
+  </form>
+{% endblock content %}

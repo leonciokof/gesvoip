@@ -1,0 +1,17 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Usuario - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Usuario</h1>{% endblock title2 %}
+
+{% block content %}
+  <form name="modificaUser" id="modificaUser" class="formulario" method="post">
+    <label>Seleccionar Usuario</label>
+    <select name="dato" id="dato" required>
+      <option selected></option>
+      {% for user in users %}
+      <option value="{{ user.pk }}">{{ user.get_full_name }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" name="busqueda" value="Buscar" />
+  </form>
+{% endblock content %}

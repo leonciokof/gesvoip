@@ -1,0 +1,13 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Procesar Numeración - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Procesar Numeración</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="procesarCdr" name="procesarCdr" class="formulario" method="post">
+    <textarea name="textarea" cols="100" rows="10" disabled />
+    </textarea>
+    <p align="center"><progress id="progress_oculto"></progress></p>
+    <input type="submit" name="procesar" id="procesar" value="Procesar" onClick="document.getElementById('progress_oculto').style.visibility='visible';" />
+  </form>
+{% endblock content %}

@@ -1,0 +1,17 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Eliminar CDR - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Eliminar CDR</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="cargaCdr" name="cargaCdr" method="post" class="formulario">
+    <label for="id">Seleccione EL CDR:</label>
+    <select name="id" id="id" required>
+      <option selected></option>
+      {% for object in object_list %}
+      <option value="{{ object.id }}">{{ object.fecha }} {{ object.compania }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" name="buscar2" id="buscar2" value="Eliminar" onclick="return confirm('¿Esta seguro que desea eliminar el CDR?')">
+  </form>
+{% endblock content %}

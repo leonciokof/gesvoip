@@ -1,0 +1,16 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Tarifa - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Tarifa</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="modificaTarifa" name="modificaTarifa" class="formulario" method="post">
+    <label>{{ inicio }} - {{ fin }}</label>
+    <input type="hidden" name="fecha2" id="fecha2" value="{{ fecha }}" />
+    <input type="hidden" name="inicio" id="inicio" value="{{ inicio }}" />
+    <input type="hidden" name="fin" id="fin" value="{{ fin }}" />
+    <input type="hidden" name="id_compania2" id="id_compania2" value="{{ id_compania }}" />
+    <input type="radio" name="id_ingreso2" id="id_ingreso2" value="{{ id_ingreso }}" />
+    <input type="submit" name="ver" id="ver" value="Ver" />
+  </form>
+{% endblock content %}

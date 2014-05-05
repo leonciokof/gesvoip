@@ -1,0 +1,305 @@
+@CHARSET "UTF-8";
+
+body
+{
+	background: #D8D8D8;
+	color: #000000;
+	font-family: "Helvetica", Arial;
+}
+header
+{
+	background: -moz-linear-gradient(top, #2a306e , #191c45);
+	background: -webkit-gradient(linear, 0 0, 0 100%, from(#2a306e),  to(#191c45));
+	margin: auto;
+	padding: 0px;
+	width:100%;
+}
+h1
+{
+	text-align: center;
+	font-size:24px;
+}
+h2
+{
+	text-align: center;
+	font-size:18px;
+}
+h3
+{
+	text-align: center;
+	font-size:14px;
+}
+table
+{
+	font-size: 10px;
+}
+footer {
+	text-align: center;
+	border-radius: 0 0 1em 1em ;
+	background: #1c1f48;
+	width:100%;
+	padding: 0px;
+	margin: 0px;
+	margin: auto;
+	bottom:1%;
+	
+	display: inline-block;
+	clear:both;
+}
+a:link {
+	text-decoration: none;
+}
+a:visited {
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: none;
+}
+a:active {
+	text-decoration: none;
+}
+input.error{  
+    background: #FF0000;  
+    border-color: #171717;  
+}
+
+table a.p:link { 
+   	color: #0066FF; 
+   	text-decoration: none; 
+} 
+table a.p:visited { 
+   	color: #0066FF; 
+   	text-decoration: none; 
+} 
+table a.p:active { 
+   	color: #0066FF; 
+   	text-decoration: none; 
+} 
+table a.p:hover { 
+   	color: #0066FF; 
+   	text-decoration: underline; 
+} 
+table a.ord:link { 
+   	color: #000000; 
+   	text-decoration: none; 
+} 
+table a.ord:visited { 
+   	color: #000000; 
+   	text-decoration: none; 
+} 
+table a.ord:active { 
+   	color: #000000; 
+   	text-decoration: none; 
+} 
+table a.ord:hover { 
+   	color: #000000; 
+   	text-decoration: underline; 
+}
+ul{
+	display:block;
+	background-color:#1c1f48;
+	margin:0;
+	padding:0;
+	width:130px;
+	list-style:none;
+}
+nav { 
+	float:right; 
+}
+#principal
+{
+	width: 100%;
+	overflow:hidden;
+    height:auto;
+}
+#datos
+{
+	width:88%;
+    float:left;
+}
+th
+{
+	background-color: #666;
+}
+#datos2
+{
+	width:60%;
+    float:left;
+}
+#IngresaLocal label, #ingresaUser label, #index label, #modificaUser label, #modificaUserPost label, #ingresaCompania label, #modificaCompania label, #modificaCompaniaPost label, #ingresaTarifa label, #ingresaTarifaPost label, #modificaTarifa label, #modificaTarifaPre label, #modificaTarifaPost label, #ingresaFeriado label, #modificaFeriado label, #modificaFeriadoPost label, #cpanel label, #cargaCdr label, #generaFactura label, #modificaFactura label, #consultaFactura label, #modificaNumeracion label, #consultaCdr label, #seleccionaTarifa label, #modificaNumeracion label, #modificaNumeracionPost label, #modificaFactura2 label, #modificaFacturaPost label, #consultaFactura2 label
+{
+	float: left; clear: left; margin: 11px 20px 0 0; width: 250px;
+	text-align: right;  
+	
+}
+#IngresaLocal input, #IngresaLocal select, #ingresaUser input, #ingresaUser select, #index input, #modificaUser input, #modificaUser select, #modificaUserPost input, #modificaUserPost select, #modificaCompania input, #modificaCompania select, #modificaCompaniaPost select, #ingresaTarifa input, #ingresaTarifa select, #ingresaTarifaPost input, #ingresaTarifaPost select, #modificaTarifa select, #modificaTarifaPre select, #modificaTarifa input, #modificaTarifaPre input, #modificaTarifaPost input, #modificaTarifaPost select, #ingresaFeriado input, #modificaFeriado input, #modificaFeriado select, #modificaFeriadoPost input, #modificaFeriadoPost select, #cpanel select, #cargaCdr input, #cargaCdr select, #generaFactura select, #modificaFactura select, #consultaFactura select, #modificaNumeracion select, #consultaCdr select, #consultaCdr input, #seleccionaTarifa select, #modificaNumeracion select, #modificaFactura2 input, #modificaFactura2 select, #modificaFacturaPost input, #consultaFactura2 select
+{
+	width: 270px;
+	margin: 11px 20px 0 0;
+	border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;
+	-moz-box-shadow: 0px 1px 0px #f2f2f2;-webkit-box-shadow: 0px 1px 0px #f2f2f2;
+}
+#procesarCdr textarea {
+	width: 565px;
+	margin: 11px 0 0 0;
+	border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;
+	-moz-box-shadow: 0px 1px 0px #f2f2f2;-webkit-box-shadow: 0px 1px 0px #f2f2f2;
+}
+#modificaFeriadoPost input[type=radio], #modificaFeriado input[type=radio]{
+	width: 270px;
+	margin: 14px 20px 0 0;
+	border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;
+	-moz-box-shadow: 0px 1px 0px #f2f2f2;-webkit-box-shadow: 0px 1px 0px #f2f2f2;
+}
+#ingresaCompania input[type=number], #modificaCompania input[type=number], #modificaCompaniaPost input[type=number]
+{
+	width: 50px;
+	margin: 11px 5px 0 5px;
+	border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;
+	-moz-box-shadow: 0px 1px 0px #f2f2f2;-webkit-box-shadow: 0px 1px 0px #f2f2f2;
+}
+#IngresaLocal input[type=submit], #IngresaLocal input[type=reset], #ingresaUser input[type=submit], #ingresaUser input[type=reset], #index input[type=submit], #modificaUser input[type=submit], #modificaUserPost input[type=submit], #ingresaCompania input[type=submit], #ingresaCompania input[type=reset], #modificaCompania input[type=reset], #modificaCompania input[type=submit], #modificaCompaniaPost input[type=reset], #modificaCompaniaPost input[type=submit], #ingresaTarifa input[type=submit], #ingresaTarifaPost input[type=submit], #modificaTarifa input[type=submit], #modificaTarifaPre input[type=submit], #modificaTarifaPost input[type=submit], #ingresaFeriado input[type=submit], #ingresaFeriado input[type=reset], #modificaFeriado input[type=submit], #modificaFeriadoPost input[type=submit], #cpanel input[type=submit], #procesarCdr input[type=submit], #cargaCdr input[type=submit], #cargaCdr input[type=reset], #generaFactura input[type=submit], #modificaFactura input[type=submit], #consultaFactura input[type=submit], #modificaNumeracion input[type=submit], #consultaCdr input[type=submit], #seleccionaTarifa input[type=submit], #modificaNumeracion input[type="submit"], #modificaFactura2 input[type=submit], #modificaFacturaPost input[type=submit], #consultaFactura2 input[type=submit]
+{
+	width: 185px; float: right; padding: 10px 15px; margin: 10px 15px 0 0;
+	-moz-box-shadow: 0px 0px 5px #999;-webkit-box-shadow: 0px 0px 5px #999;
+	border: 1px solid #556f8c;
+	
+}
+#datos input[type=submit]
+{
+	width: 185px;
+	padding: 10px 15px;
+	margin: 10px 15px 0 0;
+	-moz-box-shadow: 0px 0px 5px #999;
+	-webkit-box-shadow: 0px 0px 5px #999;
+	border: 1px solid #556f8c;
+}
+#datos p, #consultaCdr p, #consultaFactura p
+{
+	text-align: center;
+}
+#loading_oculto{
+	z-index:99;
+	position:absolute;
+	top:50%;
+	left:50%;
+	margin-left:-117px;
+	margin-top:-117px;
+	visibility:hidden;
+}
+#progress_oculto{
+	visibility:hidden;
+}
+#progress_oculto1{
+	visibility:hidden;
+}
+#menu{
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	-webkit-box-shadow:1px 1px 3px #888;
+	-moz-box-shadow:1px 1px 3px #888;
+	margin: 5px;
+}
+#menu li{border-bottom:1px solid #FFF;}
+#menu ul li, #menu li:last-child{border:none}	
+#menu a{
+	display:block;
+	color:#FFF;
+	text-decoration:none;
+	font-family:'Helvetica', Arial, sans-serif;
+	font-size:13px;
+	padding:3px 5px;
+	text-shadow:1px 1px 1px #325179;
+}
+#menu a:hover
+{
+	color:#F9B855;
+	-webkit-transition: color 0.2s linear;
+}
+#menu ul a
+{
+	background-color:#2a306e;
+}
+#menu ul a:hover
+{
+	background-color:#FFF;
+	color:#2961A9;
+	text-shadow:none;
+	-webkit-transition: color, background-color 0.2s linear;
+}
+#menu ul
+{
+	background-color:#2a306e;
+}
+#menu li ul
+{
+	display:none;
+}
+.derecha
+{
+	text-align: center;
+}
+.extra
+{
+	margin: 1em auto;
+	padding: 1em;
+	width: 570px;
+}
+.formulario
+{
+	display: table;
+	background: #CCC;
+	border-radius: 1em;
+	box-shadow: 0px 5px 5px rgba(0,0,0,0.5);
+	margin: 1em auto;
+	padding: 1em;
+	width: 570px;
+}
+.izquierda
+{
+	text-align: right;
+}
+.label
+{
+	float: left; clear: left; margin: 11px 20px 0 0; width: 500px;
+	text-align: right;  
+}
+.msgStatus
+{
+	position:fixed;
+	top:1px;
+	right:1px;
+	border:1px solid #FF6600;
+	background-color:#FEEB9D;
+	color:#333;
+	font-family:Verdana, Arial, Helvetica, sans-serif;
+	font-size:14px;
+	width:auto;
+	height:auto;
+	display:none;
+}
+.requisites
+{
+    padding: 0 2px 0 2px;
+}
+.requisites.error
+{
+    text-decoration: underline;
+    background: #FF0000;
+    color: #171717;
+}
+.text
+{
+	width: 270px;
+	margin: 11px 20px 0 0;
+	border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;
+	-moz-box-shadow: 0px 1px 0px #f2f2f2;-webkit-box-shadow: 0px 1px 0px #f2f2f2;
+}
+.time 
+{
+	width: 120px;
+	margin: 11px 5px 0 5px;
+	border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;
+	-moz-box-shadow: 0px 1px 0px #f2f2f2;-webkit-box-shadow: 0px 1px 0px #f2f2f2;
+}

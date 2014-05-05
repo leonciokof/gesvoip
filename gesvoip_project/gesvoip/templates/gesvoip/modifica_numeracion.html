@@ -1,0 +1,50 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Numeración - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Numeración</h1>{% endblock title2 %}
+
+{% block content %}
+  <div id="principal">
+    <div id="datos">
+      <form name="modificaNumeracionPost" id="modificaNumeracionPost" class="formulario" method="post">
+        <table cellpadding="0" cellspacing="0" border="0" class="display" id="tabla">
+          <thead>
+            <tr>
+              <th>Codigo</th>
+              <th>Numeracion</th>
+              <th>Compañia</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for object in object_list %}
+            <tr>
+              <td>{{ object.zona }}</td>
+              <td>{{ object.rango }}</td>
+              <td>{{ object.compania }}</td>
+              <td><input type="radio" name="num_eliminar" id="num_eliminar" value="{{ object.id }}"></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="extra">
+          <h2>Agregar Tarifa</h2>
+          <label>Codigo</label>
+          <input type="number" name="codigo" min="1" id="codigo" class="text">
+          <label>Numeracion desde</label>
+          <input type="number" name="desde" min="1" id="desde" class="text">
+          <label>Numeracion hasta</label>
+          <input type="number" name="hasta" min="1" id="hasta" class="text">
+          <input type="hidden" name="compania" id="compania" value="{{ compania }}">
+        </div>
+
+        <p>
+          <input name="eliminar" type="submit" id="eliminar" value="Eliminar Numeracion" />
+          <input name="agregar" type="submit" id="agregar" value="Agregar Numeracion" />
+          <input name="imprimir" type="submit" id="imprimir" value="Imprimir">
+        </p>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

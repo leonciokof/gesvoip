@@ -1,0 +1,15 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Feriado - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Feriado</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="modificaFeriadoPost" name="modificaFeriadoPost" class="formulario" method="post" action="modifica_feriado.php">
+    {% for object in object_list %}
+    <label>{{ object.fecha }}</label>
+    <input type="radio" name="id_feriado" id="id_feriado" value="{{ object.id_feriado }}" />
+    {% endfor %}
+    <input type="submit" name="eliminar" id="eliminar" value="Eliminar" />
+    <input type="submit" name="imprimir" id="imprimir" value="Imprimir"></p>
+  </form>
+{% endblock content %}

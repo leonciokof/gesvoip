@@ -1,0 +1,72 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Detalle Factura - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Detalle Factura</h1>{% endblock title2 %}
+
+{% block content %}
+  <div>
+    <table border="0" class="tabla">
+      <thead>
+        <tr>
+          <th>N origen</th>
+          <th>N destino</th>
+          <th>Fecha llamada</th>
+          <th>Hora llamada</th>
+          <th>Duracion</th>
+          <th>Horario</th>
+          <th>Valor</th>
+          <th>Compania origen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for object in object_list %}
+        <tr>
+          <td>{{ object.origen }}</td>
+          <td>{{ object.destino }}</td>
+          <td>{{ object.fecha }}</td>
+          <td>{{ object.hora }}</td>
+          <td align="right">{{ object.duracion }}</td>
+          <td>{{ object.horario }}</td>
+          <td align="right">{{ object.valor }}</td>
+          <td>{{ object.compania }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <hr noshade style="color:CC6666;height:1px">
+    <div align="center">
+      <font face="verdana" size="-2">
+        <a class="p" href="{% url 'gesvoip:consulta_factura' %}">Volver</a>
+      </font>
+    </div>
+    <form id="consultaFacturaDetalle" name="consultaFacturaDetalle" method="POST">
+      <input type="hidden" name="id_factura" id="id_factura" value="{{ id_factura }}>">
+      <input type="hidden" name="compania" id="compania" value="{{ compania }}>">
+      <input type="hidden" name="year" id="year" value="{{ anio }}>">
+      <input type="hidden" name="mes" id="mes" value="{{ mes }}>">
+
+      <label for="ani_number">N° origen:</label>
+      <input type="text" name="ani_number" id="ani_number" >
+
+      <label for="dialed_number">N° destino:</label>
+      <input type="text" name="dialed_number" id="dialed_number" >
+
+      <label for="fechaIngreso">Fecha:</label>
+          <input type="text" name="fechaIngreso" id="fechaIngreso">
+
+      <label for="horario">Horario:</label>
+      <select name="horario" id="horario">
+        <option selected></option>
+        <option value="normal">Normal</option>
+        <option value="reducido">Reducido</option>
+        <option value="nocturno">Nocturno</option>
+      </select>
+
+      <input type="submit" value="Buscar" name="buscar" id="buscar" onClick="document.getElementById('loading_oculto').style.visibility='visible';" />
+    </form>
+
+    <form id="exporta_det_factura" name="exporta_det_factura" method="POST">
+      <input type="text" value="{{ criterio }}" name="criterio" id="criterio" hidden />
+      <center><input type="submit" value="Imprimir" name="imprimir" id="imprimir" /></center>
+    </form>
+  </div>
+{% endblock content %}

@@ -1,0 +1,21 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Consultar Numeración - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Consultar Numeración</h1>{% endblock title2 %}
+
+{% block content %}
+  <div id="datos">
+    <form id="modificaNumeracionPost" name="modificaNumeracionPost" class="formulario" method="post">
+      <label>Rango Desde :</label>
+      <input name="desde" type="text" class="text" id="desde"/>
+      <label>Rango Hasta :</label>
+      <input name="hasta" type="text" class="text" id="hasta"/>
+      <span class="Estilo1">
+        <label>Importante: Consultar Sin Codigo de Area</label>
+      </span>
+      <div align="right">
+        <input type="submit" name="busqueda" id="busqueda" value="Buscar" />
+      </div>
+    </form>
+  </div>
+{% endblock content %}

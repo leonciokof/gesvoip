@@ -1,0 +1,36 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Listado Usuarios - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Listado Usuarios</h1>{% endblock title2 %}
+
+{% block content %}
+  <div id="principal">
+    <div id="datos">
+      <form name="listadoUsuarios" id="listadoUsuarios" method="post">
+        <table cellpadding="0" cellspacing="0" border="0" class="display" id="tabla">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>Rol</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.first_name }}</td>
+              <td>{{ user.last_name }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.is_staff }}</td>
+            </tr>
+            {% endfor %}
+          </tdody>
+        </table>
+        <p><input type="submit" name="imprimir" id="imprimir" Value="Imprimir" /></p>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

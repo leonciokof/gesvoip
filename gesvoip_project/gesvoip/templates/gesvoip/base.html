@@ -1,0 +1,55 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <title>{% block title %}{% endblock title %}</title>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+  <link rel="stylesheet" href="{% static 'gesvoip/css/estilo.css' %}" />
+  <link rel="stylesheet" href="{% static 'gesvoip/css/themes/base/jquery.ui.all.css' %}" />
+  <link rel="stylesheet" href="{% static 'gesvoip/css/jquery.ui.datetime.css' %}" />
+  <link rel="shortcut icon" href="{% static 'gesvoip/favicon.ico' %}" />
+  <link rel="stylesheet" href="{% static 'gesvoip/js/DataTables-1.8.2/media/css/demo_page.css' %}" />
+  <link rel="stylesheet" href="{% static 'gesvoip/js/DataTables-1.8.2/media/css/demo_table.css' %}" />
+
+  <!-- Scripts -->
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+  <!-- Plugin Datepicker Jquery -->
+  <script src="{% static 'gesvoip/js/ui/jquery.ui.core.js' %}"></script>
+  <script src="{% static 'gesvoip/js/ui/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'gesvoip/js/ui/jquery.ui.datepicker.js' %}"></script>
+  <script src="{% static 'gesvoip/js/ui/i18n/jquery.ui.datepicker-es.js' %}"></script>
+  <script src="{% static 'gesvoip/js/ui/jquery-ui-timepicker-addon.js' %}"></script>
+  <script src="{% static 'gesvoip/js/jquery.ui.datetime.src.js' %}"></script>
+
+  <!-- Plugin DataTables -->
+  <script src="{% static 'gesvoip/js/DataTables-1.8.2/media/js/jquery.dataTables.min.js' %}"></script>
+
+  <!-- Plugin Validation Jquery -->
+  <script src="{% static 'gesvoip/js/jquery.validate.js' %}"></script>
+  <script src="{% static 'gesvoip/js/localization/messages_es.js' %}"></script>
+  <script src="{% static 'gesvoip/js/jquery.Rut.min.js' %}"></script>
+  <script src="{% static 'gesvoip/js/gesvoip.js' %}"></script>
+</head>
+
+<body>
+  <header>
+    <img style="float: left" src="{% static 'gesvoip/images/head1_.jpg' %}" />
+    <img style="float: right" src="{% static 'gesvoip/images/head3_.jpg' %}" />
+    <div style="clear: both"></div>
+  </header>
+
+  {% block title2 %}{% endblock title2 %}
+
+  {% block menu %}{% endblock menu %}
+
+  {% block content %}{% endblock content %}
+
+  <footer >
+    <img src="{% static 'gesvoip/images/footer.jpg' %}" />
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Compañia - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Compañia</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="modificaCompania" name="modificaCompania" class="formulario" method="post">
+    <label>Seleccionar Compañia</label>
+    <select name="dato" id="dato" required>
+      <option selected></option>
+      {% for object in object_list %}
+      <option value="{{ object.id_compania }}">{{ object.nombre }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" name="busqueda" value="Buscar" />
+  </form>
+{% endblock content %}

@@ -1,0 +1,17 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Feriado - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Feriado</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="modificaFeriado" name="modificaFeriado" class="formulario" method="post">
+    <label for="fecha">Ingrese fecha</label>
+    <select name="fecha" id="fecha">
+      <option value="" selected>Todos</option>
+      {% for object in object_list %}
+      <option value="{{ object }}">{{ object }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" name="busqueda" value="Buscar" />
+  </form>
+{% endblock content %}

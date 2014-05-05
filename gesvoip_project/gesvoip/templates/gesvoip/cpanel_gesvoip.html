@@ -1,0 +1,82 @@
+{% extends "gesvoip/base.html" %}
+
+{% block title %}Cpanel{% endblock title %}
+{% block title2 %}<h1>Bienvenido {{ user.get_full_name }}</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="cpanel" name="cpanel" class="formulario">
+    <label>Administracion de Usuarios</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        {% if user.is_staff %}
+        <option value="{% url 'gesvoip:ingresa_user' %}">Ingresar Usuarios</option>
+        <option value="{% url 'gesvoip:modifica_user' %}">Modificar Usuarios</option>
+        {% endif %}
+        <option value="{% url 'gesvoip:listar_user' %}">Listar Usuarios</option>
+    </select>
+
+    <label>Administracion de Compañias</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        {% if user.is_staff %}
+        <option value="{% url 'gesvoip:ingresa_compania' %}">Ingresar Compañia</option>
+        <option value="{% url 'gesvoip:busca_compania' %}">Modificar Compañia</option>
+        {% endif %}
+        <option value="{% url 'gesvoip:listar_compania' %}">Listar Compañia</option>
+    </select>
+
+    <label>Administracion de Tarifas</label>
+    <select name="select2" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        <option value="{% url 'gesvoip:ingresa_tarifa' %}">Ingresar Tarifa</option>
+        <option value="{% url 'gesvoip:busca_tarifa' %}">Buscar/Mod Tarifas</option>
+        <option value="{% url 'gesvoip:busca_tarifa3' %}">Listar Tarifa</option>
+    </select>
+
+    <label>Administracion de Feriados</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        <option value="{% url 'gesvoip:ingresa_feriado' %}">Ingresar Feriados</option>
+        <option value="{% url 'gesvoip:modifica_feriado' %}">Eliminar Feriados</option>
+    </select>
+
+    {% if user.is_staff %}
+    <label>Administracion de Numeración</label>
+    <select name="select" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        <option value="{% url 'gesvoip:carga_numeracion' %}">Cargar</option>
+        <option value="{% url 'gesvoip:procesar_numeracion' %}">Procesar</option>
+        <option value="{% url 'gesvoip:busca_numeracion' %}">Modificar</option>
+        <option value="{% url 'gesvoip:consulta_numeracion' %}">Buscar</option>
+    </select>
+    {% endif %}
+
+    <label>Administracion de CDR</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        <option value="{% url 'gesvoip:carga_cdr' %}">Cargar CDR</option>
+        <option value="{% url 'gesvoip:procesar_cdr' %}">Procesar CDRs</option>
+        <option value="{% url 'gesvoip:consulta_cdr' %}">Consultar CDR</option>
+        {% if user.is_staff %}
+            <option value="{% url 'gesvoip:eliminar_cdr' %}">Eliminar CDR</option>
+        {% endif %}
+    </select>
+
+    <label>Administracion de Facturas</label>
+    <select name="select4" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        <option value="{% url 'gesvoip:genera_factura' %}">Generar</option>
+        <option value="{% url 'gesvoip:busca_factura' %}">Consultar Factura</option>
+        <option value="{% url 'gesvoip:eliminar_factura' %}">Eliminar Factura</option>
+        <option value="{% url 'gesvoip:consulta_factura' %}">Consultar Detalle Factura</option>
+    </select>
+
+    <label>Portados</label>
+    <select name="select4" onChange="MM_jumpMenu('parent',this,0)">
+        <option selected>Seleccionar Opción</option>
+        <option value="{% url 'gesvoip:carga_portados' %}">Cargar y procesar</option>
+    </select>
+
+    <input type="submit" name="cerrar" value="Cerrar sesion" />
+  </form>
+{% endblock content %}

@@ -1,0 +1,78 @@
+{% extends "gesvoip/base.html" %}
+
+{% block menu %}
+  <nav>
+    <ul id="menu">
+      <li><a href="#">Sesion</a>
+        <ul id="open">
+          <li><a href="{% url 'gesvoip:cpanel_gesvoip' %}">Inicio</a></li>
+          <li><a href="{% url 'logout' %}?next=/">Cerrar sesion</a></li>
+        </ul>
+      </li>
+      <li><a href="#">Usuarios</a>
+        <ul>
+          {% if user.is_staff %}
+          <li><a href="{% url 'gesvoip:ingresa_user' %}">Nuevo</a></li>
+          <li><a href="{% url 'gesvoip:busca_user' %}">Modificar</a></li>
+          {% endif %}
+          <li><a href="{% url 'gesvoip:listar_user' %}">Listar</a></li>
+        </ul>
+      </li>
+      <li><a href="#">Compañias</a>
+        <ul>
+          {% if user.is_staff %}
+          <li><a href="{% url 'gesvoip:ingresa_compania' %}">Nuevo</a></li>
+          <li><a href="{% url 'gesvoip:busca_compania' %}">Modificar</a></li>
+          {% endif %}
+          <li><a href="{% url 'gesvoip:listar_compania' %}">Listar</a></li>
+        </ul>
+      </li>
+      <li><a href="#">Tarifas</a>
+        <ul>
+          <li><a href="{% url 'gesvoip:ingresa_tarifa' %}">Nuevo</a></li>
+          <li><a href="{% url 'gesvoip:busca_tarifa' %}">Modificar</a></li>
+          <li><a href="{% url 'gesvoip:busca_tarifa3' %}">Listar</a></li>
+        </ul>
+      </li>
+      <li><a href="#">Feriados</a>
+        <ul>
+          <li><a href="{% url 'gesvoip:ingresa_feriado' %}">Nuevo</a></li>
+          <li><a href="{% url 'gesvoip:modifica_feriado' %}">Eliminar</a></li>
+        </ul>
+      </li>
+      {% if user.is_staff %}
+      <li><a href="#">Numeración</a>
+        <ul>
+          <li><a href="{% url 'gesvoip:carga_numeracion' %}">Cargar</a>
+          <li><a href="{% url 'gesvoip:procesar_numeracion' %}">Procesar</a>
+          <li><a href="{% url 'gesvoip:busca_numeracion' %}">Modificar</a>
+          <li><a href="{% url 'gesvoip:consulta_numeracion' %}">Buscar</a>
+        </ul>
+      </li>
+      {% endif %}
+      <li><a href="#">CDR</a>
+        <ul>
+          <li><a href="{% url 'gesvoip:carga_cdr' %}">Cargar</a></li>
+          <li><a href="{% url 'gesvoip:procesar_cdr' %}">Procesar</a></li>
+          <li><a href="{% url 'gesvoip:consulta_cdr' %}">Consultar</a></li>
+          {% if user.is_staff %}
+          <li><a href="{% url 'gesvoip:eliminar_cdr' %}">Eliminar</a></li>
+          {% endif %}
+        </ul>
+      </li>
+      <li><a href="#">Facturas</a>
+        <ul>
+          <li><a href="{% url 'gesvoip:genera_factura' %}">Generar</a></li>
+          <li><a href="{% url 'gesvoip:busca_factura' %}">Consultar Factura</a></li>
+          <li><a href="{% url 'gesvoip:eliminar_factura' %}">Eliminar Factura</a></li>
+          <li><a href="{% url 'gesvoip:consulta_factura' %}">Consultar Detalle Factura</a></li>
+        </ul>
+      </li>
+      <li><a href="#">Portados</a>
+        <ul>
+          <li><a href="{% url 'gesvoip:carga_portados' %}">Cargar y procesar</a></li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+{% endblock menu %}

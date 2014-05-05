@@ -1,0 +1,69 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Factura - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Factura</h1>{% endblock title2 %}
+
+{% block content %}
+  {% for object in object_list %}
+  <h2>Desde {{ object.fecha_inicio }} Hasta {{ object.fecha_fin }}</h2>
+  <table cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
+    <thead>
+      <tr align="right" bgcolor="#666666">
+        <th></th>
+        <th>Cantidad (seg)</th>
+        <th>Tarifa (pesos)</th>
+        <th>Valor (pesos)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th align="left">Normal</th>
+        <td align="right">{{ suma_normal }}</td>
+        <td align="right">${{ normal }}</td>
+        <td align="right">${{ valor_normal }}</td>
+      </tr>
+      <tr>
+        <th align="left">Reducido</th>
+        <td align="right">{{ suma_reducido }}</td>
+        <td align="right">${{ reducido }}</td>
+        <td align="right">${{ valor_reducido }}</td>
+      </tr>
+      <tr>
+        <th align="left">Nocturno</th>
+        <td align="right">{{ suma_nocturno }}</td>
+        <td align="right">${{ nocturno }}</td>
+        <td align="right">${{ valor_nocturno }}</td>
+      </tr>
+      <tr bgcolor="#666666">
+        <th align="left">Total</th>
+        <td></td>
+        <td></td>
+        <td align="right">${{ valor_total }}</td>
+      </tr>
+    </tbody>
+  </table>
+  {% endfor %}
+  <h2>Total</h2>
+  <table cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
+    <thead>
+      <tr align="right" bgcolor="#666666">
+        <th>Total Llamadas</th>
+        <th>Total Segundos</th>
+        <th>Valor Total (pesos)</th>
+
+      </tr>
+    </thead>
+    <tbody>
+      <tr align="right">
+        <td>{{ llamadas }}</td>
+        <td>{{ suma_total }}</td>
+        <td>${{ valor_total_total }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <form id="exporta_factura" name="exporta_factura" action="exporta_factura.php" method="POST">
+    <input type="hidden" id="sql" name="sql" value="{{ sql }}" />
+    <center><input type="submit" value="Imprimir" name="imprimir" id="imprimir" /></center>
+  </form>
+{% endblock content %}

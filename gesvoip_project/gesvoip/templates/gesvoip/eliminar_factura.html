@@ -1,0 +1,17 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Eliminar Factura - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Eliminar Factura</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="modificaFactura" name="modificaFactura" method="post" class="formulario">
+    <label for="id_factura">Seleccione Codigo Factura:</label>
+    <select name="id_factura" id="id_factura" required>
+      <option selected></option>
+      {% for object in object_list %}
+      <option value="{{ object.id_factura }}">{{ object.fecha_inicio }} - {{ object.nombre }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" name="buscar2" id="buscar2" value="Eliminar" onclick="return confirm('¿Esta seguro que desea eliminar la factura y sus detalles?')">
+  </form>
+{% endblock content %}

@@ -1,0 +1,44 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Listado Tarifas - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Listado Tarifas</h1>{% endblock title2 %}
+
+{% block content %}
+  <div id="principal">
+    <div id="datos">
+      <form name="seleccionaTarifa" id="seleccionaTarifa" method="post" class="formulario">
+        <label>Seleccione Compañia</label>
+        <select name="compania" id="compania" required>
+          <option value="" selected></option>
+          {% for object in object_list %}
+          <option value="{{ object.id_compania }}">{{ object.nombre }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Seleccione Mes</label>
+        <select name="mes" id="mes" required>
+          <option value="" selected></option>
+          <option value="01">Enero</option>
+          <option value="02">Febrero</option>
+          <option value="03">Marzo</option>
+          <option value="04">Abril</option>
+          <option value="05">Mayo</option>
+          <option value="06">Junio</option>
+          <option value="07">Julio</option>
+          <option value="08">Agosto</option>
+          <option value="09">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+
+        <label>Seleccione Año</label>
+        <select name="year" id="year" required>
+          <option value="" selected></option>
+        </select>
+
+        <input name="buscar" type="submit" id="buscar" value="Buscar" />
+      </form>
+    </div>
+  </div>
+{% endblock content %}

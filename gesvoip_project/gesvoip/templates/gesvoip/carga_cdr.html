@@ -1,0 +1,44 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Cargar CDR - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Cargar CDR</h1>{% endblock title2 %}
+
+{% block content %}
+  <form name="cargaCdr" id="cargaCdr" class="formulario" method="post" action="carga_cdr.php" enctype="multipart/form-data">
+    <label for="compa">Compañia (obligatorio):</label>
+    <select name="compa" id="compa" required>
+      <option selected></option>
+      <option value="CTC">CTC</option>
+      <option value="ENTEL">Entel</option>
+    </select>
+
+    <label for="mes">Mes (obligatorio):</label>
+    <select name="mes" id="mes" required>
+      <option selected></option>
+      <option value="01">Enero</option>
+      <option value="02">Febrero</option>
+      <option value="03">Marzo</option>
+      <option value="04">Abril</option>
+      <option value="05">Mayo</option>
+      <option value="06">Junio</option>
+      <option value="07">Julio</option>
+      <option value="08">Agosto</option>
+      <option value="09">Septiembre</option>
+      <option value="10">Octubre</option>
+      <option value="11">Noviembre</option>
+      <option value="12">Diciembre</option>
+    </select>
+
+    <label for="year">Año (obligatorio):</label>
+    <select name="year" id="year" required>
+      <option selected></option>
+    </select>
+
+    <label for="archivo">Enviar un nuevo archivo:</label>
+    <input type="file" name="archivo" id="archivo" />
+
+    <p align="center"><progress id="progress_oculto"></progress></p>
+
+    <input type="submit" name="enviar" id="enviar" value="Enviar" onClick="document.getElementById('progress_oculto').style.visibility='visible';" />
+  </form>
+{% endblock content %}

@@ -1,0 +1,47 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Factura - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Factura</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="modificaFactura" name="modificaFactura" method="post" class="formulario">
+    <label for="id_factura">Seleccione Codigo Factura:</label>
+    <select name="id_factura" id="id_factura" required>
+      <option selected></option>
+      {% for object in object_list %}
+      <option value="{{ object.id_factura }}">{{ object.id_factura }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" name="buscar2" id="buscar2" value="Buscar" />
+  </form>
+  <form id="modificaFactura2" name="modificaFactura2" class="formulario" method="post">
+    <label for="compania">Seleccione Compañia:</label>
+    <select name="compania" required>
+      <option selected></option>
+      {% for object in object_list %}
+      <option value="{{ object.id_compania }}">{{ object.nombre }}</option>
+      {% endfor %}
+    </select>
+    <label for="mes">Seleccione Mes:</label>
+    <select name="mes" id="mes" required>
+      <option selected></option>
+      <option value="01">Enero</option>
+      <option value="02">Febrero</option>
+      <option value="03">Marzo</option>
+      <option value="04">Abril</option>
+      <option value="05">Mayo</option>
+      <option value="06">Junio</option>
+      <option value="07">Julio</option>
+      <option value="08">Agosto</option>
+      <option value="09">Septiembre</option>
+      <option value="10">Octubre</option>
+      <option value="11">Noviembre</option>
+      <option value="12">Diciembre</option>
+    </select>
+    <label for="year">Seleccione Año:</label>
+    <select name="year" id="year" required>
+      <option selected></option>
+    </select>
+    <input type="submit" name="buscar" id="buscar" value="Buscar" />
+  </form>
+{% endblock content %}

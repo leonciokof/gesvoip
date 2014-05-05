@@ -1,0 +1,58 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Ingresar Compañia - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Ingresar Compañia</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="ingresaCompania" name="ingresaCompania" class="formulario" method="post">
+    <label for="nombre">Nombre (obligatorio):</label>
+    <input type="text" class="text" name="nombre" id="nombre" required autofocus />
+
+    <label for="rut">RUT (obligatorio):</label>
+    <input type="text" name="rut" class="text" placeholder="Ingresar RUT sin puntos ni guion" id="rut" required />
+
+    <label for="entidad">Entidad:</label>
+    <input type="text" name="entidad" class="text" id="entidad" />
+
+    <h2>Horario</h2>
+
+    <label>Horario Habil Normal</label>
+    <input type="text" name="HorarioHabilNormalInicio" class="time" id="HorarioHabilNormalInicio" /> -
+    <input type="text" name="HorarioHabilNormalFin" class="time" id="HorarioHabilNormalFin" />
+
+    <label>Horario Habil Reducido</label>
+    <input type="text" name="HorarioHabilReducidoInicio" class="time" id="HorarioHabilReducidoInicio" /> -
+    <input type="text" name="HorarioHabilReducidoFin" class="time" id="HorarioHabilReducidoFin" />
+
+    <label>Horario Habil Nocturno</label>
+    <input type="text" name="HorarioHabilNocturnoInicio" class="time" id="HorarioHabilNocturnoInicio" /> -
+    <input type="text" name="HorarioHabilNocturnoFin" class="time" id="HorarioHabilNocturnoFin" />
+
+    <label>Horario Sabado Normal</label>
+    <input type="text" name="HorarioSabadoNormalInicio" class="time" id="HorarioSabadoNormalInicio" /> -
+    <input type="text" name="HorarioSabadoNormalFin" class="time" id="HorarioSabadoNormalFin" />
+
+    <label>Horario Sabado Reducido</label>
+    <input type="text" name="HorarioSabadoReducidoInicio" class="time" id="HorarioSabadoReducidoInicio" /> -
+    <input type="text" name="HorarioSabadoReducidoFin" class="time" id="HorarioSabadoReducidoFin" />
+
+    <label>Horario Sabado Nocturno</label>
+    <input type="text" name="HorarioSabadoNocturnoInicio" class="time" id="HorarioSabadoNocturnoInicio" /> -
+    <input type="text" name="HorarioSabadoNocturnoFin" class="time" id="HorarioSabadoNocturnoFin" />
+
+    <label>Horario Festivo Normal</label>
+    <input type="text" name="HorarioFestivoNormalInicio" class="time" id="HorarioFestivoNormalInicio" /> -
+    <input type="text" name="HorarioFestivoNormalFin" class="time" id="HorarioFestivoNormalFin" />
+
+    <label>Horario Festivo Reducido</label>
+    <input type="text" name="HorarioFestivoReducidoInicio" class="time" id="HorarioFestivoReducidoInicio" /> -
+    <input type="text" name="HorarioFestivoReducidoFin" class="time" id="HorarioFestivoReducidoFin" />
+
+    <label>Horario Festivo Nocturno</label>
+    <input type="text" name="HorarioFestivoNocturnoInicio" class="time" id="HorarioFestivoNocturnoInicio" /> -
+    <input type="text" name="HorarioFestivoNocturnoFin" class="time" id="HorarioFestivoNocturnoFin" />
+
+    <input type="submit" name="enviar" value="Enviar" />
+    <input type="reset" name="reset" value="Restablecer" />
+  </form>
+{% endblock content %}

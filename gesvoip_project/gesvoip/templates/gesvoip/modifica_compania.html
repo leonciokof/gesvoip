@@ -1,0 +1,79 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Modificar Compañia - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Modificar Compañia</h1>{% endblock title2 %}
+
+{% block content %}
+  <form name="modificaCompaniaPost" id="modificaCompaniaPost" class="formulario" method="post">
+    <input type="hidden" name="id_compania" id="id_compania" value="{{ object.id_compania }}" />
+
+    <label for="nombre">Nombre (obligatorio):</label>
+    <input type="text" name="nombre" id="nombre" class="text" value="{{ object.nombre }}" required autofocus />
+
+    <label for="rut">RUT (obligatorio):</label>
+    <input type="text" name="rut" id="rut" class="text" placeholder="Ingresar RUT sin puntos ni guion" value="{{ object.rut }}" />
+
+    <label for="id">ID:</label>
+    <input type="text" name="id" id="id" class="text" value="{{ object.id }}" />
+
+    <label for="codigo">CODIGO:</label>
+    <input type="text" name="codigo" id="codigo" class="text" value="{{ object.codigo }}" />
+
+    <label for="idoidd">IDO/IDD:</label>
+    <select name="dato" id="dato" multiple>
+      {% for ido in idos %}
+      <option value="{{ ido.id }}">{{ ido.codigo }}</option>
+      {% endfor %}
+    </select>
+    <label><a href="agregar_idoidd.php">Agregar IDOIDD</a></label>
+
+    <h2>Horario</h2>
+    <label>Horario Habil Normal</label>
+    <input name="HorarioHabilNormalInicio" type="text" class="time" value="{{ object.get_HorarioHabilNormalInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioHabilNormalFin" type="text" class="time" value="{{ object.get_HorarioHabilNormalFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Habil Reducido</label>
+    <input name="HorarioHabilReducidoInicio" type="text" class="time" value="{{ object.get_HorarioHabilReducidoInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioHabilReducidoFin" type="text" class="time" value="{{ object.get_HorarioHabilReducidoFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Habil Nocturno</label>
+    <input name="HorarioHabilNocturnoInicio" type="text" class="time" value="{{ object.get_HorarioHabilNocturnoInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioHabilNocturnoFin" type="text" class="time" value="{{ object.get_HorarioHabilNocturnoFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Sabado Normal</label>
+    <input name="HorarioSabadoNormalInicio" type="text" class="time" value="{{ object.get_HorarioSabadoNormalInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioSabadoNormalFin" type="text" class="time" value="{{ object.get_HorarioSabadoNormalFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Sabado Reducido</label>
+    <input name="HorarioSabadoReducidoInicio" type="text" class="time" value="{{ object.get_HorarioSabadoReducidoInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioSabadoReducidoFin" type="text" class="time" value="{{ object.get_HorarioSabadoReducidoFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Sabado Nocturno</label>
+    <input name="HorarioSabadoNocturnoInicio" type="text" class="time" value="{{ object.get_HorarioSabadoNocturnoInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioSabadoNocturnoFin" type="text" class="time" value="{{ object.get_HorarioSabadoNocturnoFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Festivo Normal</label>
+    <input name="HorarioFestivoNormalInicio" type="text" class="time" value="{{ object.get_HorarioFestivoNormalInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioFestivoNormalFin" type="text" class="time" value="{{ object.get_HorarioFestivoNormalFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Festivo Reducido</label>
+    <input name="HorarioFestivoReducidoInicio" type="text" class="time" value="{{ object.get_HorarioFestivoReducidoInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioFestivoReducidoFin" type="text" class="time" value="{{ object.get_HorarioFestivoReducidoFin }}" size="8" maxlength="8" />
+    <br>
+    <label>Horario Festivo Nocturno</label>
+    <input name="HorarioFestivoNocturnoInicio" type="text" class="time" value="{{ object.get_HorarioFestivoNocturnoInicio }}" size="8" maxlength="8" />
+    -
+    <input name="HorarioFestivoNocturnoFin" type="text" class="time" value="{{ object.get_HorarioFestivoNocturnoFin }}" size="8" maxlength="8" />
+    <br>
+    <input type="submit" name="modificar" class="submit" value="Modificar" />
+    <input type="submit" name="eliminar" value="Eliminar" />
+  </form>
+{% endblock content %}
