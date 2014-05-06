@@ -15,10 +15,8 @@ class Compania(models.Model):
     nombre = models.CharField(max_length=255)
     rut = models.CharField(max_length=255)
     entidad = models.CharField(max_length=255, blank=True)
-    id = models.DecimalField(
-        max_digits=65535, decimal_places=65535, blank=True, null=True)
-    codigo = models.DecimalField(
-        max_digits=65535, decimal_places=65535, blank=True, null=True)
+    id = models.IntegerField(blank=True, null=True)
+    codigo = models.IntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'compania'
@@ -26,14 +24,14 @@ class Compania(models.Model):
 
 class DetFactura(models.Model):
     id_detalle = models.IntegerField(primary_key=True)
-    origen = models.DecimalField(max_digits=65535, decimal_places=65535)
-    destino = models.DecimalField(max_digits=65535, decimal_places=65535)
+    origen = models.IntegerField()
+    destino = models.IntegerField()
     fecha = models.DateField()
     hora = models.CharField(max_length=255)
-    duracion = models.DecimalField(max_digits=65535, decimal_places=65535)
+    duracion = models.FloatField()
     tarifa = models.ForeignKey('Tarifa', db_column='tarifa')
     horario = models.CharField(max_length=255)
-    valor = models.DecimalField(max_digits=65535, decimal_places=65535)
+    valor = models.FloatField()
     compania = models.ForeignKey(Compania, db_column='compania')
     factura = models.ForeignKey('Factura', db_column='factura')
 
@@ -91,8 +89,7 @@ class LogLlamadas(models.Model):
     id_log = models.IntegerField(primary_key=True)
     connect_time = models.DateTimeField(blank=True, null=True)
     ani_number = models.CharField(max_length=255, blank=True)
-    ingress_duration = models.DecimalField(
-        max_digits=65535, decimal_places=65535, blank=True, null=True)
+    ingress_duration = models.FloatField(blank=True, null=True)
     dialed_number = models.CharField(max_length=255, blank=True)
     fecha = models.CharField(max_length=7, blank=True)
     compania_cdr = models.CharField(max_length=255, blank=True)
@@ -120,9 +117,9 @@ class Numeracion(models.Model):
 
 class NumeracionAmpliada(models.Model):
     id_numeracion = models.IntegerField(primary_key=True)
-    codigo = models.DecimalField(max_digits=65535, decimal_places=65535)
+    codigo = models.IntegerField()
     numeracion = models.CharField(max_length=255)
-    compania = models.DecimalField(max_digits=65535, decimal_places=65535)
+    compania = models.ForeignKey(Compania, db_column='compania')
 
     class Meta:
         db_table = 'numeracion_ampliada'
@@ -130,8 +127,7 @@ class NumeracionAmpliada(models.Model):
 
 class Portados(models.Model):
     id = models.IntegerField(primary_key=True)
-    numero = models.DecimalField(
-        unique=True, max_digits=65535, decimal_places=65535)
+    numero = models.IntegerField(unique=True)
     ido = models.IntegerField()
     tipo = models.IntegerField(blank=True, null=True)
     fecha = models.DateField(blank=True, null=True)
@@ -144,22 +140,18 @@ class Tarifa(models.Model):
     id_tarifa = models.IntegerField(primary_key=True)
     compania = models.ForeignKey(Compania, db_column='compania')
     fecha = models.DateField()
-    valor_normal = models.DecimalField(max_digits=65535, decimal_places=65535)
-    valor_reducido = models.DecimalField(
-        max_digits=65535, decimal_places=65535)
-    valor_nocturno = models.DecimalField(
-        max_digits=65535, decimal_places=65535)
+    valor_normal = models.FloatField()
+    valor_reducido = models.FloatField()
+    valor_nocturno = models.FloatField()
     tipo = models.CharField(max_length=255, blank=True)
-    id_ingreso = models.DecimalField(
-        max_digits=65535, decimal_places=65535, blank=True, null=True)
+    id_ingreso = models.IntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'tarifa'
 
 
 class Usuarios(models.Model):
-    id_usuario = models.DecimalField(
-        primary_key=True, max_digits=65535, decimal_places=65535)
+    id_usuario = models.IntegerField(primary_key=True)
     usuario = models.TextField()
     password = models.TextField(blank=True)
     nombre = models.TextField()
