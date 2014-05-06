@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.views import generic
 
+from . import forms, models
+
 
 class cpanel_gesvoipView(generic.TemplateView):
 
@@ -11,10 +13,12 @@ class cpanel_gesvoipView(generic.TemplateView):
 cpanel_gesvoip = cpanel_gesvoipView.as_view()
 
 
-class ingresa_userView(generic.TemplateView):
+class ingresa_userView(generic.CreateView):
 
     """ Vista de ingresa_user """
 
+    form_class = forms.UsuariosForm
+    model = models.Usuarios
     template_name = 'gesvoip/ingresa_user.html'
 
 ingresa_user = ingresa_userView.as_view()

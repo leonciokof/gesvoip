@@ -5,30 +5,8 @@
 
 {% block content %}
   <form id="ingresaUser" name="ingresaUser" class="formulario" method="post">
-    <label for="usuario">Usuario (obligatorio):</label>
-    <input type="text" name="usuario" id="usuario" required autofocus />
-
-    <label for="password1">Contraseña (obligatorio):</label>
-    <input name="password1" type="password" id="password1" required />
-
-    <label for="password2">Repetir Contraseña (obligatorio):</label>
-        <input name="password2" id="password2" type="password" class="text" value="" required />
-
-    <label for="nombre">Nombre (obligatorio):</label>
-    <input name="nombre" id="nombre" type="text" class='nombre' required />
-
-    <label for="apellido">Apellido (obligatorio):</label>
-    <input name="apellido" type="text" id="apellido" required />
-
-    <label for="correo">Correo:</label>
-    <input name="correo" type="email" id="correo" />
-
-    <label for="rol">Rol (obligatorio):</label>
-    <select name="rol" id="rol" required>
-      <option selected></option>
-      <option value="Operador">Operador</option>
-      <option value="Administrador">Administrador</option>
-    </select>
+    {% csrf_token %}
+    {{ form }}
     <input type="submit" name="enviar" value="Enviar" />
     <input type="reset" name="reset" value="Restablecer" />
   </form>
