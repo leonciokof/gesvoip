@@ -5,31 +5,8 @@
 
 {% block content %}
   <form name="modificaUserPost" id="modificaUserPost" class="formulario" method="post">
-    <label for="usuario">Usuario (obligatorio):</label>
-    <input type="text" name="usuario" disabled value="{{ user.username }}" />
-    <input type="hidden" name="id_usuario" id="id_usuario" value="{{ user.pk }}" />
-
-    <label for="password1">Contraseña (obligatorio):</label>
-    <input name="password1" type="password" id="password1" autofocus />
-
-    <label for="password2">Repetir Contraseña (obligatorio):</label>
-    <input name="password2" id="password2" type="password" class="text" />
-
-    <label for="nombre">Nombre (obligatorio):</label>
-    <input name="nombre" type="text" id="nombre" value="{{ user.first_name }}" required />
-
-    <label for="apellido">Apellido (obligatorio):</label>
-    <input name="apellido" type="text" id="apellido" value="{{ user.last_name }}" required />
-
-    <label for="correo">Correo:</label>
-    <input name="correo" type="email" id="correo" value="{{ user.email }}" />
-
-    <label for="rol">Rol (obligatorio):</label>
-    <select name="rol" id="rol" required>
-      <option {% ifnotequal user.is_staff  %}selected{% endifnotequal %} value="Operador">Operador</option>
-      <option {% ifequal user.is_staff  %}selected{% endifequal %} value="Administrador">Administrador</option>
-    </select>
-
+    {% csrf_token %}
+    {{ form }}
     <input type="submit" name="modificar" class="submit" value="Modificar" />
     <input type="submit" name="eliminar" value="Eliminar" />
   </form>

@@ -5,13 +5,8 @@
 
 {% block content %}
   <form id="modificaCompania" name="modificaCompania" class="formulario" method="post">
-    <label>Seleccionar Compañia</label>
-    <select name="dato" id="dato" required>
-      <option selected></option>
-      {% for object in object_list %}
-      <option value="{{ object.id_compania }}">{{ object.nombre }}</option>
-      {% endfor %}
-    </select>
+    {% csrf_token %}
+    {{ form }}
     <input type="submit" name="busqueda" value="Buscar" />
   </form>
 {% endblock content %}

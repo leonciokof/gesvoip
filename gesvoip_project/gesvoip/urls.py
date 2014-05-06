@@ -2,14 +2,16 @@ from django.conf.urls import patterns, url
 
 urlpatterns = patterns(
     'gesvoip.views',
+    url(r'^$', 'cpanel', name='cpanel'),
     url(r'^cpanel_gesvoip/$', 'cpanel_gesvoip', name='cpanel_gesvoip'),
     url(r'^ingresa_user/$', 'ingresa_user', name='ingresa_user'),
     url(r'^busca_user/$', 'busca_user', name='busca_user'),
-    url(r'^modifica_user/$', 'modifica_user', name='modifica_user'),
+    url(r'^modifica_user/(?P<pk>\d+)/$',
+        'modifica_user', name='modifica_user'),
     url(r'^listar_user/$', 'listar_user', name='listar_user'),
     url(r'^ingresa_compania/$', 'ingresa_compania', name='ingresa_compania'),
     url(r'^busca_compania/$', 'busca_compania', name='busca_compania'),
-    url(r'^modifica_compania/$',
+    url(r'^modifica_compania/(?P<pk>\d+)/$',
         'modifica_compania', name='modifica_compania'),
     url(r'^listar_compania/$', 'listar_compania', name='listar_compania'),
     url(r'^ingresa_tarifa/$', 'ingresa_tarifa', name='ingresa_tarifa'),

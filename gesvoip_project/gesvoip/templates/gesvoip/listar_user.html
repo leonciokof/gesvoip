@@ -18,13 +18,13 @@
             </tr>
           </thead>
           <tbody>
-            {% for user in users %}
+            {% for object in object_list %}
             <tr>
-              <td>{{ user.first_name }}</td>
-              <td>{{ user.last_name }}</td>
-              <td>{{ user.username }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.is_staff }}</td>
+              <td>{{ object.nombre }}</td>
+              <td>{{ object.apellido }}</td>
+              <td>{{ object.usuario }}</td>
+              <td>{{ object.correo }}</td>
+              <td>{{ object.rol }}</td>
             </tr>
             {% endfor %}
           </tdody>

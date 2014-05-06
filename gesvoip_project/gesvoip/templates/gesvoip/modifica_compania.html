@@ -5,13 +5,54 @@
 
 {% block content %}
   <form name="modificaCompaniaPost" id="modificaCompaniaPost" class="formulario" method="post">
-    <input type="hidden" name="id_compania" id="id_compania" value="{{ object.id_compania }}" />
+    {% csrf_token %}
 
-    <label for="nombre">Nombre (obligatorio):</label>
-    <input type="text" name="nombre" id="nombre" class="text" value="{{ object.nombre }}" required autofocus />
+    {{ form.nombre.label }}
+    {{ form.nombre }}
 
-    <label for="rut">RUT (obligatorio):</label>
-    <input type="text" name="rut" id="rut" class="text" placeholder="Ingresar RUT sin puntos ni guion" value="{{ object.rut }}" />
+    {{ form.rut.label }}
+    {{ form.rut }}
+
+    {{ form.id.label }}
+    {{ form.id }}
+
+    {{ form.codigo.label }}
+    {{ form.codigo }}
+
+    {{ form.codigo.label }}
+    {{ form.codigo }}
+
+    <h2>Horario</h2>
+    <label>Horario Habil Normal</label>
+    {{ form.horario_habil_normal_inicio }}
+    -
+    {{ form.horario_habil_normal_fin }}
+    <br>
+    <label>Horario Habil Reducido</label>
+    {{ form.horario_habil_reducido_inicio }}
+    -
+    {{ form.horario_habil_reducido_fin }}
+    <br>
+    <label>Horario Habil Nocturno</label>
+    {{ form.horario_habil_nocturno_inicio }}
+    -
+    {{ form.horario_habil_nocturno_fin }}
+    <br>
+    <label>Horario Sabado Normal</label>
+    {{ form.horario_sabado_normal_inicio }}
+    -
+    {{ form.horario_sabado_normal_fin }}
+    <br>
+    <label>Horario Sabado Reducido</label>
+    {{ form.horario_sabado_reducido_inicio }}
+    -
+    {{ form.horario_sabado_reducido_fin }}
+    <br>
+    <label>Horario Sabado Nocturno</label>
+    {{ form.horario_sabado_nocturno_inicio }}
+    -
+    {{ form.horario_sabado_nocturno_fin }}
+    <br>
 
     <label for="id">ID:</label>
     <input type="text" name="id" id="id" class="text" value="{{ object.id }}" />

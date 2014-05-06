@@ -5,7 +5,15 @@
 
 {% block content %}
   <form id="procesarCdr" name="procesarCdr" class="formulario" method="post">
-    <textarea name="textarea" cols="100" rows="10" disabled></textarea>
+    <textarea name="textarea" cols="100" rows="10" disabled>
+      {% if messages %}
+      {% for message in messages %}
+        {{ message }}
+      {% endfor %}
+      {% endif %}
+    </textarea>
+    {% csrf_token %}
+    {{ form }}
     <p align="center"><progress id="progress_oculto"></progress></p>
     <input type="submit" name="procesar" id="procesar" value="Procesar CDRs" onClick="document.getElementById('progress_oculto').style.visibility='visible';" />
   </form>

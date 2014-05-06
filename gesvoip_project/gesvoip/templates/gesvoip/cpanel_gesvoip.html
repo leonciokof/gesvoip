@@ -10,7 +10,7 @@
         <option selected>Seleccionar Opción</option>
         {% if user.is_staff %}
         <option value="{% url 'gesvoip:ingresa_user' %}">Ingresar Usuarios</option>
-        <option value="{% url 'gesvoip:modifica_user' %}">Modificar Usuarios</option>
+        <option value="{% url 'gesvoip:busca_user' %}">Modificar Usuarios</option>
         {% endif %}
         <option value="{% url 'gesvoip:listar_user' %}">Listar Usuarios</option>
     </select>

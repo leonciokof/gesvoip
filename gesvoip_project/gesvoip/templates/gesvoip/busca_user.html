@@ -5,13 +5,8 @@
 
 {% block content %}
   <form name="modificaUser" id="modificaUser" class="formulario" method="post">
-    <label>Seleccionar Usuario</label>
-    <select name="dato" id="dato" required>
-      <option selected></option>
-      {% for user in users %}
-      <option value="{{ user.pk }}">{{ user.get_full_name }}</option>
-      {% endfor %}
-    </select>
+    {% csrf_token %}
+    {{ form }}
     <input type="submit" name="busqueda" value="Buscar" />
   </form>
 {% endblock content %}

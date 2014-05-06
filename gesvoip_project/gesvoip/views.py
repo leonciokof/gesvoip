@@ -1,7 +1,17 @@
-from django.contrib.auth.models import User
+# from django.contrib import messages
+from django.core.urlresolvers import reverse_lazy
 from django.views import generic
 
 from . import forms, models
+
+
+class cpanelView(generic.TemplateView):
+
+    """ Vista de cpanel """
+
+    template_name = 'gesvoip/cpanel.html'
+
+cpanel = cpanelView.as_view()
 
 
 class cpanel_gesvoipView(generic.TemplateView):
@@ -20,29 +30,43 @@ class ingresa_userView(generic.CreateView):
     form_class = forms.UsuariosForm
     model = models.Usuarios
     template_name = 'gesvoip/ingresa_user.html'
+    success_url = reverse_lazy('gesvoip:listar_user')
 
 ingresa_user = ingresa_userView.as_view()
 
 
-class busca_userView(generic.TemplateView):
+class busca_userView(generic.FormView):
 
     """ Vista de busca_user """
 
+    form_class = forms.BuscaUserForm
     template_name = 'gesvoip/busca_user.html'
 
     def get_context_data(self, **kwargs):
         context = super(busca_userView, self).get_context_data(**kwargs)
-        context.update({'users': User.objects.all()})
+        context.update({'object_list': models.Usuarios.objects.all()})
 
         return context
+
+    def form_valid(self, form):
+        self.usuario = form.cleaned_data.get('usuario')
+
+        return super(busca_userView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'gesvoip:modifica_user', kwargs={'pk': self.usuario.id_usuario})
 
 busca_user = busca_userView.as_view()
 
 
-class modifica_userView(generic.TemplateView):
+class modifica_userView(generic.UpdateView):
 
     """ Vista de modifica_user """
 
+    form_class = forms.UsuariosForm
+    model = models.Usuarios
+    success_url = reverse_lazy('gesvoip:listar_user')
     template_name = 'gesvoip/modifica_user.html'
 
 modifica_user = modifica_userView.as_view()
@@ -53,6 +77,12 @@ class listar_userView(generic.TemplateView):
     """ Vista de listar_user """
 
     template_name = 'gesvoip/listar_user.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(listar_userView, self).get_context_data(**kwargs)
+        context.update({'object_list': models.Usuarios.objects.all()})
+
+        return context
 
 listar_user = listar_userView.as_view()
 
@@ -66,19 +96,38 @@ class ingresa_companiaView(generic.TemplateView):
 ingresa_compania = ingresa_companiaView.as_view()
 
 
-class busca_companiaView(generic.TemplateView):
+class busca_companiaView(generic.FormView):
 
     """ Vista de busca_compania """
 
+    form_class = forms.BuscaCompaniaForm
     template_name = 'gesvoip/busca_compania.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(busca_companiaView, self).get_context_data(**kwargs)
+        context.update({'object_list': models.Compania.objects.all()})
+
+        return context
+
+    def form_valid(self, form):
+        self.compania = form.cleaned_data.get('compania')
+
+        return super(busca_companiaView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'gesvoip:modifica_compania',
+            kwargs={'pk': self.compania.id_compania})
 
 busca_compania = busca_companiaView.as_view()
 
 
-class modifica_companiaView(generic.TemplateView):
+class modifica_companiaView(generic.UpdateView):
 
     """ Vista de modifica_compania """
 
+    form_class = forms.CompaniaForm
+    model = models.Compania
     template_name = 'gesvoip/modifica_compania.html'
 
 modifica_compania = modifica_companiaView.as_view()
@@ -210,20 +259,32 @@ class consulta_numeracionView(generic.TemplateView):
 consulta_numeracion = consulta_numeracionView.as_view()
 
 
-class carga_cdrView(generic.TemplateView):
+class carga_cdrView(generic.CreateView):
 
     """ Vista de carga_cdr """
 
+    form_class = forms.CdrForm
+    model = models.Cdr
+    success_url = reverse_lazy('gesvoip:procesar_cdr')
     template_name = 'gesvoip/carga_cdr.html'
 
 carga_cdr = carga_cdrView.as_view()
 
 
-class procesar_cdrView(generic.TemplateView):
+class procesar_cdrView(generic.FormView):
 
     """ Vista de procesar_cdr """
 
+    form_class = forms.ProcesaCdrForm
+    success_url = reverse_lazy('gesvoip:procesar_cdr')
     template_name = 'gesvoip/procesar_cdr.html'
+
+    def form_valid(self, form):
+        # result = models.Cdr.processes()
+        # message = 'Procesados' if result else 'Ocurrio un error'
+        # messages.success(self.request, message)
+
+        return super(procesar_cdrView, self).form_valid(form)
 
 procesar_cdr = procesar_cdrView.as_view()
 
