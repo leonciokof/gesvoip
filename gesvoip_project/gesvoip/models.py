@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
+
 from re import search
 import datetime as dt
 
 from django.db import models
+
+from djorm_pgarray.fields import ArrayField
 
 from . import patterns
 
@@ -297,16 +301,14 @@ class DetFactura(models.Model):
 
 
 class Factura(models.Model):
-    id_factura = models.IntegerField(primary_key=True)
+    id_factura = models.AutoField(primary_key=True)
     compania = models.ForeignKey(Compania, db_column='compania')
-    fecha_inicio = models.TextField(blank=True)  # This field type is a guess.
-    fecha_fin = models.TextField(blank=True)  # This field type is a guess.
-    tarifa = models.TextField(blank=True)  # This field type is a guess.
-    valor_normal = models.TextField(blank=True)  # This field type is a guess.
-    valor_reducido = models.TextField(
-        blank=True)  # This field type is a guess.
-    valor_nocturno = models.TextField(
-        blank=True)  # This field type is a guess.
+    fecha_inicio = ArrayField(dbtype="date", blank=True)
+    fecha_fin = ArrayField(dbtype="date", blank=True)
+    tarifa = ArrayField(dbtype="int", blank=True)
+    valor_normal = ArrayField(dbtype="float", blank=True)
+    valor_reducido = ArrayField(dbtype="float", blank=True)
+    valor_nocturno = ArrayField(dbtype="float", blank=True)
     usuario = models.ForeignKey('Usuarios', db_column='usuario')
 
     class Meta:

@@ -1,3 +1,4 @@
 Django==1.6.4
 South==0.8.4
+djorm-ext-pgarray==0.10
 psycopg2==2.5.2
