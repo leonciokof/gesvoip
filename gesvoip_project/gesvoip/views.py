@@ -1,4 +1,4 @@
-# from django.contrib import messages
+from django.contrib import messages
 from django.core.urlresolvers import reverse_lazy
 from django.views import generic
 
@@ -280,9 +280,8 @@ class procesar_cdrView(generic.FormView):
     template_name = 'gesvoip/procesar_cdr.html'
 
     def form_valid(self, form):
-        # result = models.Cdr.processes()
-        # message = 'Procesados' if result else 'Ocurrio un error'
-        # messages.success(self.request, message)
+        result = models.Cdr.processes()
+        messages.success(self.request, result)
 
         return super(procesar_cdrView, self).form_valid(form)
 

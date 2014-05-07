@@ -1,6 +1,9 @@
+from re import search
 import datetime as dt
 
 from django.db import models
+
+from . import patterns
 
 
 class Cdr(models.Model):
@@ -50,11 +53,202 @@ class Cdr(models.Model):
     def __unicode__(self):
         return u'{0} {1}'.format(self.fecha, self.compania)
 
+    def valida_ani(self, ani):
+        if search(patterns.pattern_zonas, ani) and len(ani) == 11:
+            return True
+
+        else:
+            return False
+
+    def get_activado_ctc(self, ani, dialed_number):
+        """Funcion que determina si un registro debe o no ser facturado"""
+        if search(patterns.pattern_569, ani):
+            return True
+
+        elif (search(patterns.pattern_562, ani)
+                and not search(patterns.pattern_800, dialed_number)):
+            return True
+
+        elif search(patterns.pattern_4469, dialed_number):
+            return True
+
+        elif search(patterns.pattern_04469, dialed_number):
+            return True
+
+        elif search(patterns.pattern_64469, dialed_number):
+            return True
+
+        else:
+            return False
+
+    def get_activado_entel(self, ani, dialed_number):
+        """Funcion que determina si un registro debe o no ser facturado"""
+        if search(patterns.pattern_0234469, dialed_number):
+            return True
+
+        elif search(patterns.pattern_4469, dialed_number):
+            return True
+
+        elif search(patterns.pattern_64469, dialed_number):
+            return True
+
+        else:
+            return False
+
+    def get_zona_rango(self, ani):
+        """Funcion que determina el IDO de un ANI"""
+        if search(patterns.pattern_569, ani):
+            return ani[2:][:1], ani[3:][:4]
+
+        elif search(patterns.pattern_9, ani):
+            return ani[2:][:2], ani[4:][:4]
+
+        elif search(patterns.pattern_562, ani) and len(ani) == 11:
+            return ani[2:][:1], ani[3:][:5]
+
+        else:
+            return ani[2:][:2], ani[4:][:3]
+
+    def get_compania(self, zona, rango, ani, portados, numeracion):
+        """Funcion que retorna la compañia del numero de origen"""
+        numero = u'{0}{1}'.format(zona, rango)
+
+        if int(ani) in portados:
+            return portados[int(ani)]
+
+        elif numero in numeracion:
+            return numeracion[numero]
+
+        else:
+            return None
+
+    def get_tipo(self, ani, final_number):
+        """Funcion que determina el tipo de llamada"""
+        if search(patterns.pattern_564469, final_number):
+            if search(patterns.pattern_569, ani):
+                return 'voip-movil'
+
+            elif not search(patterns.pattern_56, ani):
+                return 'voip-ldi'
+
+            else:
+                return 'voip-local'
+
+        else:
+            if search(patterns.pattern_569, ani):
+                return 'movil'
+
+            elif not search(patterns.pattern_56, ani):
+                return 'internacional'
+
+            elif search(patterns.pattern_562, ani):
+                return 'local'
+
+            elif search(patterns.pattern_5610, ani):
+                return 'especial'
+
+            else:
+                return 'nacional'
+
+    def cargar_cdr(self):
+        logs = []
+        portados = {
+            p.numero: models.Ido.objects.get(codigo=p.ido).compania
+            for p in Portados.objects.all()}
+        numeracion = {
+            n.__unicode__(): n.compania for n in Numeracion.objects.all()}
+
+        if self.compania == 'CTC':
+            get_activado = self.get_activado_ctc
+
+        elif self.compania == 'ENTEL':
+            get_activado = self.get_activado_entel
+
+        if self.source:
+            lines = [
+                r.split(',') for r in self.source.read().split('\r\n')[:-1]]
+            head = lines[0]
+
+            for line in lines[1:]:
+                row = dict(zip(head, line))
+                observacion = ''
+
+                if self.valida_ani(row['ANI']):
+                    activado = get_activado(
+                        row['ANI'], row['DIALED_NUMBER'])
+
+                else:
+                    activado = False
+                    observacion = 'ani invalido'
+
+                if activado:
+                    zona, rango = self.get_zona_rango(row['ANI'])
+                    compania_ani_number = self.get_compania(
+                        zona, rango, row['ANI'], portados, numeracion)
+
+                    if compania_ani_number is None:
+                        activado = False
+                        observacion = 'ani_number sin numeracion'
+
+                    tipo = self.get_tipo(row['ANI'], row['DIALED_NUMBER'])
+
+                else:
+                    compania_ani_number = None
+                    tipo = None
+                    observacion = 'No cumple con los filtros'
+
+                activado = 'activado' if activado else 'desactivado'
+                ani_number = int(row['ANI_NUMBER']) if row[
+                    'ANI_NUMBER'].isdigit() else None
+                ingress_duration = int(row['INGRESS_DURATION']) if row[
+                    'INGRESS_DURATION'].isdigit() else None
+                is_digit = row['DIALED_NUMBER'].isdigit()
+                length = len(row['DIALED_NUMBER']) < 20
+                dialed_number = int(
+                    row['DIALED_NUMBER']) if is_digit and length else None
+                logs.append(
+                    LogLlamadas(
+                        connect_time=dt.datetime.strptime(
+                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S'),
+                        ani_number=ani_number,
+                        ingress_duration=ingress_duration,
+                        dialed_number=dialed_number,
+                        fecha=self.fecha,
+                        compania_cdr=self.compania,
+                        estado=activado,
+                        motivo=observacion,
+                        compania_ani=compania_ani_number.id_compania,
+                        tipo=tipo,
+                        hora=dt.datetime.strptime(
+                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S').time(),
+                        date=dt.datetime.strptime(
+                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S').date()
+                    )
+                )
+
+            LogLlamadas.objects.bulk_create(logs)
+
+            return True
+
+        return False
+
     def save(self, *args, **kwargs):
         if self.id is None:
             self.fecha = '{0}-{1}'.format(self.year, self. month)
 
         super(Cdr, self).save(*args, **kwargs)
+
+    @classmethod
+    def processes(cls):
+        results = []
+
+        for cdr in cls.objects.filter(processed=False).exclude(
+                source__isnull=True):
+            result = cdr.cargar_cdr()
+            result = 'Procesado' if result else 'Ocurrio un error'
+            results.append('{0}: {1}'.format(cdr.compania, result))
+
+        return '\n'.join(results)
 
 
 class Compania(models.Model):
