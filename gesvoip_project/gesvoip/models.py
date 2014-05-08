@@ -165,7 +165,7 @@ class Cdr(models.Model):
     def cargar_cdr(self):
         logs = []
         portados = {
-            p.numero: Ido.objects.get(codigo=p.ido).compania.pk
+            p.numero: Ido.objects.get(codigo=p.ido).compania.id_compania
             for p in Portados.objects.all()}
         numeracion = {
             n.__unicode__(): n.compania.id_compania
@@ -230,7 +230,7 @@ class Cdr(models.Model):
                         compania_cdr=self.compania,
                         estado=activado,
                         motivo=observacion,
-                        compania_ani=compania_ani_number.id_compania,
+                        compania_ani=compania_ani_number,
                         tipo=tipo,
                         hora=dt.datetime.strptime(
                             row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S').time(),
