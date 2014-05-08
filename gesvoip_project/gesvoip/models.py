@@ -58,7 +58,8 @@ class Cdr(models.Model):
         return u'{0} {1}'.format(self.fecha, self.compania)
 
     def valida_ani(self, ani):
-        if search(patterns.pattern_zonas, ani) and len(ani) == 11:
+        if (search(patterns.pattern_zonas1, ani) and len(ani) == 11 or
+                search(patterns.pattern_zonas2, ani) and len(ani) == 10):
             return True
 
         else:
@@ -93,7 +94,8 @@ class Cdr(models.Model):
         elif search(patterns.pattern_4469, dialed_number):
             return True
 
-        elif search(patterns.pattern_64469, dialed_number):
+        elif (search(patterns.pattern_64469, dialed_number) and
+                not search(patterns.pattern_112, dialed_number)):
             return True
 
         else:
@@ -104,8 +106,14 @@ class Cdr(models.Model):
         if search(patterns.pattern_569, ani):
             return ani[2:][:1], ani[3:][:4]
 
-        elif search(patterns.pattern_9, ani):
+        elif search(patterns.pattern_92, ani):
             return ani[2:][:2], ani[4:][:4]
+
+        elif search(patterns.pattern_93, ani) and len(ani) == 11:
+            return ani[2:][:2], ani[4:][:4]
+
+        elif search(patterns.pattern_93, ani) and len(ani) == 10:
+            return ani[2:][:2], ani[4:][:3]
 
         elif search(patterns.pattern_562, ani) and len(ani) == 11:
             return ani[2:][:1], ani[3:][:5]
@@ -157,10 +165,11 @@ class Cdr(models.Model):
     def cargar_cdr(self):
         logs = []
         portados = {
-            p.numero: models.Ido.objects.get(codigo=p.ido).compania
+            p.numero: Ido.objects.get(codigo=p.ido).compania.pk
             for p in Portados.objects.all()}
         numeracion = {
-            n.__unicode__(): n.compania for n in Numeracion.objects.all()}
+            n.__unicode__(): n.compania.id_compania
+            for n in Numeracion.objects.all()}
 
         if self.compania == 'CTC':
             get_activado = self.get_activado_ctc
