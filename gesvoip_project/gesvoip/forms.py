@@ -118,3 +118,18 @@ class CdrForm(forms.ModelForm):
 class ProcesaCdrForm(forms.Form):
 
     pass
+
+
+class FacturaForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Factura
+        fields = ('compania', 'month', 'year')
+        labels = {
+            'month': u'Mes', 'year': u'Año', 'compania': u'Compañia',
+        }
+        widgets = {
+            'compania': forms.Select(attrs={'required': 'required'}),
+            'month': forms.Select(attrs={'required': 'required'}),
+            'year': forms.Select(attrs={'required': 'required'}),
+        }

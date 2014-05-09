@@ -4,8 +4,8 @@
 {% block title2 %}<h1>Modificar Factura</h1>{% endblock title2 %}
 
 {% block content %}
-  {% for object in object_list %}
-  <h2>Desde {{ object.fecha_inicio }} Hasta {{ object.fecha_fin }}</h2>
+  {% for resumen in object.resumenes %}
+  <h2>Desde {{ resumen.fecha_inicio }} Hasta {{ resumen.fecha_fin }}</h2>
   <table cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
     <thead>
       <tr align="right" bgcolor="#666666">
@@ -18,27 +18,27 @@
     <tbody>
       <tr>
         <th align="left">Normal</th>
-        <td align="right">{{ suma_normal }}</td>
-        <td align="right">${{ normal }}</td>
-        <td align="right">${{ valor_normal }}</td>
+        <td align="right">{{ resumen.duracion_normal }}</td>
+        <td align="right">${{ resumen.tarifa_normal }}</td>
+        <td align="right">${{ resumen.valor_normal }}</td>
       </tr>
       <tr>
         <th align="left">Reducido</th>
-        <td align="right">{{ suma_reducido }}</td>
-        <td align="right">${{ reducido }}</td>
-        <td align="right">${{ valor_reducido }}</td>
+        <td align="right">{{ resumen.duracion_reducido }}</td>
+        <td align="right">${{ resumen.tarifa_reducido }}</td>
+        <td align="right">${{ resumen.valor_reducido }}</td>
       </tr>
       <tr>
         <th align="left">Nocturno</th>
-        <td align="right">{{ suma_nocturno }}</td>
-        <td align="right">${{ nocturno }}</td>
-        <td align="right">${{ valor_nocturno }}</td>
+        <td align="right">{{ resumen.duracion_nocturno }}</td>
+        <td align="right">${{ resumen.tarifa_nocturno }}</td>
+        <td align="right">${{ resumen.valor_nocturno }}</td>
       </tr>
       <tr bgcolor="#666666">
         <th align="left">Total</th>
         <td></td>
         <td></td>
-        <td align="right">${{ valor_total }}</td>
+        <td align="right">${{ resumen.total }}</td>
       </tr>
     </tbody>
   </table>
@@ -55,9 +55,9 @@
     </thead>
     <tbody>
       <tr align="right">
-        <td>{{ llamadas }}</td>
-        <td>{{ suma_total }}</td>
-        <td>${{ valor_total_total }}</td>
+        <td>{{ object.total_llamadas }}</td>
+        <td>{{ object.total_segundos }}</td>
+        <td>${{ object.valor_total }}</td>
       </tr>
     </tbody>
   </table>

@@ -306,11 +306,18 @@ class eliminar_cdrView(generic.TemplateView):
 eliminar_cdr = eliminar_cdrView.as_view()
 
 
-class genera_facturaView(generic.TemplateView):
+class genera_facturaView(generic.CreateView):
 
     """ Vista de genera_factura """
 
+    form_class = forms.FacturaForm
+    model = models.Factura
+    success_url = reverse_lazy('gesvoip:genera_factura')
     template_name = 'gesvoip/genera_factura.html'
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'gesvoip:modifica_factura', kwargs={'pk': self.object.pk})
 
 genera_factura = genera_facturaView.as_view()
 
@@ -324,10 +331,11 @@ class busca_facturaView(generic.TemplateView):
 busca_factura = busca_facturaView.as_view()
 
 
-class modifica_facturaView(generic.TemplateView):
+class modifica_facturaView(generic.DetailView):
 
     """ Vista de modifica_factura """
 
+    model = models.Factura
     template_name = 'gesvoip/modifica_factura.html'
 
 modifica_factura = modifica_facturaView.as_view()
