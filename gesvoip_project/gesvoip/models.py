@@ -6,8 +6,6 @@ import datetime as dt
 
 from django.db import models
 from django.db.models import Max, Min, Sum
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 from djorm_pgarray.fields import ArrayField
 from nptime import nptime
@@ -1293,9 +1291,3 @@ class ResumenFactura(models.Model):
     def __unicode__(self):
         return u'Resumen factura {0} desde {1} hasta {2}'.format(
             self.factura.pk, self.fecha_inicio, self.fecha_fin)
-
-
-@receiver(post_save, sender=Factura)
-def generar_det_factura(sender, instance, created, **kwargs):
-    if created:
-        instance.facturar()

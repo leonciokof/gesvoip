@@ -316,6 +316,7 @@ class genera_facturaView(generic.CreateView):
     template_name = 'gesvoip/genera_factura.html'
 
     def get_success_url(self):
+        self.object.facturar()
         return reverse_lazy(
             'gesvoip:modifica_factura', kwargs={'pk': self.object.pk})
 
