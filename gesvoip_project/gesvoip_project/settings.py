@@ -10,6 +10,9 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+
+import dj_database_url
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -17,14 +20,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'lf&u5w0$1zicy4kxsl@2=%+orky(off#(ivx95^u4zjk@@0(!j'
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY', 'lf&u5w0$1zicy4kxsl@2=%+orky(off#(ivx95^u4zjk@@0(!j'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.environ.get('DEBUG', False))
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -58,22 +63,28 @@ WSGI_APPLICATION = 'gesvoip_project.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'NAME': 'gesvoip',
-        'USER': 'postgres',
-        'PASSWORD': '',
-    }
+    'default': dj_database_url.parse(
+        os.environ.get(
+            'GESVOIP_DB_URL', 'postgres://postgres@127.0.0.1/gesvoip'
+        )
+    ),
+    'sti': dj_database_url.parse(
+        os.environ.get(
+            'STI_DB_URL', 'postgres://postgres@127.0.0.1/sti'
+        )
+    ),
 }
+
+DATABASE_ROUTERS = [
+    'gesvoip_project.routers.ModelDatabaseRouter'
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-cl'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 
@@ -87,21 +98,15 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# See:
-# https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#
-# std:setting-STATICFILES_DIRS
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
 
-# See:
-# https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#
-# staticfiles-finders
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-# END STATIC FILE CONFIGURATION
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 MEDIA_URL = '/media/'
