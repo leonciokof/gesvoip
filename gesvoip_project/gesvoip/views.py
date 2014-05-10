@@ -342,11 +342,20 @@ class modifica_facturaView(generic.DetailView):
 modifica_factura = modifica_facturaView.as_view()
 
 
-class eliminar_facturaView(generic.TemplateView):
+class eliminar_facturaView(generic.FormView):
 
     """ Vista de eliminar_factura """
 
+    form_class = forms.BuscaFacturaForm
     template_name = 'gesvoip/eliminar_factura.html'
+    success_url = reverse_lazy('gesvoip:eliminar_factura')
+
+    def form_valid(self, form):
+        factura = form.cleaned_data.get('factura')
+        factura.reset_logs()
+        factura.delete()
+
+        return super(eliminar_facturaView, self).form_valid(form)
 
 eliminar_factura = eliminar_facturaView.as_view()
 

@@ -133,3 +133,11 @@ class FacturaForm(forms.ModelForm):
             'month': forms.Select(attrs={'required': 'required'}),
             'year': forms.Select(attrs={'required': 'required'}),
         }
+
+
+class BuscaFacturaForm(forms.Form):
+
+    factura = forms.ModelChoiceField(
+        label='Seleccionar factura',
+        queryset=models.Factura.objects.all(),
+        widget=forms.Select(attrs={'required': 'required'}))
