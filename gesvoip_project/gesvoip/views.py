@@ -323,11 +323,29 @@ class genera_facturaView(generic.CreateView):
 genera_factura = genera_facturaView.as_view()
 
 
-class busca_facturaView(generic.TemplateView):
+class busca_facturaView(generic.FormView):
 
     """ Vista de busca_factura """
 
+    form_class = forms.BuscaFacturaForm
     template_name = 'gesvoip/busca_factura.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(busca_facturaView, self).get_context_data(**kwargs)
+        context.update({'object_list': models.Factura.objects.all()})
+
+        return context
+
+    def form_valid(self, form):
+        self.factura = form.cleaned_data.get('factura')
+        print(self.factura)
+
+        return super(busca_facturaView, self).form_valid(form)
+
+    def get_success_url(self):
+        print(self.factura.pk)
+        return reverse_lazy(
+            'gesvoip:modifica_factura', kwargs={'pk': self.factura.pk})
 
 busca_factura = busca_facturaView.as_view()
 

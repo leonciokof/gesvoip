@@ -310,6 +310,7 @@ class Factura(models.Model):
 
     class Meta:
         db_table = 'factura'
+        ordering = ('-pk',)
         verbose_name = 'factura'
         verbose_name_plural = 'facturas'
 
@@ -965,23 +966,26 @@ class Factura(models.Model):
             valores = self.detfactura_set.filter(
                 horario__startswith='normal',
                 fecha__range=(fecha_inicio, fecha_fin))
-            valor_normal = valores.aggregate(Sum('valor'))
+            valor_normal = valores.aggregate(Sum('valor')).get('valor__sum')
             valores_normales.append(valor_normal)
-            duracion_normal = valores.aggregate(Sum('duracion'))
+            duracion_normal = valores.aggregate(
+                Sum('duracion')).get('duracion__sum')
 
             valores = self.detfactura_set.filter(
                 horario__startswith='reducido',
                 fecha__range=(fecha_inicio, fecha_fin))
-            valor_reducido = valores.aggregate(Sum('valor'))
+            valor_reducido = valores.aggregate(Sum('valor')).get('valor__sum')
             valores_reducidos.append(valor_reducido)
-            duracion_reducido = valores.aggregate(Sum('duracion'))
+            duracion_reducido = valores.aggregate(
+                Sum('duracion')).get('duracion__sum')
 
             valores = self.detfactura_set.filter(
                 horario__startswith='nocturno',
                 fecha__range=(fecha_inicio, fecha_fin))
-            valor_nocturno = valores.aggregate(Sum('valor'))
+            valor_nocturno = valores.aggregate(Sum('valor')).get('valor__sum')
             valores_nocturnos.append(valor_nocturno)
-            duracion_nocturno = valores.aggregate(Sum('duracion'))
+            duracion_nocturno = valores.aggregate(
+                Sum('duracion')).get('duracion__sum')
 
             total = valor_normal + valor_reducido + valor_nocturno
 
@@ -1000,8 +1004,10 @@ class Factura(models.Model):
                 tarifa_nocturno=tarifa.valor_nocturno,
                 total=total).save()
 
-        valor_total = self.detfactura_set.aggregate(Sum('valor'))
-        total_segundos = self.detfactura_set.aggregate(Sum('duracion'))
+        valor_total = self.detfactura_set.aggregate(
+            Sum('valor')).get('valor__sum')
+        total_segundos = self.detfactura_set.aggregate(
+            Sum('duracion')).get('duracion__sum')
         total_llamadas = self.detfactura_set.count()
 
         self.fecha_inicio = fechas_inicio

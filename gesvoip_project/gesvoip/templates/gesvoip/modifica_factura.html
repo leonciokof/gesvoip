@@ -1,68 +1,72 @@
 {% extends "gesvoip/base_intranet.html" %}
+{% load humanize %}
 
 {% block title %}Modificar Factura - GesVoIP{% endblock title %}
 {% block title2 %}<h1>Modificar Factura</h1>{% endblock title2 %}
 
 {% block content %}
-  {% for resumen in object.resumenes %}
-  <h2>Desde {{ resumen.fecha_inicio }} Hasta {{ resumen.fecha_fin }}</h2>
-  <table cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
-    <thead>
-      <tr align="right" bgcolor="#666666">
-        <th></th>
-        <th>Cantidad (seg)</th>
-        <th>Tarifa (pesos)</th>
-        <th>Valor (pesos)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th align="left">Normal</th>
-        <td align="right">{{ resumen.duracion_normal }}</td>
-        <td align="right">${{ resumen.tarifa_normal }}</td>
-        <td align="right">${{ resumen.valor_normal }}</td>
-      </tr>
-      <tr>
-        <th align="left">Reducido</th>
-        <td align="right">{{ resumen.duracion_reducido }}</td>
-        <td align="right">${{ resumen.tarifa_reducido }}</td>
-        <td align="right">${{ resumen.valor_reducido }}</td>
-      </tr>
-      <tr>
-        <th align="left">Nocturno</th>
-        <td align="right">{{ resumen.duracion_nocturno }}</td>
-        <td align="right">${{ resumen.tarifa_nocturno }}</td>
-        <td align="right">${{ resumen.valor_nocturno }}</td>
-      </tr>
-      <tr bgcolor="#666666">
-        <th align="left">Total</th>
-        <td></td>
-        <td></td>
-        <td align="right">${{ resumen.total }}</td>
-      </tr>
-    </tbody>
-  </table>
-  {% endfor %}
-  <h2>Total</h2>
-  <table cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
-    <thead>
-      <tr align="right" bgcolor="#666666">
-        <th>Total Llamadas</th>
-        <th>Total Segundos</th>
-        <th>Valor Total (pesos)</th>
+  <form id="modificaFacturaPost" name="modificaFacturaPost" class="formulario" method="post">
+    <h2>{{ object }}</h2>
+    {% for resumen in object.resumenes %}
+    <h2>Desde {{ resumen.fecha_inicio }} Hasta {{ resumen.fecha_fin }}</h2>
+    <table cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
+      <thead>
+        <tr align="right" bgcolor="#666666">
+          <th></th>
+          <th>Cantidad (seg)</th>
+          <th>Tarifa (pesos)</th>
+          <th>Valor (pesos)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th align="left">Normal</th>
+          <td align="right">{{ resumen.duracion_normal|intcomma }}</td>
+          <td align="right">$ {{ resumen.tarifa_normal }}</td>
+          <td align="right">$ {{ resumen.valor_normal|floatformat:"0"|intcomma }}</td>
+        </tr>
+        <tr>
+          <th align="left">Reducido</th>
+          <td align="right">{{ resumen.duracion_reducido|intcomma }}</td>
+          <td align="right">$ {{ resumen.tarifa_reducido }}</td>
+          <td align="right">$ {{ resumen.valor_reducido|floatformat:"0"|intcomma }}</td>
+        </tr>
+        <tr>
+          <th align="left">Nocturno</th>
+          <td align="right">{{ resumen.duracion_nocturno|intcomma }}</td>
+          <td align="right">$ {{ resumen.tarifa_nocturno }}</td>
+          <td align="right">$ {{ resumen.valor_nocturno|floatformat:"0"|intcomma }}</td>
+        </tr>
+        <tr bgcolor="#666666">
+          <th align="left">Total</th>
+          <td></td>
+          <td></td>
+          <td align="right">$ {{ resumen.total|floatformat:"0"|intcomma }}</td>
+        </tr>
+      </tbody>
+    </table>
+    {% endfor %}
+    <h2>Total</h2>
+    <table cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
+      <thead>
+        <tr align="right" bgcolor="#666666">
+          <th>Total Llamadas</th>
+          <th>Total Segundos</th>
+          <th>Valor Total (pesos)</th>
 
-      </tr>
-    </thead>
-    <tbody>
-      <tr align="right">
-        <td>{{ object.total_llamadas }}</td>
-        <td>{{ object.total_segundos }}</td>
-        <td>${{ object.valor_total }}</td>
-      </tr>
-    </tbody>
-  </table>
+        </tr>
+      </thead>
+      <tbody>
+        <tr align="right">
+          <td>{{ object.total_llamadas|intcomma }}</td>
+          <td>{{ object.total_segundos|intcomma }}</td>
+          <td>$ {{ object.valor_total|floatformat:"0"|intcomma }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
 
-  <form id="exporta_factura" name="exporta_factura" action="exporta_factura.php" method="POST">
+  <form id="exporta_factura" name="exporta_factura" method="POST">
     <input type="hidden" id="sql" name="sql" value="{{ sql }}" />
     <center><input type="submit" value="Imprimir" name="imprimir" id="imprimir" /></center>
   </form>
