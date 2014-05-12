@@ -6,3 +6,4 @@ django-extensions==1.3.5
 djorm-ext-pgarray==0.10
 nptime==0.4.0
 psycopg2==2.5.2
+python-dateutil==2.2

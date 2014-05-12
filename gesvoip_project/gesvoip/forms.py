@@ -2,12 +2,17 @@
 
 from django import forms
 
-from . import models
+from . import choices, models
 
 
 class EmailTextInput(forms.widgets.TextInput):
 
     input_type = 'email'
+
+
+class NumberTextInput(forms.widgets.TextInput):
+
+    input_type = 'number'
 
 
 class UsuariosForm(forms.ModelForm):
@@ -141,3 +146,99 @@ class BuscaFacturaForm(forms.Form):
         label='Seleccionar factura',
         queryset=models.Factura.objects.all(),
         widget=forms.Select(attrs={'required': 'required'}))
+
+
+class FeriadoForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Feriado
+        labels = {'fecha': u'Ingrese fecha'}
+        widgets = {
+            'fecha': forms.TextInput(
+                attrs={'required': 'required', 'autofocus': 'autofocus'}),
+        }
+
+
+class BuscaFeriadoForm(forms.Form):
+
+    feriado = forms.ModelChoiceField(
+        label='Seleccionar feriado',
+        queryset=models.Feriado.objects.all(),
+        widget=forms.Select(attrs={'required': 'required'}))
+
+
+class NuevaTarifaForm(forms.Form):
+
+    compania = forms.ModelChoiceField(
+        queryset=models.Compania.objects.all(),
+        widget=forms.Select(attrs={'required': 'required'}))
+    fecha_inicio = forms.DateField(
+        widget=forms.TextInput(attrs={'required': 'required'}))
+    fecha_fin = forms.DateField(
+        widget=forms.TextInput(attrs={'required': 'required'}))
+    valor_normal = forms.FloatField(
+        label='Valor horario normal ($/seg)',
+        widget=NumberTextInput(attrs={
+            'required': 'required',
+            'min': '0.0001',
+            'step': '0.0001',
+            'placeholder': '0.0001'}))
+    valor_reducido = forms.FloatField(
+        label='Valor horario reducido ($/seg)',
+        widget=NumberTextInput(attrs={
+            'required': 'required',
+            'min': '0.0001',
+            'step': '0.0001',
+            'placeholder': '0.0001'}))
+    valor_nocturno = forms.FloatField(
+        label='Valor horario ncturno ($/seg)',
+        widget=NumberTextInput(attrs={
+            'required': 'required',
+            'min': '0.0001',
+            'step': '0.0001',
+            'placeholder': '0.0001'}))
+
+
+class CompaniaFechaForm(forms.Form):
+
+    MONTHS = list(choices.MONTHS)
+    MONTHS.insert(0, ('', '---------'))
+    YEARS = choices.YEARS
+    YEARS.insert(0, ('', '---------'))
+    compania = forms.ModelChoiceField(
+        queryset=models.Compania.objects.all(),
+        widget=forms.Select(attrs={'required': 'required'}))
+    month = forms.ChoiceField(
+        label='Mes',
+        choices=MONTHS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    year = forms.ChoiceField(
+        label='Año',
+        choices=YEARS,
+        widget=forms.Select(attrs={'required': 'required'}))
+
+
+class EditaTarifaForm(forms.Form):
+
+    id_ingreso = forms.CharField(widget=forms.HiddenInput())
+    valor_normal = forms.FloatField(
+        label='Valor horario normal ($/seg)',
+        widget=NumberTextInput(attrs={
+            'required': 'required',
+            'min': '0.0001',
+            'step': '0.0001',
+            'placeholder': '0.0001'}))
+    valor_reducido = forms.FloatField(
+        label='Valor horario reducido ($/seg)',
+        widget=NumberTextInput(attrs={
+            'required': 'required',
+            'min': '0.0001',
+            'step': '0.0001',
+            'placeholder': '0.0001'}))
+    valor_nocturno = forms.FloatField(
+        label='Valor horario ncturno ($/seg)',
+        widget=NumberTextInput(attrs={
+            'required': 'required',
+            'min': '0.0001',
+            'step': '0.0001',
+            'placeholder': '0.0001'}))

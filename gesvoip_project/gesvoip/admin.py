@@ -48,7 +48,10 @@ class PortadosAdmin(admin.ModelAdmin):
 
 
 class TarifaAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        'fecha', 'tipo', 'valor_normal', 'valor_reducido', 'valor_nocturno',
+        'compania', 'id_ingreso')
+    list_filter = ('compania',)
 
 
 class UsuariosAdmin(admin.ModelAdmin):

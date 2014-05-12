@@ -5,9 +5,8 @@
 
 {% block content %}
   <form id="ingresaFeriado" name="ingresaFeriado" class="formulario" method="post">
-    <label for="fechaIngreso">Ingrese fecha</label>
-    <input type="text" name="fechaIngreso" id="fechaIngreso" autofocus required />
-
+    {% csrf_token %}
+    {{ form }}
     <input type="submit" name="enviar" value="Enviar" />
     <input type="reset" name="reset" value="Restablecer" />
   </form>

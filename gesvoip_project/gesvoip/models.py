@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from calendar import monthrange
+from dateutil.rrule import rrule, DAILY
 from re import search
 import datetime as dt
 
-from django.db import models
+from django.db import connection, models
 from django.db.models import Max, Min, Sum
 
 from djorm_pgarray.fields import ArrayField
@@ -1096,7 +1097,7 @@ class Feriado(models.Model):
         db_table = 'feriado'
         verbose_name = 'feriado'
         verbose_name_plural = 'feriados'
-        ordering = ('fecha',)
+        ordering = ('-fecha',)
 
     def __unicode__(self):
         return u'{0}'.format(self.fecha)
@@ -1247,6 +1248,65 @@ class Tarifa(models.Model):
 
     def __unicode__(self):
         return self.tipo
+
+    @classmethod
+    def get_next_id_ingreso(cls):
+        cursor = connection.cursor()
+        cursor.execute("SELECT nextval(%s)", ['sec_tarifa_ingreso'])
+        row = cursor.fetchone()
+
+        return row[0]
+
+    @classmethod
+    def ingress(
+            cls, compania, fecha_inicio, fecha_fin, valor_normal,
+            valor_reducido, valor_nocturno):
+        tarifas = []
+        id_ingreso = cls.get_next_id_ingreso()
+
+        for fecha in rrule(DAILY, dtstart=fecha_inicio, until=fecha_fin):
+            if cls.objects.filter(fecha=fecha).count() == 0:
+                if (fecha.weekday() == 0 or
+                        Feriado.objects.filter(fecha=fecha).count() > 0):
+                    tipo = 'festivo'
+
+                elif fecha.weekday() in range(1, 6):
+                    tipo = 'habil'
+
+                elif fecha.weekday() == 6:
+                    tipo = 'sabado'
+
+                tarifas.append(cls(
+                    compania=compania,
+                    fecha=fecha,
+                    valor_normal=valor_normal,
+                    valor_reducido=valor_reducido,
+                    valor_nocturno=valor_nocturno,
+                    tipo=tipo,
+                    id_ingreso=id_ingreso
+                ))
+
+        cls.objects.bulk_create(tarifas)
+
+    @classmethod
+    def get_by_compania_and_fecha(cls, compania, year, month):
+        limites = []
+
+        for t in cls.objects.filter(
+                compania=compania, fecha__year=year,
+                fecha__month=month).distinct('id_ingreso'):
+            fechas = cls.objects.filter(id_ingreso=t.id_ingreso)
+            fecha_inicio = fechas.aggregate(Min('fecha')).get('fecha__min')
+            fecha_fin = fechas.aggregate(Max('fecha')).get('fecha__max')
+            limites.append({
+                'fecha_inicio': fecha_inicio, 'fecha_fin': fecha_fin,
+                'id_ingreso': t.id_ingreso})
+
+        return limites
+
+    @classmethod
+    def get_by_id_ingreso(cls, id_ingreso):
+        return cls.objects.filter(id_ingreso=id_ingreso)[0]
 
 
 class Usuarios(models.Model):

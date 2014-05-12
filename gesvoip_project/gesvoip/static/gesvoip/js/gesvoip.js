@@ -44,6 +44,23 @@ $.fn.accordion = function(custom) {
 
 $(document).ready(function(){
   <!-- Funcion Calendario -->
+  $( "#id_fecha" ).datepicker();
+  $( "#id_fecha" ).datepicker($.datepicker.regional['es']);
+  $( "#id_fecha" ).datepicker('option', {dateFormat: 'yy-mm-dd'});
+  $( "#id_fecha_inicio" ).datepicker($.datepicker.regional['es']);
+  $("#id_fecha_inicio").datepicker('option', {
+    dateFormat: "yy-mm-dd",
+    onClose: function( selectedDate ) {
+      $("#id_fecha_fin").datepicker("option", "minDate", selectedDate);
+    }
+  });
+  $( "#id_fecha_fin" ).datepicker($.datepicker.regional['es']);
+  $("#id_fecha_fin").datepicker('option', {
+    dateFormat: "yy-mm-dd",
+    onClose: function( selectedDate ) {
+      $("#id_fecha_inicio").datepicker("option", "maxDate", selectedDate);
+    }
+  });
   $( "#fechaIngreso" ).datepicker();
   $( "#fechaIngreso" ).datepicker($.datepicker.regional['es']);
   $( "#fechaIngreso" ).datepicker('option', {dateFormat: 'yy-mm-dd'});
@@ -80,6 +97,7 @@ $(document).ready(function(){
   $('#HorarioFestivoReducidoFin').datetime({ withDate: false, format: 'hh:ii' });
   $('#HorarioFestivoNocturnoInicio').datetime({ withDate: false, format: 'hh:ii' });
   $('#HorarioFestivoNocturnoFin').datetime({ withDate: false, format: 'hh:ii', steap: 1 });
+
 
   // Valida si el RUT fue ingresado correctamente
   $('#rut').Rut({

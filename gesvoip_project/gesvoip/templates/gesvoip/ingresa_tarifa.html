@@ -5,31 +5,8 @@
 
 {% block content %}
   <form name="ingresaTarifaPost" id="ingresaTarifaPost" class="formulario" method="post">
-    <input type="hidden" name="id_compania" id="id_compania" value="{{ id_compania }}" />
-
-    <label for="tarifas">Tarifas existentes</label>
-    <select name="tarifas" id="tarifas">
-      <option selected></option>
-      {% for tarifa in tarifas %}
-      <option>{{ tarifa.fecha }}</option>
-      {% endfor %}
-    </select>
-
-    <label for="fechaInicio">Fecha inicio (obligatorio):</label>
-    <input type="text" name="fechaInicio" id="fechaInicio" />
-
-    <label for="fechaFin">Fecha fin (obligatorio):</label>
-    <input type="text" name="fechaFin" id="fechaFin" />
-
-    <label for="normal">Valor horario normal ($xseg):</label>
-    <input type="number" name="normal" id="normal" min="0.0001" step="0.0001" placeholder="0.0001" required />
-
-    <label for="reducido">Valor horario reducido ($xseg):</label>
-    <input type="number" name="reducido" id="reducido" min="0.001" step="0.0001" placeholder="0.0001" required />
-
-    <label for="reducido">Valor horario nocturno ($xseg):</label>
-    <input type="number" name="nocturno" id="nocturno" min="0.0001" step="0.0001" placeholder="0.0001" required />
-
+    {% csrf_token %}
+    {{ form }}
     <input type="submit" name="agregar" class="submit" value="Agregar tarifa" />
   </form>
 {% endblock content %}

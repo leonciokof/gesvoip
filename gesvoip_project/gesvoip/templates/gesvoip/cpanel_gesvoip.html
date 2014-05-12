@@ -29,15 +29,15 @@
     <select name="select2" onChange="MM_jumpMenu('parent',this,0)">
         <option selected>Seleccionar Opción</option>
         <option value="{% url 'gesvoip:ingresa_tarifa' %}">Ingresar Tarifa</option>
-        <option value="{% url 'gesvoip:busca_tarifa' %}">Buscar/Mod Tarifas</option>
-        <option value="{% url 'gesvoip:busca_tarifa3' %}">Listar Tarifa</option>
+        <option value="{% url 'gesvoip:busca_tarifa2' %}">Buscar/Mod Tarifas</option>
+        <option value="{% url 'gesvoip:busca_tarifa' %}">Listar Tarifa</option>
     </select>
 
     <label>Administracion de Feriados</label>
     <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
         <option selected>Seleccionar Opción</option>
         <option value="{% url 'gesvoip:ingresa_feriado' %}">Ingresar Feriados</option>
-        <option value="{% url 'gesvoip:modifica_feriado' %}">Eliminar Feriados</option>
+        <option value="{% url 'gesvoip:eliminar_feriado' %}">Eliminar Feriados</option>
     </select>
 
     {% if user.is_staff %}

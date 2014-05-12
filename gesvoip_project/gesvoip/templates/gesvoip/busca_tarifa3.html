@@ -4,41 +4,24 @@
 {% block title2 %}<h1>Listado Tarifas</h1>{% endblock title2 %}
 
 {% block content %}
-  <div id="principal">
-    <div id="datos">
-      <form name="seleccionaTarifa" id="seleccionaTarifa" method="post" class="formulario">
-        <label>Seleccione Compañia</label>
-        <select name="compania" id="compania" required>
-          <option value="" selected></option>
-          {% for object in object_list %}
-          <option value="{{ object.id_compania }}">{{ object.nombre }}</option>
-          {% endfor %}
-        </select>
-
-        <label>Seleccione Mes</label>
-        <select name="mes" id="mes" required>
-          <option value="" selected></option>
-          <option value="01">Enero</option>
-          <option value="02">Febrero</option>
-          <option value="03">Marzo</option>
-          <option value="04">Abril</option>
-          <option value="05">Mayo</option>
-          <option value="06">Junio</option>
-          <option value="07">Julio</option>
-          <option value="08">Agosto</option>
-          <option value="09">Septiembre</option>
-          <option value="10">Octubre</option>
-          <option value="11">Noviembre</option>
-          <option value="12">Diciembre</option>
-        </select>
-
-        <label>Seleccione Año</label>
-        <select name="year" id="year" required>
-          <option value="" selected></option>
-        </select>
-
-        <input name="buscar" type="submit" id="buscar" value="Buscar" />
-      </form>
-    </div>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha inicio</th>
+        <th>Fecha fin</th>
+        <th>Id ingreso</th>
+        <th></th>
+      </tr>
+    </thead>
+    <thead>
+      {% for obj in object_list %}
+      <tr>
+        <td>{{ obj.fecha_inicio|date:"SHORT_DATE_FORMAT" }}</td>
+        <td>{{ obj.fecha_fin|date:"SHORT_DATE_FORMAT" }}</td>
+        <td>{{ obj.id_ingreso }}</td>
+        <td><a href="{% url 'gesvoip:modifica_tarifa' obj.id_ingreso %}" class="button">Editar</a></td>
+      </tr>
+      {% endfor %}
+    </thead>
+  </table>
 {% endblock content %}

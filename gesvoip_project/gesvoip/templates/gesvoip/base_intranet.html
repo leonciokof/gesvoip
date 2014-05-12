@@ -30,14 +30,14 @@
       <li><a href="#">Tarifas</a>
         <ul>
           <li><a href="{% url 'gesvoip:ingresa_tarifa' %}">Nuevo</a></li>
-          <li><a href="{% url 'gesvoip:busca_tarifa' %}">Modificar</a></li>
-          <li><a href="{% url 'gesvoip:busca_tarifa3' %}">Listar</a></li>
+          <li><a href="{% url 'gesvoip:busca_tarifa2' %}">Modificar</a></li>
+          <li><a href="{% url 'gesvoip:busca_tarifa' %}">Listar</a></li>
         </ul>
       </li>
       <li><a href="#">Feriados</a>
         <ul>
           <li><a href="{% url 'gesvoip:ingresa_feriado' %}">Nuevo</a></li>
-          <li><a href="{% url 'gesvoip:modifica_feriado' %}">Eliminar</a></li>
+          <li><a href="{% url 'gesvoip:eliminar_feriado' %}">Eliminar</a></li>
         </ul>
       </li>
       {% if user.is_staff %}
