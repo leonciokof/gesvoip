@@ -23,8 +23,13 @@ class LineasAdmin(admin.ModelAdmin):
     pass
 
 
+class PnMtcAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(models.Ccaa, CcaaAdmin)
 admin.site.register(models.Cdr, CdrAdmin)
 admin.site.register(models.CentrosLocales, CentrosLocalesAdmin)
 admin.site.register(models.Companias, CompaniasAdmin)
 admin.site.register(models.Lineas, LineasAdmin)
+admin.site.register(models.PnMtc, PnMtcAdmin)

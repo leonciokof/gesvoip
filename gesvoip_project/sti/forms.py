@@ -56,3 +56,79 @@ class FechaForm(forms.Form):
         label='Año',
         choices=YEARS,
         widget=forms.Select(attrs={'required': 'required'}))
+
+
+class DatoForm(forms.Form):
+
+    dato = forms.CharField(
+        label='Consulta por Numero, Rut:',
+        widget=forms.TextInput(
+            attrs={
+                'required': 'required', 'autofocus': 'autofocus',
+                'class': 'text'}))
+
+
+class PnMtcForm(forms.ModelForm):
+
+    class Meta:
+        model = models.PnMtc
+        fields = (
+            'numero_telefono',
+            'rut_propietario',
+            'tipo_servicio',
+            'modalidad',
+            'deuda_vencida',
+            'tipo_servicio_especial',
+            'estado',
+        )
+        labels = {
+            'rut_propietario': u'Rut',
+            'tipo_servicio': u'Tipo Servicio',
+            'modalidad': u'Modalidad',
+            'deuda_vencida': u'Deuda',
+            'tipo_servicio_especial': u'Servicio Especial',
+            'estado': u'Estado',
+        }
+        widgets = {
+            'numero_telefono': forms.HiddenInput(),
+            'rut_propietario': forms.TextInput(
+                attrs={
+                    'required': 'required', 'autofocus': 'autofocus'}),
+            'tipo_servicio': forms.Select(
+                attrs={'required': 'required'}),
+            'modalidad': forms.Select(
+                attrs={'required': 'required'}),
+            'deuda_vencida': forms.TextInput(
+                attrs={'required': 'required'}),
+            'tipo_servicio_especial': forms.Select(
+                attrs={'required': 'required'}),
+            'estado': forms.Select(
+                attrs={'required': 'required'}),
+        }
+
+
+class LineasForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Lineas
+        fields = (
+            'numero',
+            'nombre',
+            'tipo_persona',
+            'area',
+            'comuna',
+            'comentarios',
+        )
+        widgets = {
+            'numero': forms.HiddenInput(),
+            'nombre': forms.TextInput(
+                attrs={'required': 'required', 'autofocus': 'autofocus'}),
+            'tipo_persona': forms.Select(
+                attrs={'required': 'required'}),
+            'area': forms.Select(
+                attrs={'required': 'required'}),
+            'comuna': forms.Select(
+                attrs={'required': 'required'}),
+            'comentarios': forms.Textarea(
+                attrs={'required': 'required', 'class': 'text'}),
+        }

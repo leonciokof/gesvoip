@@ -16,8 +16,8 @@
     <label>Administracion de Lineas/Clientes</label>
     <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
       <option selected>Seleccionar Opción</option>
-      <option value='sti_lineas.php'>Buscar/Modificar Lineas</option>
-      <option value='sti_informe_lineas.php'>Informe Lineas en Servicio</option>
+      <option value="{% url 'sti:sti_lineas' %}">Buscar/Modificar Lineas</option>
+      <option value="{% url 'sti:sti_informe_lineas' %}">Informe Lineas en Servicio</option>
       <option value='sti_informe_lineas.php'>Informe Suscriptores (Voip)</option>
       <option value='sti_ingresa_portado.php'>Ingresa Portado</option>
       <option value='ingresa_rango_portados.php'>Ingresa Rango Portados</option>

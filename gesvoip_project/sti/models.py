@@ -1,6 +1,8 @@
 from django.db import models
 import django.db.models.options as options
 
+from . import choices
+
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('in_db',)
 
@@ -60,13 +62,37 @@ class Companias(models.Model):
 
 
 class Lineas(models.Model):
-    numero = models.IntegerField(blank=True, null=True)
+    numero = models.IntegerField(primary_key=True)
     nombre = models.CharField(max_length=250, blank=True)
-    tipo_persona = models.CharField(max_length=250, blank=True)
-    comentarios = models.CharField(max_length=9999, blank=True)
-    area = models.CharField(max_length=10, blank=True)
-    comuna = models.CharField(max_length=10, blank=True)
+    tipo_persona = models.CharField(
+        max_length=250, blank=True, choices=choices.TIPO_PERSONAS)
+    comentarios = models.TextField(blank=True)
+    area = models.CharField(
+        max_length=10, blank=True, choices=choices.PRIMARIAS)
+    comuna = models.CharField(
+        max_length=10, blank=True, choices=choices.COMUNAS)
 
     class Meta:
         db_table = 'lineas'
         in_db = 'sti'
+
+
+class PnMtc(models.Model):
+    ip_empresa = models.CharField(max_length=20, blank=True)
+    rut_propietario = models.CharField(max_length=12, blank=True)
+    numero_telefono = models.CharField(primary_key=True, max_length=12)
+    tipo_servicio = models.IntegerField(
+        blank=True, null=True, choices=choices.TIPO_SERVICIOS)
+    modalidad = models.IntegerField(
+        blank=True, null=True, choices=choices.MODALIDADES)
+    deuda_vencida = models.DecimalField(
+        max_digits=19, decimal_places=5, blank=True, null=True)
+    estado = models.IntegerField(
+        blank=True, null=True, choices=choices.ESTADOS)
+    id_documento = models.CharField(max_length=20)
+    tipo_servicio_especial = models.IntegerField(
+        blank=True, null=True, choices=choices.TIPO_SERVICIO_ESPECIALES)
+
+    class Meta:
+        db_table = 'pn_mtc'
+        in_db = 'portabilidad'

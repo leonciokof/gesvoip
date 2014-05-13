@@ -78,6 +78,11 @@ DATABASES = {
             'STI_DB_URL', 'postgres://postgres@127.0.0.1/sti'
         )
     ),
+    'portabilidad': dj_database_url.parse(
+        os.environ.get(
+            'PORTABILIDAD_DB_URL', 'postgres://postgres@127.0.0.1/portabilidad'
+        )
+    ),
 }
 
 DATABASE_ROUTERS = [

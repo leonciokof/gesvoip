@@ -1,0 +1,14 @@
+{% extends "sti/base_intranet.html" %}
+
+{% block title %}Ingresar Local - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Ingresar Local</h1>{% endblock title2 %}
+
+{% block content %}
+  <div id="datos">
+    <form id="IngresaLocal" name="IngresaLocal" class="formulario" method="post">
+      {% csrf_token %}
+      {{ form }}
+      <input name="guardar" type="submit" value="Guardar" id="guardar" />
+    </form>
+  </div>
+{% endblock content %}
