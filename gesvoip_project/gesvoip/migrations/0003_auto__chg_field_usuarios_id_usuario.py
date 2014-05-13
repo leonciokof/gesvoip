@@ -14,7 +14,7 @@ class Migration(SchemaMigration):
         # self.gf('django.db.models.fields.AutoField')(primary_key=True))
         db.execute("CREATE SEQUENCE usuarios_id_usuario_seq")
         db.execute(
-            "SELECT SETVAL('usuarios_id_usuario_seq', (SELECT MAX(id_usuario) FROM usuarios))")
+            "SELECT SETVAL('usuarios_id_usuario_seq', (SELECT MAX(id_usuario) FROM usuarios)::int)")
         db.execute(
             "ALTER TABLE usuarios ALTER COLUMN id_usuario SET DEFAULT nextval('usuarios_id_usuario_seq'::regclass)")
 

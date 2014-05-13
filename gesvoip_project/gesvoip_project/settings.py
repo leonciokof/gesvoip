@@ -44,6 +44,7 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'south',
     'gesvoip',
+    'sti',
 )
 
 if DEBUG:

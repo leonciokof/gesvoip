@@ -1,0 +1,33 @@
+{% extends "sti/base_intranet.html" %}
+
+{% block title %}Ingresar Local - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Ingresar Local</h1>{% endblock title2 %}
+
+{% block content %}
+  <div id="datos">
+    <form id="MuestraLocales" name="MuestraLocales" class="formulario" method="post" target="_blank">
+      <table border="0" align="center" cellpadding="0" cellspacing="0" class="display" id="tabla">
+        <thead>
+          <tr>
+            <th>Codigo Empresa</th>
+            <th>Codigo Local</th>
+            <th>Descripcion Local</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for obj in object_list %}
+          <tr>
+            <td>{{ obj.cod_empresa }}</td>
+            <td>{{ obj.cod_centro_local }}</td>
+            <td>{{ obj.desp_centro_local }}</td>
+            <td>
+              <a href="{% url 'sti:sti_locales3' obj.cod_centro_local %}">Modificar</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
+  </div>
+{% endblock content %}

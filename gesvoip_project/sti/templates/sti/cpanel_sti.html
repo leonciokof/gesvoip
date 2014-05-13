@@ -1,0 +1,49 @@
+{% extends "gesvoip/base.html" %}
+
+{% block title %}Cpanel{% endblock title %}
+{% block title2 %}<h1>Bienvenido {{ user.get_full_name }}</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="cpanel" name="cpanel" class="formulario" method="post" action="logout.php">
+    <label>Administracion de Locales</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+      <option selected>Seleccionar Opción</option>
+      <option value="{% url 'sti:sti_locales' %}">Ingresar Local</option>
+      <option value='sti_locales2.php'>Buscar/Modificar Local</option>
+      <option value='sti_informe_locales.php'>Informe Centros Locales</option>
+    </select>
+
+    <label>Administracion de Lineas/Clientes</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+      <option selected>Seleccionar Opción</option>
+      <option value='sti_lineas.php'>Buscar/Modificar Lineas</option>
+      <option value='sti_informe_lineas.php'>Informe Lineas en Servicio</option>
+      <option value='sti_informe_lineas.php'>Informe Suscriptores (Voip)</option>
+      <option value='sti_ingresa_portado.php'>Ingresa Portado</option>
+      <option value='ingresa_rango_portados.php'>Ingresa Rango Portados</option>
+    </select>
+
+    <label>Administracion de CCAA</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+      <option selected>Seleccionar Opción</option>
+      <option value='sti_ccaa.php'>Ingresar CCAA</option>
+      <option value='sti_informe_ccaa.php'>Informe CCAA</option>
+    </select>
+
+    <label>Informe de Traficos</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+      <option selected>Seleccionar Opción</option>
+      <option value='genera_trafico.php'>Generar informe de trafico</option>
+    </select>
+
+    <label>Administracion de CDR</label>
+    <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
+      <option selected>Seleccionar Opción</option>
+      <option value='sti_carga_cdr.php'>Cargar CDR</option>
+      <option value='sti_procesa_cdr.php'>Procesar CDR</option>
+      <option value='sti_consulta_cdr.php'>Consulta CDR</option>
+    </select>
+
+    <input type="submit" name="cerrar" value="Cerrar sesion" />
+  </form>
+{% endblock content %}

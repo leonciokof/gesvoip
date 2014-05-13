@@ -9,7 +9,7 @@
     <select name="select2" onChange="MM_jumpMenu('parent',this,0)">
       <option selected>Seleccionar Opción</option>
       <option value="{% url 'gesvoip:cpanel_gesvoip' %}">Acceso Administracion de Cargos de Acceso</option>
-      <option value="#">Acceso a Administracion de STI</option>
+      <option value="{% url 'sti:cpanel_sti' %}">Acceso a Administracion de STI</option>
     </select>
     <input type="submit" name="cerrar" value="Cerrar sesion" />
   </form>

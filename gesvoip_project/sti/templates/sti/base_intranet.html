@@ -1,0 +1,53 @@
+{% extends "gesvoip/base.html" %}
+
+{% block menu %}
+  <nav>
+    <ul id="menu">
+    <li><a href="#">Sesion</a>
+      <ul id="open">
+        <li><a href="{% url 'sti:cpanel_sti' %}">Inicio</a></li>
+        <li><a href="/logout?next=/">Cerrar sesion</a></li>
+      </ul>
+    </li>
+    <li><a href="#">Locales</a>
+      <ul>
+        <li><a href="{% url 'sti:sti_locales' %}">Ingresar Local</a></li>
+        <li><a href="{% url 'sti:sti_locales2' %}">Buscar/Modificar</a></li>
+        <li><a href='sti_informe_locales.php'>Informe Locales</a></li>
+      </ul>
+    </li>
+    <li><a href="#">Lineas/Clientes</a>
+      <ul>
+        <li><a href='sti_lineas.php'>Buscar/Modificar</a></li>
+        <li><a href='sti_informe_lineas.php'>Informe Lineas</a></li>
+        <li><a href='sti_informe_suscriptores.php'>Informe Suscriptores(Voip)</a></li>
+        <li><a href='sti_ingresa_portado.php'>Ingresa Portado</a></li>
+        <li><a href='ingresa_rango_portados.php'>Ingresa Rango Portados</a></li>
+      </ul>
+    </li>
+    <li><a href="#">CCAA</a>
+      <ul>
+        <li><a href='sti_ccaa.php'>Ingresar CCAA</a></li>
+        <li><a href='sti_informe_ccaa.php'>Informe CCAA</a></li>
+      </ul>
+    </li>
+    <li><a href="#">Informes Trafico</a>
+      <ul>
+        <li><a href='genera_trafico.php'>Generar informe de trafico</a></li>
+      </ul>
+    </li>
+    <li><a href="#">CDR</a>
+      <ul>
+        <li><a href='sti_carga_cdr.php'>Cargar</a></li>
+        <li><a href='sti_procesa_cdr.php'>Procesar</a></li>
+        <li><a href="sti_consulta_cdr.php">Consultar</a></li>
+      </ul>
+    </li>
+    <li><a href="#">Portados</a>
+      <ul>
+        <li><a href='carga_portados3.php'>Cargar y procesar</a></li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+{% endblock menu %}
