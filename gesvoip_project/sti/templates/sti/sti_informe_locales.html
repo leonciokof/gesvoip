@@ -1,0 +1,12 @@
+{% extends "sti/base_intranet.html" %}
+
+{% block title %}Genera Informe Locales - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Genera Informe Locales</h1>{% endblock title2 %}
+
+{% block content %}
+  <form name="cargaCdr" id="cargaCdr" class="formulario" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" name="generar" id="generar" value="Generar">
+  </form>
+{% endblock content %}

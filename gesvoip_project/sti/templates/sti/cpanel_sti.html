@@ -9,8 +9,8 @@
     <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
       <option selected>Seleccionar Opción</option>
       <option value="{% url 'sti:sti_locales' %}">Ingresar Local</option>
-      <option value='sti_locales2.php'>Buscar/Modificar Local</option>
-      <option value='sti_informe_locales.php'>Informe Centros Locales</option>
+      <option value="{% url 'sti:sti_locales2' %}">Buscar/Modificar Local</option>
+      <option value="{% url 'sti:sti_informe_locales' %}">Informe Centros Locales</option>
     </select>
 
     <label>Administracion de Lineas/Clientes</label>

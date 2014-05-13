@@ -3,6 +3,7 @@
 from django import forms
 
 from . import models
+from gesvoip import choices
 
 
 class CentrosLocalesForm(forms.ModelForm):
@@ -39,3 +40,19 @@ class UpdateCentrosLocalesForm(forms.ModelForm):
             'desp_centro_local': forms.TextInput(
                 attrs={'required': 'required'}),
         }
+
+
+class FechaForm(forms.Form):
+
+    MONTHS = list(choices.MONTHS)
+    MONTHS.insert(0, ('', '---------'))
+    YEARS = choices.YEARS
+    YEARS.insert(0, ('', '---------'))
+    month = forms.ChoiceField(
+        label='Mes',
+        choices=MONTHS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    year = forms.ChoiceField(
+        label='Año',
+        choices=YEARS,
+        widget=forms.Select(attrs={'required': 'required'}))
