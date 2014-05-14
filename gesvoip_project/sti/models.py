@@ -78,20 +78,21 @@ class Lineas(models.Model):
 
 
 class PnMtc(models.Model):
-    ip_empresa = models.CharField(max_length=20, blank=True)
+    ip_empresa = models.CharField(max_length=20, blank=True, default='333')
     rut_propietario = models.CharField(max_length=12, blank=True)
-    numero_telefono = models.CharField(primary_key=True, max_length=12)
+    numero_telefono = models.CharField(primary_key=True, max_length=12,)
     tipo_servicio = models.IntegerField(
-        blank=True, null=True, choices=choices.TIPO_SERVICIOS)
+        blank=True, null=True, choices=choices.TIPO_SERVICIOS, default=2)
     modalidad = models.IntegerField(
-        blank=True, null=True, choices=choices.MODALIDADES)
+        blank=True, null=True, choices=choices.MODALIDADES, default=1)
     deuda_vencida = models.DecimalField(
-        max_digits=19, decimal_places=5, blank=True, null=True)
+        max_digits=19, decimal_places=5, blank=True, null=True, default=0.0000)
     estado = models.IntegerField(
-        blank=True, null=True, choices=choices.ESTADOS)
+        blank=True, null=True, choices=choices.ESTADOS, default=1)
     id_documento = models.CharField(max_length=20)
     tipo_servicio_especial = models.IntegerField(
-        blank=True, null=True, choices=choices.TIPO_SERVICIO_ESPECIALES)
+        blank=True, null=True, choices=choices.TIPO_SERVICIO_ESPECIALES,
+        default=0)
 
     class Meta:
         db_table = 'pn_mtc'

@@ -22,4 +22,8 @@ urlpatterns = patterns(
         'sti_informe_suscriptores', name='sti_informe_suscriptores'),
     url(r'^sti_informe_suscriptores2/(?P<year>\d+)/(?P<month>\d+)/$',
         'sti_informe_suscriptores2', name='sti_informe_suscriptores2'),
+    url(r'^sti_ingresa_portado/$',
+        'sti_ingresa_portado', name='sti_ingresa_portado'),
+    url(r'^ingresa_rango_portados/$',
+        'ingresa_rango_portados', name='ingresa_rango_portados'),
 )

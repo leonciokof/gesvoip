@@ -331,3 +331,77 @@ class sti_informe_suscriptores2View(CSVResponseMixin, generic.TemplateView):
         return context
 
 sti_informe_suscriptores2 = sti_informe_suscriptores2View.as_view()
+
+
+class sti_ingresa_portadoView(generic.FormView):
+
+    """ Vista de sti_ingresa_portado """
+
+    form_class = forms.PortadoForm
+    success_url = reverse_lazy('sti:sti_ingresa_portado')
+    template_name = 'sti/sti_ingresa_portado.html'
+
+    def form_valid(self, form):
+        numero = form.cleaned_data.get('numero')
+        models.PnMtc(numero_telefono=numero).save()
+        models.Lineas(numero=numero).save()
+
+        return super(sti_ingresa_portadoView, self).form_valid(form)
+
+sti_ingresa_portado = sti_ingresa_portadoView.as_view()
+
+
+class ingresa_rango_portadosView(generic.FormView):
+
+    """ Vista de ingresa_rango_portados """
+
+    form_class = forms.RangoPortadoForm
+    success_url = reverse_lazy('sti:ingresa_rango_portados')
+    template_name = 'sti/ingresa_rango_portados.html'
+
+    def form_valid(self, form):
+        pnmtc = []
+        lineas = []
+        rango_inicio = form.cleaned_data.get('rango_inicio')
+        rango_fin = form.cleaned_data.get('rango_fin')
+        rut = form.cleaned_data.get('rut')
+        tipo_servicio = form.cleaned_data.get('tipo_servicio')
+        modalidad = form.cleaned_data.get('modalidad')
+        deuda = form.cleaned_data.get('deuda')
+        documento = form.cleaned_data.get('documento')
+        servicio_especial = form.cleaned_data.get('servicio_especial')
+        estado = form.cleaned_data.get('estado')
+        nombre_cliente = form.cleaned_data.get('nombre_cliente')
+        tipo_persona = form.cleaned_data.get('tipo_persona')
+        zona_primaria = form.cleaned_data.get('zona_primaria')
+        comuna = form.cleaned_data.get('comuna')
+        comentarios = form.cleaned_data.get('comentarios')
+
+        if rango_inicio > rango_fin:
+            return self.form_invalid(form)
+
+        else:
+            for i in range(rango_inicio, rango_fin + 1):
+                pnmtc.append(models.PnMtc(
+                    rut_propietario=rut,
+                    numero_telefono=i,
+                    tipo_servicio=tipo_servicio,
+                    modalidad=modalidad,
+                    deuda_vencida=deuda,
+                    estado=estado,
+                    id_documento=documento,
+                    tipo_servicio_especial=servicio_especial))
+                lineas.append(models.Lineas(
+                    numero=i,
+                    nombre=nombre_cliente,
+                    tipo_persona=tipo_persona,
+                    comentarios=comentarios,
+                    area=zona_primaria,
+                    comuna=comuna))
+
+            models.PnMtc.objects.bulk_create(pnmtc)
+            models.Lineas.objects.bulk_create(lineas)
+
+        return super(ingresa_rango_portadosView, self).form_valid(form)
+
+ingresa_rango_portados = ingresa_rango_portadosView.as_view()

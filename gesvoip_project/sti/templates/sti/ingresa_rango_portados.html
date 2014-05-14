@@ -1,0 +1,12 @@
+{% extends "sti/base_intranet.html" %}
+
+{% block title %}Ingresar Rango de Numeros Portados - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Ingresar Rango de Numeros Portados</h1>{% endblock title2 %}
+
+{% block content %}
+  <form id="ingresaUser" name="ingresaUser" class="formulario" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" name="enviar" value="Enviar" />
+  </form>
+{% endblock content %}

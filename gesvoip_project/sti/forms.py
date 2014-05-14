@@ -2,8 +2,9 @@
 
 from django import forms
 
-from . import models
-from gesvoip import choices
+from . import choices, models
+from gesvoip.choices import MONTHS, YEARS
+from gesvoip.forms import NumberTextInput
 
 
 class CentrosLocalesForm(forms.ModelForm):
@@ -44,9 +45,9 @@ class UpdateCentrosLocalesForm(forms.ModelForm):
 
 class FechaForm(forms.Form):
 
-    MONTHS = list(choices.MONTHS)
+    MONTHS = list(MONTHS)
     MONTHS.insert(0, ('', '---------'))
-    YEARS = choices.YEARS
+    YEARS = YEARS
     YEARS.insert(0, ('', '---------'))
     month = forms.ChoiceField(
         label='Mes',
@@ -132,3 +133,66 @@ class LineasForm(forms.ModelForm):
             'comentarios': forms.Textarea(
                 attrs={'required': 'required', 'class': 'text'}),
         }
+
+
+class PortadoForm(forms.Form):
+
+    numero = forms.IntegerField(
+        widget=forms.TextInput(
+            attrs={
+                'required': 'required', 'autofocus': 'autofocus',
+                'class': 'text', 'placeholder': '56XXXXXXXX'}))
+
+
+class RangoPortadoForm(forms.Form):
+
+    TIPO_SERVICIOS = list(choices.TIPO_SERVICIOS)
+    TIPO_SERVICIOS.insert(0, ('', '---------'))
+    MODALIDADES = list(choices.MODALIDADES)
+    MODALIDADES.insert(0, ('', '---------'))
+    TIPO_SERVICIO_ESPECIALES = list(choices.TIPO_SERVICIO_ESPECIALES)
+    TIPO_SERVICIO_ESPECIALES.insert(0, ('', '---------'))
+    ESTADOS = list(choices.ESTADOS)
+    ESTADOS.insert(0, ('', '---------'))
+    TIPO_PERSONAS = list(choices.TIPO_PERSONAS)
+    TIPO_PERSONAS.insert(0, ('', '---------'))
+    PRIMARIAS = list(choices.PRIMARIAS)
+    PRIMARIAS.insert(0, ('', '---------'))
+    COMUNAS = list(choices.COMUNAS)
+    COMUNAS.insert(0, ('', '---------'))
+    rango_inicio = forms.IntegerField(
+        widget=NumberTextInput(
+            attrs={
+                'required': 'required', 'autofocus': 'autofocus',
+                'placeholder': '56XXXXXXXX'}))
+    rango_fin = forms.IntegerField(
+        widget=NumberTextInput(
+            attrs={
+                'required': 'required', 'placeholder': '56XXXXXXXX'}))
+    rut = forms.CharField()
+    tipo_servicio = forms.ChoiceField(
+        choices=TIPO_SERVICIOS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    modalidad = forms.ChoiceField(
+        choices=MODALIDADES,
+        widget=forms.Select(attrs={'required': 'required'}))
+    deuda = forms.FloatField(widget=NumberTextInput(), required=False)
+    documento = forms.CharField(required=False)
+    especial = forms.ChoiceField(
+        choices=TIPO_SERVICIO_ESPECIALES,
+        widget=forms.Select(attrs={'required': 'required'}))
+    estado = forms.ChoiceField(
+        choices=ESTADOS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    nombre_cliente = forms.CharField()
+    tipo_persona = forms.ChoiceField(
+        choices=TIPO_PERSONAS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    zona_primaria = forms.ChoiceField(
+        choices=PRIMARIAS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    comuna = forms.ChoiceField(
+        choices=COMUNAS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    comentarios = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'text'}), required=False)
