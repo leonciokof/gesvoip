@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.views import generic
 
 from . import forms, models
+from gesvoip.models import LogLlamadas
 
 
 class CSVResponseMixin(object):
@@ -427,3 +428,108 @@ class sti_ccaaView(generic.CreateView):
         return super(sti_ccaaView, self).form_valid(form)
 
 sti_ccaa = sti_ccaaView.as_view()
+
+
+class sti_informe_ccaaView(generic.FormView):
+
+    """ Vista de sti_informe_ccaa """
+
+    form_class = forms.FechaForm
+    template_name = 'sti/sti_informe_ccaa.html'
+
+    def form_valid(self, form):
+        self.year = form.cleaned_data.get('year')
+        self.month = form.cleaned_data.get('month')
+
+        return super(sti_informe_ccaaView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'sti:sti_informe_ccaa2',
+            kwargs={'year': self.year, 'month': self.month})
+
+sti_informe_ccaa = sti_informe_ccaaView.as_view()
+
+
+class sti_informe_ccaa2View(CSVResponseMixin, generic.TemplateView):
+
+    """ Vista de sti_informe_ccaa2 """
+
+    template_name = 'sti/sti_informe_ccaa2.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            sti_informe_ccaa2View, self).get_context_data(**kwargs)
+        fecha = '{0}{1}'.format(kwargs.get('year'), kwargs.get('month'))
+        title = 'OT_314_{0}_CARGOS_ACC.txt'.format(fecha)
+        items = [
+            [
+                314, fecha, i.concecionaria, i.n_factura, i.fecha_inicio,
+                i.fecha_fin, i.fecha_fact, i.horario, i.trafico, i.monto
+            ]
+            for i in models.Ccaa.objects.filter(periodo=fecha)
+        ]
+        context.update({'title': title, 'items': items})
+
+        return context
+
+sti_informe_ccaa2 = sti_informe_ccaa2View.as_view()
+
+
+class genera_traficoView(generic.FormView):
+
+    """ Vista de genera_trafico """
+
+    form_class = forms.FechaTipoForm
+    template_name = 'sti/genera_trafico.html'
+
+    def form_valid(self, form):
+        self.year = form.cleaned_data.get('year')
+        self.month = form.cleaned_data.get('month')
+        self.tipo = form.cleaned_data.get('tipo')
+
+        return super(genera_traficoView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'sti:genera_trafico2',
+            kwargs={'tipo': self.tipo, 'year': self.year, 'month': self.month})
+
+genera_trafico = genera_traficoView.as_view()
+
+
+class genera_trafico2View(CSVResponseMixin, generic.TemplateView):
+
+    """ Vista de genera_trafico2 """
+
+    template_name = 'sti/genera_trafico2.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            genera_trafico2View, self).get_context_data(**kwargs)
+        items = []
+        fecha = '{0}{1}'.format(kwargs.get('year'), kwargs.get('month'))
+        fecha2 = '{0}-{1}'.format(kwargs.get('year'), kwargs.get('month'))
+        title = 'OT_314_{0}_CARGOS_ACC.txt'.format(fecha)
+        tipo = kwargs.get('tipo')
+
+        if tipo == 'local':
+            items = LogLlamadas.get_trafico_local(fecha2)
+
+        # elif tipo == 'voip-local':
+        #     items = LogLlamadas.get_trafico_voip_local(fecha)
+
+        # elif tipo == 'movil':
+        #     items = LogLlamadas.get_trafico_movil(fecha)
+
+        # elif tipo == 'voip-movil':
+        #     items = LogLlamadas.get_trafico_voip_movil(fecha)
+
+        # elif tipo == 'distancia':
+        #     items = LogLlamadas.get_trafico_nacional(fecha)
+
+        context.update({'title': title, 'items': items})
+
+        return context
+
+genera_trafico2 = genera_trafico2View.as_view()

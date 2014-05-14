@@ -43,6 +43,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'south',
+    'djrill',
     'gesvoip',
     'sti',
 )
@@ -120,3 +121,7 @@ STATICFILES_FINDERS = (
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
+
+MANDRILL_API_KEY = os.environ.get('MANDRILL_API_KEY')
+
+EMAIL_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'

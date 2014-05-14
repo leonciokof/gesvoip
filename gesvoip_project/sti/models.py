@@ -26,7 +26,7 @@ class Ccaa(models.Model):
 
 
 class Cdr(models.Model):
-    id_log = models.IntegerField()
+    id_log = models.AutoField(primary_key=True)
     ani_number = models.IntegerField(blank=True, null=True)
     ingress_duration = models.IntegerField(blank=True, null=True)
     final_number = models.CharField(max_length=100, blank=True)

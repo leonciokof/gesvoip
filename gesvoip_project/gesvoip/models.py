@@ -12,6 +12,7 @@ from djorm_pgarray.fields import ArrayField
 from nptime import nptime
 
 from . import choices, patterns
+from sti.models import Lineas, Cdr as CdrSti
 
 
 class Cdr(models.Model):
@@ -1154,6 +1155,326 @@ class LogLlamadas(models.Model):
 
     def __unicode__(self):
         return u'{0} {1}'.format(self.date, self.hora)
+
+    @classmethod
+    def get_llamadas_salientes(cls, fecha, tipo):
+        """
+        Metodo que obtiene las llamadas salientes en la tabla cdr de la base de
+        datos sti
+        """
+        cdrs = CdrSti.objects.filter(
+            fecha_cdr=fecha, descripcion=tipo).exclude(estado='desactivado')
+
+        for c in cdrs:
+            linea = Lineas.objects.filter(numero=c.ani_number)
+            c.linea = linea[0] if linea.count() > 0 else None
+
+        return cdrs
+
+    @classmethod
+    def get_dic_llamada_tiempo_by_idd(cls, fecha, tipo):
+        """
+        Metodo que obtiene la cantidad y tiempo de llamadas salientes para
+        cada compania
+        """
+        cdr_idd = CdrSti.objects.filter(
+            fecha_cdr=fecha, descripcion=tipo).exclude(estado='desactivado')
+        dic_llamada = {
+            c.idd: {
+                'normal': {'natural': 0, 'empresa': 0},
+                'reducido': {'natural': 0, 'empresa': 0},
+                'nocturno': {'natural': 0, 'empresa': 0}
+            }
+            for c in cdr_idd
+        }
+        dic_tiempo = {
+            c.idd: {
+                'normal': {'natural': 0, 'empresa': 0},
+                'reducido': {'natural': 0, 'empresa': 0},
+                'nocturno': {'natural': 0, 'empresa': 0}
+            }
+            for c in cdr_idd
+        }
+
+        cdrs = cls.get_llamadas_salientes(fecha, tipo)
+
+        for llamada in cdrs:
+            tipo_horario = cls.get_horario(llamada.hora, llamada.fecha)
+            if llamada.linea:
+                if llamada.linea.tipo_persona == 'Natural':
+                    dic_tiempo[llamada.idd][tipo_horario][
+                        'natural'] += llamada.ingress_duration
+                    dic_llamada[llamada.idd][tipo_horario]['natural'] += 1
+
+                else:
+                    dic_tiempo[llamada.idd][tipo_horario][
+                        'empresa'] += llamada.ingress_duration
+                    dic_llamada[llamada.idd][tipo_horario]['empresa'] += 1
+
+        return {
+            'llamada': dic_llamada, 'tiempo': dic_tiempo,
+            'log_llamadas': cdr_idd}
+
+    @classmethod
+    def get_companias_cod_empresa(cls):
+        """
+        Metodo que genera un diccionario con el iddido y el cod_empresa, ambos
+        de la tabla companias en la base de datos sti
+        """
+        return {
+            i.codigo: i.compania.codigo
+            for i in Ido.objects.exclude(codigo__isnull=True)}
+
+    @classmethod
+    def get_compania_id(cls):
+        """
+        Metodo que genera un diccionario con el id_compania y el id, ambos de
+        la tabla compania en la base de datos gesvoip
+        """
+        return {
+            c.id_compania: c.id
+            for c in Compania.objects.exclude(id__isnull=True)}
+
+    @classmethod
+    def get_horario(cls, hora, fecha):
+        """
+        Metodo que determina el tipo de horario de una llamada
+        :param hora: Hora de la llamada.
+        :type hora: datetime.time
+        :param fecha: Fecha de la llamada.
+        :type fecha: datetime.date
+        """
+        if fecha.isoweekday() in range(1, 6):
+            if dt.time(8, 0) <= hora <= dt.time(19, 59, 59):
+                return 'normal'
+
+            elif dt.time(20, 0) <= hora <= dt.time(23, 59, 59):
+                return 'reducido'
+
+            elif dt.time(0, 0) <= hora <= dt.time(7, 59, 59):
+                return 'nocturno'
+
+        elif fecha.isoweekday() == 6:
+            if dt.time(8, 0) <= hora <= dt.time(13, 59, 59):
+                return 'normal'
+
+            elif dt.time(14, 0) <= hora <= dt.time(23, 59, 59):
+                return 'reducido'
+
+            elif dt.time(0, 0) <= hora <= dt.time(7, 59, 59):
+                return 'nocturno'
+
+        else:
+            if dt.time(8, 0) <= hora <= dt.time(23, 59, 59):
+                return 'reducido'
+
+            elif dt.time(0, 0) <= hora <= dt.time(23, 59, 59):
+                return 'nocturno'
+
+            else:
+                return ''
+
+    @classmethod
+    def get_tipo_persona(cls, tipo, fecha):
+        """
+        Metodo que obtiene el tipo de persona para un determinado numero
+        """
+        return {l.numero: l.tipo_persona for l in Lineas.objects.all()}
+
+    @classmethod
+    def get_llamadas_entrantes(cls, tipo, fecha):
+        """
+        Metodo que obtiene las llamadas entrantes en la tabla log_llamadas de
+        la base de datos gesvoip
+        """
+        return cls.objects.filter(
+            fecha=fecha, tipo=tipo).exclude(estado='desactivado')
+
+    @classmethod
+    def get_dic_llamada_tiempo_by_compania_ani(cls, tipo, fecha):
+        """
+        Metodo que obtiene la cantidad y tiempo de llamadas entrantes para
+        cada compania
+        """
+        logs = cls.objects.filter(
+            tipo=tipo, fecha=fecha
+        ).exclude(estado='desactivado').distinct('compania_ani')
+        dic_llamada = {
+            l.compania_ani: {
+                'normal': {'natural': 0, 'empresa': 0},
+                'reducido': {'natural': 0, 'empresa': 0},
+                'nocturno': {'natural': 0, 'empresa': 0}
+            }
+            for l in logs
+        }
+        dic_tiempo = {
+            l.compania_ani: {
+                'normal': {'natural': 0, 'empresa': 0},
+                'reducido': {'natural': 0, 'empresa': 0},
+                'nocturno': {'natural': 0, 'empresa': 0}
+            }
+            for l in logs
+        }
+        llamadas_entrantes = cls.get_llamadas_entrantes(tipo, fecha)
+        tipo_personas = cls.get_tipo_persona(tipo, fecha)
+
+        for llamada in llamadas_entrantes:
+            if (len(str(llamada.dialed_number)) == 8 and
+                    str(llamada.dialed_number)[0] == '2'):
+                numero = int('562' + str(llamada.dialed_number))
+
+                if numero in tipo_personas:
+                    tipo_persona = tipo_personas.get(numero)
+
+                else:
+                    tipo_persona = ''
+
+            else:
+                numero = int('56' + str(llamada.dialed_number))
+
+                if numero in tipo_personas:
+                    tipo_persona = tipo_personas.get(numero)
+
+                else:
+                    tipo_persona = ''
+
+            tipo_horario = cls.get_horario(llamada.hora, llamada.date)
+
+            if tipo_persona == 'Natural':
+                dic_tiempo[llamada.compania_ani][
+                    tipo_horario]['natural'] += llamada.ingress_duration
+                dic_llamada[llamada.compania_ani][
+                    tipo_horario]['natural'] += 1
+
+            else:
+                dic_tiempo[llamada.compania_ani][
+                    tipo_horario]['empresa'] += llamada.ingress_duration
+                dic_llamada[llamada.compania_ani][
+                    tipo_horario]['empresa'] += 1
+
+        return {
+            'llamada': dic_llamada, 'tiempo': dic_tiempo, 'log_llamadas': logs}
+
+    @classmethod
+    def get_trafico_local(cls, fecha):
+        """Metodo que obtiene el trafico de entrada para llamadas locales"""
+        items = []
+        tipo = 'local'
+        llamada_tiempo = cls.get_dic_llamada_tiempo_by_compania_ani(
+            tipo, fecha)
+        compania_id = cls.get_compania_id()
+        cod_empresa = cls.get_companias_cod_empresa()
+        dic_llamada = llamada_tiempo.get('llamada')
+        dic_tiempo = llamada_tiempo.get('tiempo')
+        logs = llamada_tiempo.get('log_llamadas')
+
+        for fila in logs:
+            if int(fila.compania_ani) in compania_id:
+                iddido = compania_id.get(int(fila.compania_ani))
+                interconexion = cod_empresa.get(iddido)
+                horarios = ('normal', 'reducido', 'nocturno')
+
+                if iddido is not None and interconexion is not None:
+                    for idx, horario in enumerate(horarios, start=4):
+                        if (dic_llamada.get(fila.compania_ani).get(
+                                horario).get('natural') > 0 and
+                                dic_tiempo.get(fila.compania_ani).get(
+                                horario).get('natural') > 0):
+                            items.append([
+                                314,
+                                fecha.replace('-', ''),
+                                'E',
+                                '06',
+                                2,
+                                int(interconexion),
+                                'TB',
+                                'RE',
+                                'NOR',
+                                '0{0}'.format(idx),
+                                dic_llamada.get(fila.compania_ani).get(
+                                    horario).get('natural'),
+                                int(
+                                    dic_tiempo.get(fila.compania_ani).get(
+                                        horario).get('natural'))])
+
+                        if (dic_llamada.get(fila.compania_ani).get(
+                                horario).get('empresa') > 0 and
+                                dic_tiempo.get(fila.compania_ani).get(
+                                horario).get('empresa') > 0):
+                            items.append([
+                                314,
+                                fecha.replace('-', ''),
+                                'E',
+                                '06',
+                                2,
+                                int(interconexion),
+                                'TB',
+                                'CO',
+                                'NOR',
+                                '0{0}'.format(idx),
+                                dic_llamada.get(fila.compania_ani).get(
+                                    horario).get('empresa'),
+                                int(
+                                    dic_tiempo.get(fila.compania_ani).get(
+                                        horario).get('empresa'))])
+
+        """Metodo que obtiene el trafico de salida para llamadas locales"""
+        llamada_tiempo = cls.get_dic_llamada_tiempo_by_idd(fecha, tipo)
+        cdr_idd = llamada_tiempo.get('log_llamadas')
+        compania_id = cls.get_compania_id()
+        cod_empresa = cls.get_companias_cod_empresa()
+
+        for fila in cdr_idd:
+            if fila.idd in compania_id:
+                iddido = compania_id.get(fila.idd)
+                interconexion = cod_empresa.get(iddido)
+                horarios = ('normal', 'reducido', 'nocturno')
+
+                if iddido is not None and interconexion is not None:
+                    for idx, horario in enumerate(horarios, start=4):
+                        if (dic_llamada.get(fila.idd).get(
+                                horario).get('natural') > 0 and
+                                dic_tiempo.get(fila.idd).get(
+                                horario).get('natural') > 0):
+                            items.append([
+                                314,
+                                fecha.replace('-', ''),
+                                'S',
+                                '06',
+                                2,
+                                int(interconexion),
+                                'TB',
+                                'RE',
+                                'NOR',
+                                '0{0}'.format(idx),
+                                dic_llamada.get(fila.idd).get(
+                                    horario).get('natural'),
+                                int(
+                                    dic_tiempo.get(fila.idd).get(
+                                        horario).get('natural'))])
+
+                        if (dic_llamada.get(fila.idd).get(
+                                horario).get('empresa') > 0 and
+                                dic_tiempo.get(fila.idd).get(
+                                horario).get('empresa') > 0):
+                            items.append([
+                                314,
+                                fecha.replace('-', ''),
+                                'S',
+                                '06',
+                                2,
+                                int(interconexion),
+                                'TB',
+                                'CO',
+                                'NOR',
+                                '0{0}'.format(idx),
+                                dic_llamada.get(fila.idd).get(
+                                    horario).get('empresa'),
+                                int(
+                                    dic_tiempo.get(fila.idd).get(
+                                        horario).get('empresa'))])
+
+        return items
 
 
 class Numeracion(models.Model):

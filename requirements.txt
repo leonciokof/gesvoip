@@ -4,6 +4,7 @@ bpython==0.12
 dj-database-url==0.3.0
 django-extensions==1.3.5
 djorm-ext-pgarray==0.10
+djrill==1.0.0
 nptime==0.4.0
 psycopg2==2.5.2
 python-dateutil==2.2

@@ -27,4 +27,12 @@ urlpatterns = patterns(
     url(r'^ingresa_rango_portados/$',
         'ingresa_rango_portados', name='ingresa_rango_portados'),
     url(r'^sti_ccaa/$', 'sti_ccaa', name='sti_ccaa'),
+    url(r'^sti_informe_ccaa/$',
+        'sti_informe_ccaa', name='sti_informe_ccaa'),
+    url(r'^sti_informe_ccaa2/(?P<year>\d+)/(?P<month>\d+)/$',
+        'sti_informe_ccaa2', name='sti_informe_ccaa2'),
+    url(r'^genera_trafico/$',
+        'genera_trafico', name='genera_trafico'),
+    url(r'^genera_trafico2/(?P<tipo>\w+)/(?P<year>\d+)/(?P<month>\d+)/$',
+        'genera_trafico2', name='genera_trafico2'),
 )

@@ -265,3 +265,26 @@ class CcaaForm(forms.ModelForm):
             'horario',
             'trafico',
             'monto']
+
+
+class FechaTipoForm(forms.Form):
+
+    YEARS = list(YEARS)
+    YEARS.insert(0, ('', '---------'))
+    MONTHS = list(MONTHS)
+    MONTHS.insert(0, ('', '---------'))
+    TRAFICOS = list(choices.TRAFICOS)
+    TRAFICOS.insert(0, ('', '---------'))
+    year = forms.ChoiceField(
+        label='Año',
+        choices=YEARS,
+        widget=forms.Select(
+            attrs={'required': 'required', 'autofocus': 'autofocus'}))
+    month = forms.ChoiceField(
+        label='Mes',
+        choices=MONTHS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    tipo = forms.ChoiceField(
+        label='Tipo trafico',
+        choices=TRAFICOS,
+        widget=forms.Select(attrs={'required': 'required'}))
