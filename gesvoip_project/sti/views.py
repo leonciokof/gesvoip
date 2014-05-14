@@ -280,3 +280,54 @@ class sti_informe_lineas2View(CSVResponseMixin, generic.TemplateView):
         return context
 
 sti_informe_lineas2 = sti_informe_lineas2View.as_view()
+
+
+class sti_informe_suscriptoresView(generic.FormView):
+
+    """ Vista de sti_informe_suscriptores """
+
+    form_class = forms.FechaForm
+    template_name = 'sti/sti_informe_suscriptores.html'
+
+    def form_valid(self, form):
+        self.year = form.cleaned_data.get('year')
+        self.month = form.cleaned_data.get('month')
+
+        return super(sti_informe_suscriptoresView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'sti:sti_informe_suscriptores2',
+            kwargs={'year': self.year, 'month': self.month})
+
+sti_informe_suscriptores = sti_informe_suscriptoresView.as_view()
+
+
+class sti_informe_suscriptores2View(CSVResponseMixin, generic.TemplateView):
+
+    """ Vista de sti_informe_suscriptores2 """
+
+    template_name = 'sti/sti_informe_suscriptores2.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            sti_informe_suscriptores2View, self).get_context_data(**kwargs)
+        items = []
+        fecha = '{0}{1}'.format(kwargs.get('year'), kwargs.get('month'))
+        title = 'VI_314_{0}_SUSCRIPTORES.txt'.format(fecha)
+        empresa = models.Lineas.objects.filter(
+            tipo_persona='Empresa', numero__regex=r'^5644690').count()
+        natural = models.Lineas.objects.filter(
+            tipo_persona='Natural', numero__regex=r'^5644690').count()
+
+        if natural > 0:
+            items.append([314, fecha, 'RE', natural])
+
+        if empresa > 0:
+            items.append([314, fecha, 'CO', empresa])
+
+        context.update({'title': title, 'items': items})
+
+        return context
+
+sti_informe_suscriptores2 = sti_informe_suscriptores2View.as_view()
