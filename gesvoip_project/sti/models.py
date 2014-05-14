@@ -8,14 +8,15 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('in_db',)
 
 
 class Ccaa(models.Model):
-    id_ccaa = models.IntegerField()
+    id_ccaa = models.AutoField(primary_key=True)
     periodo = models.CharField(max_length=100, blank=True)
     concecionaria = models.CharField(max_length=100, blank=True)
     n_factura = models.IntegerField(blank=True, null=True)
     fecha_inicio = models.CharField(max_length=100, blank=True)
     fecha_fin = models.CharField(max_length=100, blank=True)
     fecha_fact = models.CharField(max_length=100, blank=True)
-    horario = models.CharField(max_length=100, blank=True)
+    horario = models.CharField(
+        max_length=100, blank=True, choices=choices.HORARIOS)
     trafico = models.IntegerField(blank=True, null=True)
     monto = models.IntegerField(blank=True, null=True)
 

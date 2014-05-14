@@ -44,6 +44,8 @@ $.fn.accordion = function(custom) {
 
 $(document).ready(function(){
   <!-- Funcion Calendario -->
+  $(".datepicker").datepicker($.datepicker.regional['es']);
+  $(".datepicker").datepicker('option', {dateFormat: 'yy-mm-dd'});
   $( "#id_fecha" ).datepicker();
   $( "#id_fecha" ).datepicker($.datepicker.regional['es']);
   $( "#id_fecha" ).datepicker('option', {dateFormat: 'yy-mm-dd'});

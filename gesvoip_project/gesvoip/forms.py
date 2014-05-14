@@ -203,7 +203,7 @@ class CompaniaFechaForm(forms.Form):
 
     MONTHS = list(choices.MONTHS)
     MONTHS.insert(0, ('', '---------'))
-    YEARS = choices.YEARS
+    YEARS = list(choices.YEARS)
     YEARS.insert(0, ('', '---------'))
     compania = forms.ModelChoiceField(
         queryset=models.Compania.objects.all(),

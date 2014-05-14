@@ -265,11 +265,6 @@ class Compania(models.Model):
 
 
 class DetFactura(models.Model):
-    HORARIOS = (
-        ('normal', 'normal'),
-        ('reducido', 'reducido'),
-        ('nocturno', 'nocturno'),
-    )
     id_detalle = models.AutoField(primary_key=True)
     origen = models.IntegerField()
     destino = models.IntegerField()
@@ -277,7 +272,7 @@ class DetFactura(models.Model):
     hora = models.CharField(max_length=255)
     duracion = models.FloatField()
     tarifa = models.ForeignKey('Tarifa', db_column='tarifa')
-    horario = models.CharField(max_length=255, choices=HORARIOS)
+    horario = models.CharField(max_length=255, choices=choices.HORARIOS)
     valor = models.FloatField()
     compania = models.ForeignKey(Compania, db_column='compania')
     factura = models.ForeignKey('Factura', db_column='factura')
@@ -1104,19 +1099,9 @@ class Feriado(models.Model):
 
 
 class Horario(models.Model):
-    DIAS = (
-        ('habil', 'habil'),
-        ('sabado', 'sabado'),
-        ('festivo', 'festivo'),
-    )
-    TIPOS = (
-        ('normal', 'normal'),
-        ('reducido', 'reducido'),
-        ('nocturno', 'nocturno'),
-    )
     id = models.AutoField(primary_key=True)
-    dia = models.CharField(max_length=255, choices=DIAS)
-    tipo = models.CharField(max_length=255, choices=TIPOS)
+    dia = models.CharField(max_length=255, choices=choices.DIAS)
+    tipo = models.CharField(max_length=255, choices=choices.HORARIOS)
     inicio = models.TimeField(blank=True, null=True)
     fin = models.TimeField(blank=True, null=True)
     compania = models.ForeignKey(Compania, db_column='compania')
@@ -1146,15 +1131,6 @@ class Ido(models.Model):
 
 
 class LogLlamadas(models.Model):
-    COMPANIA_CDRS = (
-        ('ENTEL', 'ENTEL'),
-        ('CTC', 'CTC'),
-    )
-    ESTADOS = (
-        ('desactivado', 'desactivado'),
-        ('activado', 'activado'),
-        ('facturado', 'facturado'),
-    )
     id_log = models.AutoField(primary_key=True)
     connect_time = models.DateTimeField(blank=True, null=True)
     ani_number = models.CharField(max_length=255, blank=True)
@@ -1162,8 +1138,9 @@ class LogLlamadas(models.Model):
     dialed_number = models.CharField(max_length=255, blank=True)
     fecha = models.CharField(max_length=7, blank=True)
     compania_cdr = models.CharField(
-        max_length=255, blank=True, choices=COMPANIA_CDRS)
-    estado = models.CharField(max_length=255, blank=True, choices=ESTADOS)
+        max_length=255, blank=True, choices=choices.COMPANIAS)
+    estado = models.CharField(
+        max_length=255, blank=True, choices=choices.ESTADOS)
     motivo = models.CharField(max_length=255, blank=True)
     compania_ani = models.CharField(max_length=255, blank=True)
     tipo = models.CharField(max_length=100, blank=True)
@@ -1227,18 +1204,13 @@ class Portados(models.Model):
 
 
 class Tarifa(models.Model):
-    TIPOS = (
-        ('habil', 'habil'),
-        ('sabado', 'sabado'),
-        ('festivo', 'festivo'),
-    )
     id_tarifa = models.AutoField(primary_key=True)
     compania = models.ForeignKey(Compania, db_column='compania')
     fecha = models.DateField()
     valor_normal = models.FloatField()
     valor_reducido = models.FloatField()
     valor_nocturno = models.FloatField()
-    tipo = models.CharField(max_length=255, blank=True, choices=TIPOS)
+    tipo = models.CharField(max_length=255, blank=True, choices=choices.DIAS)
     id_ingreso = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -1310,17 +1282,13 @@ class Tarifa(models.Model):
 
 
 class Usuarios(models.Model):
-    ROLES = (
-        ('Operador', 'Operador'),
-        ('Administrador', 'Administrador'),
-    )
     id_usuario = models.AutoField(primary_key=True)
     usuario = models.CharField(max_length=255)
     password = models.CharField(max_length=255, blank=True)
     nombre = models.CharField(max_length=255)
     apellido = models.CharField(max_length=255)
     correo = models.EmailField(blank=True)
-    rol = models.CharField(max_length=255, choices=ROLES)
+    rol = models.CharField(max_length=255, choices=choices.ROLES)
 
     class Meta:
         db_table = 'usuarios'

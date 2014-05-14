@@ -5,6 +5,7 @@ from django import forms
 from . import choices, models
 from gesvoip.choices import MONTHS, YEARS
 from gesvoip.forms import NumberTextInput
+from gesvoip.models import Compania
 
 
 class CentrosLocalesForm(forms.ModelForm):
@@ -47,7 +48,7 @@ class FechaForm(forms.Form):
 
     MONTHS = list(MONTHS)
     MONTHS.insert(0, ('', '---------'))
-    YEARS = YEARS
+    YEARS = list(YEARS)
     YEARS.insert(0, ('', '---------'))
     month = forms.ChoiceField(
         label='Mes',
@@ -196,3 +197,71 @@ class RangoPortadoForm(forms.Form):
         widget=forms.Select(attrs={'required': 'required'}))
     comentarios = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'text'}), required=False)
+
+
+class CcaaForm(forms.ModelForm):
+
+    MONTHS = list(MONTHS)
+    MONTHS.insert(0, ('', '---------'))
+    YEARS = list(YEARS)
+    YEARS.insert(0, ('', '---------'))
+    month = forms.ChoiceField(
+        label='Mes',
+        choices=MONTHS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    year = forms.ChoiceField(
+        label='Año',
+        choices=YEARS,
+        widget=forms.Select(
+            attrs={'required': 'required', 'autofocus': 'autofocus'}))
+    concecionaria = forms.ModelChoiceField(
+        label='Concecionaria Interconectada',
+        queryset=Compania.objects.all(),
+        widget=forms.Select(attrs={'required': 'required'}))
+
+    class Meta:
+        model = models.Ccaa
+        fields = (
+            'n_factura',
+            'fecha_inicio',
+            'fecha_fin',
+            'fecha_fact',
+            'horario',
+            'trafico',
+            'monto',
+        )
+        labels = {
+            'n_factura': 'Numero Factura',
+            'fecha_fact': 'Fecha Emision Factura',
+            'horario': 'Tipo Horario',
+        }
+        widgets = {
+            'n_factura': NumberTextInput(
+                attrs={'required': 'required'}),
+            'fecha_inicio': forms.TextInput(
+                attrs={'required': 'required', 'class': 'datepicker'}),
+            'fecha_fin': forms.TextInput(
+                attrs={'required': 'required', 'class': 'datepicker'}),
+            'fecha_fact': forms.TextInput(
+                attrs={'required': 'required', 'class': 'datepicker'}),
+            'horario': forms.Select(
+                attrs={'required': 'required'}),
+            'trafico': NumberTextInput(
+                attrs={'required': 'required'}),
+            'monto': NumberTextInput(
+                attrs={'required': 'required'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CcaaForm, self).__init__(*args, **kwargs)
+        self.fields.keyOrder = [
+            'year',
+            'month',
+            'concecionaria',
+            'n_factura',
+            'fecha_inicio',
+            'fecha_fin',
+            'fecha_fact',
+            'horario',
+            'trafico',
+            'monto']

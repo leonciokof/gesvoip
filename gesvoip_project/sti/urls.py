@@ -26,4 +26,5 @@ urlpatterns = patterns(
         'sti_ingresa_portado', name='sti_ingresa_portado'),
     url(r'^ingresa_rango_portados/$',
         'ingresa_rango_portados', name='ingresa_rango_portados'),
+    url(r'^sti_ccaa/$', 'sti_ccaa', name='sti_ccaa'),
 )

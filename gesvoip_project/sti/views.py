@@ -405,3 +405,25 @@ class ingresa_rango_portadosView(generic.FormView):
         return super(ingresa_rango_portadosView, self).form_valid(form)
 
 ingresa_rango_portados = ingresa_rango_portadosView.as_view()
+
+
+class sti_ccaaView(generic.CreateView):
+
+    """ Vista de sti_ccaa """
+
+    form_class = forms.CcaaForm
+    success_url = reverse_lazy('sti:sti_ccaa')
+    template_name = 'sti/sti_ccaa.html'
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        year = form.cleaned_data.get('year')
+        month = form.cleaned_data.get('month')
+        concecionaria = form.cleaned_data.get('concecionaria')
+        self.object.periodo = '{0}{1}'.format(year, month)
+        self.object.concecionaria = concecionaria.codigo
+        self.object.save()
+
+        return super(sti_ccaaView, self).form_valid(form)
+
+sti_ccaa = sti_ccaaView.as_view()

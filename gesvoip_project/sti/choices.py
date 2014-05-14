@@ -429,3 +429,14 @@ TIPO_PERSONAS = (
     ('Natural', 'Natural'),
     ('Empresa', 'Empresa'),
 )
+
+TIPO_PERSONAS = (
+    ('Natural', 'Natural'),
+    ('Empresa', 'Empresa'),
+)
+
+HORARIOS = (
+    ('N', 'normal'),
+    ('R', 'reducido'),
+    ('O', 'nocturno'),
+)
