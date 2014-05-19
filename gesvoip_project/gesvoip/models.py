@@ -10,8 +10,11 @@ from django.db.models import Max, Min, Sum
 
 from djorm_pgarray.fields import ArrayField
 from nptime import nptime
+import mongoengine
 
 from . import choices, patterns
+
+mongoengine.connect('gesvoip2')
 
 
 class Cdr(models.Model):
@@ -40,8 +43,7 @@ class Cdr(models.Model):
         return u'{0} {1}'.format(self.fecha, self.compania)
 
     def valida_ani(self, ani):
-        if (search(patterns.pattern_zonas1, ani) and len(ani) == 11 or
-                search(patterns.pattern_zonas2, ani) and len(ani) == 10):
+        if len(ani) == 11:
             return True
 
         else:
@@ -50,71 +52,61 @@ class Cdr(models.Model):
     def get_activado_ctc(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
         if search(patterns.pattern_569, ani):
-            return True
+            return 'activado'
 
         elif (search(patterns.pattern_562, ani)
                 and not search(patterns.pattern_800, dialed_number)):
-            return True
+            return 'activado'
 
-        elif search(patterns.pattern_4469, dialed_number):
-            return True
-
-        elif search(patterns.pattern_04469, dialed_number):
-            return True
-
-        elif search(patterns.pattern_64469, dialed_number):
-            return True
+        elif search(patterns.pattern_4469v2, dialed_number):
+            return 'activado'
 
         else:
-            return False
+            return 'desactivado'
 
     def get_activado_entel(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
-        if search(patterns.pattern_0234469, dialed_number):
-            return True
-
-        elif search(patterns.pattern_4469, dialed_number):
-            return True
+        if search(patterns.pattern_0234469v2, dialed_number):
+            return 'activado'
 
         elif (search(patterns.pattern_64469, dialed_number) and
                 not search(patterns.pattern_112, dialed_number)):
-            return True
+            return 'activado'
 
         else:
-            return False
+            return 'desactivado'
 
     def get_zona_rango(self, ani):
-        """Funcion que determina el IDO de un ANI"""
+        """Retorna la zona y rango del ani_number"""
         if search(patterns.pattern_569, ani):
             return ani[2:][:1], ani[3:][:4]
 
-        elif search(patterns.pattern_92, ani):
+        elif search(patterns.pattern_9, ani):
             return ani[2:][:2], ani[4:][:4]
 
-        elif search(patterns.pattern_93, ani) and len(ani) == 11:
-            return ani[2:][:2], ani[4:][:4]
-
-        elif search(patterns.pattern_93, ani) and len(ani) == 10:
-            return ani[2:][:2], ani[4:][:3]
-
-        elif search(patterns.pattern_562, ani) and len(ani) == 11:
+        elif search(patterns.pattern_562, ani):
             return ani[2:][:1], ani[3:][:5]
 
         else:
             return ani[2:][:2], ani[4:][:3]
 
-    def get_compania(self, zona, rango, ani, portados, numeracion):
+    def get_compania(self, ani):
         """Funcion que retorna la compañia del numero de origen"""
-        numero = u'{0}{1}'.format(zona, rango)
+        portado = Portados.objects.filter(numero=ani).first()
 
-        if int(ani) in portados:
-            return portados[int(ani)]
-
-        elif numero in numeracion:
-            return numeracion[numero]
+        if portado is not None:
+            return portado.compania
 
         else:
-            return None
+            zona, rango = self.get_zona_rango(ani)
+            numeracion = Numeracion.objects.filter(
+                zona=zona, rango=rango).first()
+
+            if numeracion is not None:
+                return numeracion.compania
+
+            else:
+                return None
 
     def get_tipo(self, ani, final_number):
         """Funcion que determina el tipo de llamada"""
@@ -146,12 +138,6 @@ class Cdr(models.Model):
 
     def cargar_cdr(self):
         logs = []
-        portados = {
-            p.numero: Ido.objects.get(codigo=p.ido).compania.id_compania
-            for p in Portados.objects.all()}
-        numeracion = {
-            n.__unicode__(): n.compania.id_compania
-            for n in Numeracion.objects.all()}
 
         if self.compania == 'CTC':
             get_activado = self.get_activado_ctc
@@ -173,16 +159,14 @@ class Cdr(models.Model):
                         row['ANI'], row['DIALED_NUMBER'])
 
                 else:
-                    activado = False
+                    activado = 'desactivado'
                     observacion = 'ani invalido'
 
-                if activado:
-                    zona, rango = self.get_zona_rango(row['ANI'])
-                    compania_ani_number = self.get_compania(
-                        zona, rango, row['ANI'], portados, numeracion)
+                if activado == 'activado':
+                    compania_ani_number = self.get_compania(row['ANI'])
 
                     if compania_ani_number is None:
-                        activado = False
+                        activado = 'desactivado'
                         observacion = 'ani_number sin numeracion'
 
                     tipo = self.get_tipo(row['ANI'], row['DIALED_NUMBER'])
@@ -192,7 +176,6 @@ class Cdr(models.Model):
                     tipo = None
                     observacion = 'No cumple con los filtros'
 
-                activado = 'activado' if activado else 'desactivado'
                 ani_number = int(row['ANI_NUMBER']) if row[
                     'ANI_NUMBER'].isdigit() else None
                 ingress_duration = int(row['INGRESS_DURATION']) if row[
@@ -1357,3 +1340,53 @@ class ResumenFactura(models.Model):
     def __unicode__(self):
         return u'Resumen factura {0} desde {1} hasta {2}'.format(
             self.factura.pk, self.fecha_inicio, self.fecha_fin)
+
+
+class Numeration(mongoengine.EmbeddedDocument):
+
+    """Modelo de las numeraciones."""
+
+    zone = mongoengine.IntField()
+    _range = mongoengine.IntField()
+
+    def __unicode__(self):
+        return u'{0}{1}'.format(self.zone, self._range)
+
+
+class Schedule(mongoengine.EmbeddedDocument):
+
+    """Modelo de los horarios."""
+
+    BUSINESS = 'habil'
+    SATURDAY = 'sabado'
+    FESTIVE = 'festivo'
+    DAYS = (
+        (BUSINESS, 'Habil'), (SATURDAY, 'Sabado'), (FESTIVE, 'Festivo'))
+    NORMAL = 'normal'
+    REDUCED = 'reducido'
+    NIGHT = 'nocturno'
+    SCHEDULES = (
+        (NORMAL, 'Normal'), (REDUCED, 'Reducido'), (NIGHT, 'Nocturno'))
+    day = mongoengine.StringField(choices=DAYS)
+    schedule = mongoengine.StringField(choices=SCHEDULES)
+    start = mongoengine.StringField()
+    end = mongoengine.StringField()
+
+    def __unicode__(self):
+        return u'{0} {1} ({2}-{3})'.format(
+            self.day, self.schedule, self.start, self.end)
+
+
+class Company(mongoengine.Document):
+
+    """Modelo de compañias."""
+
+    name = mongoengine.StringField()
+    code = mongoengine.IntField()
+    numeration = mongoengine.ListField(
+        mongoengine.EmbeddedDocumentField(Numeration))
+    schedule = mongoengine.ListField(
+        mongoengine.EmbeddedDocumentField(Schedule))
+
+    def __unicode__(self):
+        return self.name
