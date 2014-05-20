@@ -13,8 +13,9 @@ from nptime import nptime
 import mongoengine
 
 from . import choices, patterns
+from sti.models import Lineas
 
-mongoengine.connect('gesvoip2')
+mongoengine.connect('gesvoip')
 
 
 class Cdr(models.Model):
@@ -136,6 +137,576 @@ class Cdr(models.Model):
             else:
                 return 'nacional'
 
+    def get_dia(self, fecha):
+        feriado = Feriado.objects.filter(fecha=fecha).first()
+
+        if feriado is not None:
+            return "festivo"
+
+        else:
+            if fecha.weekday() in range(5):
+                return "habil"
+
+            elif fecha.weekday() == 5:
+                return "sabado"
+
+            else:
+                return "festivo"
+
+    def horario_compania(self, fecha_llamada, hora_llamada, compania):
+        dia = self.get_dia(fecha_llamada)
+        normal = Horario.objects.filter(
+            compania=compania, dia=dia, tipo='normal').first()
+        reducido = Horario.objects.filter(
+            compania=compania, dia=dia, tipo='reducido').first()
+        nocturno = Horario.objects.filter(
+            compania=compania, dia=dia, tipo='nocturno').first()
+
+        if normal:
+            if normal.inicio < normal.fin:
+                if normal.inicio <= hora_llamada <= normal.fin:
+                    return "normal"
+            else:
+                if normal.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                    return "normal"
+                elif dt.time(0, 0) <= hora_llamada <= normal.fin:
+                    return "normal"
+
+        if reducido:
+            if reducido.inicio < reducido.fin:
+                if reducido.inicio <= hora_llamada <= reducido.fin:
+                    return "reducido"
+            else:
+                if reducido.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                    return "reducido"
+                elif dt.time(0, 0) <= hora_llamada <= reducido.fin:
+                    return "reducido"
+
+        if nocturno:
+            if nocturno.inicio < nocturno.fin:
+                if nocturno.inicio <= hora_llamada <= nocturno.fin:
+                    return "nocturno"
+            else:
+                if nocturno.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                    return "nocturno"
+                elif dt.time(0, 0) <= hora_llamada <= nocturno.fin:
+                    return "nocturno"
+
+    def split_horario(self, connect_time, duracion, compania):
+        fecha_llamada = connect_time.date()
+        dia = self.get_dia(fecha_llamada)
+        normal = Horario.objects.filter(
+            compania=compania, dia=dia, tipo='normal').first()
+        reducido = Horario.objects.filter(
+            compania=compania, dia=dia, tipo='reducido').first()
+        nocturno = Horario.objects.filter(
+            compania=compania, dia=dia, tipo='nocturno').first()
+        hora_inicio = nptime().from_time(connect_time.time())
+        hora_fin = hora_inicio + dt.timedelta(seconds=float(duracion))
+
+        if hora_inicio <= hora_fin:
+            if normal:
+                if hora_inicio < normal.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.inicio)
+                            ).total_seconds())
+                        },
+                    )
+                elif hora_inicio < normal.fin < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(normal.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if reducido:
+                if hora_inicio < reducido.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                reducido.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif hora_inicio < reducido.fin < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(reducido.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if nocturno:
+                if hora_inicio < nocturno.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                nocturno.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif hora_inicio < nocturno.fin < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(nocturno.fin)
+                            ).total_seconds())
+                        },
+                    )
+            return (
+                {
+                    'fecha_llamada': fecha_llamada,
+                    'hora_inicio': hora_inicio,
+                    'duracion': duracion,
+                },
+            )
+        else:
+            if normal:
+                if hora_inicio < normal.inicio < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.inicio
+                            ),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    normal.inicio)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+                elif hora_inicio < normal.fin < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(normal.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    normal.fin)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+
+                elif dt.time(0, 0) < normal.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.inicio) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                normal.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.inicio)
+                            ).total_seconds())
+                        },
+                    )
+                elif dt.time(0, 0) <= normal.fin <= hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.fin) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                normal.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if reducido:
+                if hora_inicio < reducido.inicio < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.inicio
+                            ),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    reducido.inicio)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+                elif hora_inicio < reducido.fin < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    reducido.fin)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+
+                elif dt.time(0, 0) < reducido.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.inicio) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                reducido.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                reducido.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif dt.time(0, 0) <= reducido.fin <= hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.fin) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                reducido.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(reducido.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if nocturno:
+                if hora_inicio < nocturno.inicio < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.inicio
+                            ),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    nocturno.inicio)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+                elif hora_inicio < nocturno.fin < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    nocturno.fin)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+
+                elif dt.time(0, 0) < nocturno.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.inicio) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                nocturno.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                nocturno.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif dt.time(0, 0) <= nocturno.fin <= hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.fin) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                nocturno.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(nocturno.fin)
+                            ).total_seconds())
+                        },
+                    )
+
+            return (
+                {
+                    'fecha_llamada': fecha_llamada,
+                    'hora_inicio': hora_inicio,
+                    'duracion': duracion
+                },
+            )
+
+    def get_entity(self, dialed_number):
+        if len(dialed_number) == 8 and dialed_number[0] == '2':
+            numero = int('562' + dialed_number)
+
+        else:
+            numero = int('56' + dialed_number)
+
+        linea = Lineas.objects.filter(numero=numero).first()
+
+        return None if linea is None else linea.numero
+
     def cargar_cdr(self):
         logs = []
 
@@ -182,27 +753,65 @@ class Cdr(models.Model):
                     'INGRESS_DURATION'].isdigit() else None
                 is_digit = row['DIALED_NUMBER'].isdigit()
                 length = len(row['DIALED_NUMBER']) < 20
+                entity = self.get_entity(row['DIALED_NUMBER'])
                 dialed_number = int(
                     row['DIALED_NUMBER']) if is_digit and length else None
-                logs.append(
-                    LogLlamadas(
-                        connect_time=dt.datetime.strptime(
-                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S'),
-                        ani_number=ani_number,
-                        ingress_duration=ingress_duration,
-                        dialed_number=dialed_number,
-                        fecha=self.fecha,
-                        compania_cdr=self.compania,
-                        estado=activado,
-                        motivo=observacion,
-                        compania_ani=compania_ani_number,
-                        tipo=tipo,
-                        hora=dt.datetime.strptime(
-                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S').time(),
-                        date=dt.datetime.strptime(
-                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S').date()
+                connect_time = dt.datetime.strptime(
+                    row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
+
+                if activado == 'activado':
+                    for rango in self.split_horario(
+                            connect_time, ingress_duration,
+                            compania_ani_number):
+                        fecha_llamada = rango['fecha_llamada']
+
+                        if str(fecha_llamada.month) != self.month:
+                            fecha_llamada = connect_time.date()
+
+                        hora_llamada = rango['hora_inicio']
+                        horario = self.horario_compania(
+                            fecha_llamada, hora_llamada, compania_ani_number)
+                        duracion = rango['duracion']
+                        connect_time2 = dt.datetime.combine(
+                            fecha_llamada, hora_llamada)
+                        logs.append(
+                            LogLlamadas(
+                                connect_time=connect_time2,
+                                ani_number=ani_number,
+                                ingress_duration=duracion,
+                                dialed_number=dialed_number,
+                                fecha=self.fecha,
+                                compania_cdr=self.compania,
+                                estado=activado,
+                                motivo=observacion,
+                                compania_ani=compania_ani_number,
+                                tipo=tipo,
+                                hora=hora_llamada,
+                                date=fecha_llamada,
+                                horario=horario,
+                                entity=entity
+                            )
+                        )
+
+                else:
+                    logs.append(
+                        LogLlamadas(
+                            connect_time=connect_time,
+                            ani_number=ani_number,
+                            ingress_duration=ingress_duration,
+                            dialed_number=dialed_number,
+                            fecha=self.fecha,
+                            compania_cdr=self.compania,
+                            estado=activado,
+                            motivo=observacion,
+                            compania_ani=compania_ani_number,
+                            tipo=tipo,
+                            hora=connect_time.time(),
+                            date=connect_time.date(),
+                            horario='',
+                            entity=entity
+                        )
                     )
-                )
 
             LogLlamadas.objects.bulk_create(logs)
 
@@ -1342,51 +1951,859 @@ class ResumenFactura(models.Model):
             self.factura.pk, self.fecha_inicio, self.fecha_fin)
 
 
-class Numeration(mongoengine.EmbeddedDocument):
+class Company(mongoengine.Document):
+
+    """Modelo de compañias."""
+
+    name = mongoengine.StringField(unique=True)
+    code = mongoengine.IntField()
+    schedules = mongoengine.DictField()
+
+    def __unicode__(self):
+        return self.name
+
+
+class Numeration(mongoengine.Document):
 
     """Modelo de las numeraciones."""
 
     zone = mongoengine.IntField()
     _range = mongoengine.IntField()
+    company = mongoengine.ReferenceField(Company)
 
     def __unicode__(self):
         return u'{0}{1}'.format(self.zone, self._range)
 
 
-class Schedule(mongoengine.EmbeddedDocument):
+class Line(mongoengine.Document):
 
-    """Modelo de los horarios."""
+    """Modelo de los clientes de convergia."""
 
-    BUSINESS = 'habil'
-    SATURDAY = 'sabado'
-    FESTIVE = 'festivo'
-    DAYS = (
-        (BUSINESS, 'Habil'), (SATURDAY, 'Sabado'), (FESTIVE, 'Festivo'))
-    NORMAL = 'normal'
-    REDUCED = 'reducido'
-    NIGHT = 'nocturno'
-    SCHEDULES = (
-        (NORMAL, 'Normal'), (REDUCED, 'Reducido'), (NIGHT, 'Nocturno'))
-    day = mongoengine.StringField(choices=DAYS)
-    schedule = mongoengine.StringField(choices=SCHEDULES)
-    start = mongoengine.StringField()
-    end = mongoengine.StringField()
-
-    def __unicode__(self):
-        return u'{0} {1} ({2}-{3})'.format(
-            self.day, self.schedule, self.start, self.end)
-
-
-class Company(mongoengine.Document):
-
-    """Modelo de compañias."""
-
+    PERSON = 'persona'
+    COMPANY = 'empresa'
+    ENTITIES = (
+        (PERSON, 'Persona'),
+        (PERSON, 'Empresa'),
+    )
+    number = mongoengine.IntField(unique=True)
     name = mongoengine.StringField()
-    code = mongoengine.IntField()
-    numeration = mongoengine.ListField(
-        mongoengine.EmbeddedDocumentField(Numeration))
-    schedule = mongoengine.ListField(
-        mongoengine.EmbeddedDocumentField(Schedule))
+    entity = mongoengine.StringField(choices=ENTITIES)
+    comments = mongoengine.StringField()
+    zone = mongoengine.IntField(choices=choices.ZONES)
+    city = mongoengine.IntField(choices=choices.CITIES)
 
-    def __unicode__(self):
-        return self.name
+
+class Cdr2(mongoengine.Document):
+
+    """Modelo de los cdr."""
+
+    month = mongoengine.StringField(
+        max_length=2, choices=choices.MONTHS)
+    year = mongoengine.StringField(
+        max_length=4, choices=choices.YEARS)
+    incoming_ctc = mongoengine.FileField()
+    incoming_entel = mongoengine.FileField()
+    outgoing = mongoengine.FileField()
+    processed = mongoengine.BooleanField(default=False)
+
+    def valida_ani(self, ani):
+        if len(ani) == 11:
+            return True
+
+        else:
+            return False
+
+    def get_activado_ctc(self, ani, dialed_number):
+        """Funcion que determina si un registro debe o no ser facturado"""
+        if search(patterns.pattern_569, ani):
+            return True
+
+        elif (search(patterns.pattern_562, ani)
+                and not search(patterns.pattern_800, dialed_number)):
+            return True
+
+        elif search(patterns.pattern_4469v2, dialed_number):
+            return True
+
+        else:
+            return False
+
+    def get_activado_entel(self, ani, dialed_number):
+        """Funcion que determina si un registro debe o no ser facturado"""
+        if search(patterns.pattern_0234469v2, dialed_number):
+            return True
+
+        elif (search(patterns.pattern_64469, dialed_number) and
+                not search(patterns.pattern_112, dialed_number)):
+            return True
+
+        else:
+            return False
+
+    def get_zona_rango(self, ani):
+        """Retorna la zona y rango del ani_number"""
+        if search(patterns.pattern_569, ani):
+            return ani[2:][:1], ani[3:][:4]
+
+        elif search(patterns.pattern_9, ani):
+            return ani[2:][:2], ani[4:][:4]
+
+        elif search(patterns.pattern_562, ani):
+            return ani[2:][:1], ani[3:][:5]
+
+        else:
+            return ani[2:][:2], ani[4:][:3]
+
+    def get_compania(self, ani):
+        """Funcion que retorna la compañia del numero de origen"""
+        portado = Portability.objects.filter(number=ani).first()
+
+        if portado is not None:
+            return portado.company
+
+        else:
+            zona, rango = self.get_zona_rango(ani)
+            numeracion = Numeration.objects.filter(
+                zone=zona, _range=rango).first()
+
+            if numeracion is not None:
+                return numeracion.company
+
+            else:
+                return None
+
+    def get_tipo(self, ani, final_number):
+        """Funcion que determina el tipo de llamada"""
+        if search(patterns.pattern_564469, final_number):
+            if search(patterns.pattern_569, ani):
+                return 'voip-movil'
+
+            elif not search(patterns.pattern_56, ani):
+                return 'voip-ldi'
+
+            else:
+                return 'voip-local'
+
+        else:
+            if search(patterns.pattern_569, ani):
+                return 'movil'
+
+            elif not search(patterns.pattern_56, ani):
+                return 'internacional'
+
+            elif search(patterns.pattern_562, ani):
+                return 'local'
+
+            elif search(patterns.pattern_5610, ani):
+                return 'especial'
+
+            else:
+                return 'nacional'
+
+    def get_dia(self, fecha):
+        feriado = Holiday.objects.filter(date=fecha).first()
+
+        if feriado is not None:
+            return 'festivo'
+
+        else:
+            if fecha.weekday() in range(5):
+                return 'habil'
+
+            elif fecha.weekday() == 5:
+                return 'sabado'
+
+            else:
+                return 'festivo'
+
+    def horario_compania(self, fecha_llamada, hora_llamada, compania):
+        dia = self.get_dia(fecha_llamada)
+        normal = compania.schedules.get(dia).get('normal')
+        reducido = compania.schedules.get(dia).get('reducido')
+        nocturno = compania.schedules.get(dia).get('nocturno')
+
+        if normal:
+            if normal.inicio < normal.fin:
+                if normal.inicio <= hora_llamada <= normal.fin:
+                    return 'normal'
+            else:
+                if normal.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                    return 'normal'
+                elif dt.time(0, 0) <= hora_llamada <= normal.fin:
+                    return 'normal'
+
+        if reducido:
+            if reducido.inicio < reducido.fin:
+                if reducido.inicio <= hora_llamada <= reducido.fin:
+                    return 'reducido'
+            else:
+                if reducido.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                    return 'reducido'
+                elif dt.time(0, 0) <= hora_llamada <= reducido.fin:
+                    return 'reducido'
+
+        if nocturno:
+            if nocturno.inicio < nocturno.fin:
+                if nocturno.inicio <= hora_llamada <= nocturno.fin:
+                    return 'nocturno'
+            else:
+                if nocturno.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                    return 'nocturno'
+                elif dt.time(0, 0) <= hora_llamada <= nocturno.fin:
+                    return 'nocturno'
+
+    def split_horario(self, connect_time, duracion, compania):
+        fecha_llamada = connect_time.date()
+        dia = self.get_dia(fecha_llamada)
+        normal = compania.schedules.get(dia).get('normal')
+        reducido = compania.schedules.get(dia).get('reducido')
+        nocturno = compania.schedules.get(dia).get('nocturno')
+        hora_inicio = nptime().from_time(connect_time.time())
+        hora_fin = hora_inicio + dt.timedelta(seconds=float(duracion))
+
+        if hora_inicio <= hora_fin:
+            if normal:
+                if hora_inicio < normal.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.inicio)
+                            ).total_seconds())
+                        },
+                    )
+                elif hora_inicio < normal.fin < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(normal.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if reducido:
+                if hora_inicio < reducido.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                reducido.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif hora_inicio < reducido.fin < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(reducido.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if nocturno:
+                if hora_inicio < nocturno.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                nocturno.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif hora_inicio < nocturno.fin < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(nocturno.fin)
+                            ).total_seconds())
+                        },
+                    )
+            return (
+                {
+                    'fecha_llamada': fecha_llamada,
+                    'hora_inicio': hora_inicio,
+                    'duracion': duracion,
+                },
+            )
+        else:
+            if normal:
+                if hora_inicio < normal.inicio < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.inicio
+                            ),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    normal.inicio)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+                elif hora_inicio < normal.fin < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(normal.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                normal.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    normal.fin)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+
+                elif dt.time(0, 0) < normal.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.inicio) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                normal.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.inicio)
+                            ).total_seconds())
+                        },
+                    )
+                elif dt.time(0, 0) <= normal.fin <= hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    normal.fin) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                normal.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(normal.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if reducido:
+                if hora_inicio < reducido.inicio < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.inicio
+                            ),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    reducido.inicio)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+                elif hora_inicio < reducido.fin < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                reducido.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    reducido.fin)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+
+                elif dt.time(0, 0) < reducido.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.inicio) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                reducido.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                reducido.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif dt.time(0, 0) <= reducido.fin <= hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    reducido.fin) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                reducido.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(reducido.fin)
+                            ).total_seconds())
+                        },
+                    )
+            if nocturno:
+                if hora_inicio < nocturno.inicio < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.inicio) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.inicio
+                            ),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    nocturno.inicio)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+                elif hora_inicio < nocturno.fin < dt.time(23, 59, 59):
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.fin) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': nptime().from_time(
+                                nocturno.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                nptime(23, 59, 59) - nptime().from_time(
+                                    nocturno.fin)
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                hora_fin - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        }
+                    )
+
+                elif dt.time(0, 0) < nocturno.inicio < hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.inicio) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                nocturno.inicio
+                            ),
+                            'duracion': int((
+                                hora_fin -
+                                            nptime().from_time(
+                                                nocturno.inicio)
+                                            ).total_seconds())
+                        },
+                    )
+                elif dt.time(0, 0) <= nocturno.fin <= hora_fin:
+                    return (
+                        {
+                            'fecha_llamada': fecha_llamada,
+                            'hora_inicio': hora_inicio,
+                            'duracion': int((
+                                nptime(23, 59, 59) - hora_inicio
+                            ).total_seconds())
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime(0, 0),
+                            'duracion': int((
+                                nptime().from_time(
+                                    nocturno.fin) - nptime(0, 0)
+                            ).total_seconds()) + 1
+                        },
+                        {
+                            'fecha_llamada': fecha_llamada + dt.timedelta(
+                                days=1),
+                            'hora_inicio': nptime().from_time(
+                                nocturno.fin) + dt.timedelta(seconds=1),
+                            'duracion': int((
+                                hora_fin - nptime().from_time(nocturno.fin)
+                            ).total_seconds())
+                        },
+                    )
+
+            return (
+                {
+                    'fecha_llamada': fecha_llamada,
+                    'hora_inicio': hora_inicio,
+                    'duracion': duracion
+                },
+            )
+
+    def get_entity(self, dialed_number):
+        if len(dialed_number) == 8 and dialed_number[0] == '2':
+            numero = int('562' + dialed_number)
+
+        else:
+            numero = int('56' + dialed_number)
+
+        linea = Line.objects.filter(numero=numero).first()
+
+        return None if linea is None else linea.number
+
+    def insert_incoming(self, name):
+        if name == 'ENTEL':
+            lines = [
+                r.split(',')
+                for r in self.incoming_entel.read().split('\r\n')[:-1]]
+            get_activado = self.get_activado_entel
+
+        else:
+            lines = [
+                r.split(',')
+                for r in self.incoming_ctc.read().split('\r\n')[:-1]]
+            get_activado = self.get_activado_ctc
+
+        head = lines[0]
+
+        for line in lines[1:]:
+            row = dict(zip(head, line))
+            observation = None
+
+            if self.valida_ani(row['ANI']):
+                valid = get_activado(
+                    row['ANI'], row['DIALED_NUMBER'])
+
+            else:
+                valid = False
+                observation = 'ani invalido'
+
+            if valid:
+                company = self.get_compania(row['ANI'])
+
+                if company is None:
+                    valid = False
+                    observation = 'ani_number sin numeracion'
+
+                tipo = self.get_tipo(row['ANI'], row['DIALED_NUMBER'])
+
+            else:
+                company = None
+                tipo = None
+                observation = 'No cumple con los filtros'
+
+            ani_number = int(row['ANI_NUMBER']) if row[
+                'ANI_NUMBER'].isdigit() else None
+            ingress_duration = int(row['INGRESS_DURATION']) if row[
+                'INGRESS_DURATION'].isdigit() else None
+            is_digit = row['DIALED_NUMBER'].isdigit()
+            length = len(row['DIALED_NUMBER']) < 20
+            entity = self.get_entity(row['DIALED_NUMBER'])
+            dialed_number = int(
+                row['DIALED_NUMBER']) if is_digit and length else None
+            connect_time = dt.datetime.strptime(
+                row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
+
+            if valid and ingress_duration is not None:
+                for rango in self.split_horario(
+                        connect_time, ingress_duration,
+                        company):
+                    fecha_llamada = rango['fecha_llamada']
+
+                    if str(fecha_llamada.month) != self.month:
+                        fecha_llamada = connect_time.date()
+
+                    hora_llamada = rango['hora_inicio']
+                    horario = self.horario_compania(
+                        fecha_llamada, hora_llamada, company)
+                    duracion = rango['duracion']
+                    connect_time2 = dt.datetime.combine(
+                        fecha_llamada, hora_llamada)
+                    Incoming(
+                        connect_time=connect_time2,
+                        ani_number=ani_number,
+                        ingress_duration=duracion,
+                        dialed_number=dialed_number,
+                        cdr=self,
+                        valid=valid,
+                        observation=observation,
+                        company=company,
+                        _type=tipo,
+                        schedule=horario,
+                        entity=entity
+                    ).save()
+
+            else:
+                LogLlamadas(
+                    connect_time=connect_time,
+                    ani_number=ani_number,
+                    ingress_duration=ingress_duration,
+                    dialed_number=dialed_number,
+                    cdr=self,
+                    valid=valid,
+                    observation=observation,
+                    company=company,
+                    _type=tipo,
+                    entity=entity
+                ).save()
+
+        return True
+
+
+class Incoming(mongoengine.Document):
+
+    """Modelo de las llamdas entrantes."""
+
+    connect_time = mongoengine.DateTimeField()
+    ani_number = mongoengine.IntField()
+    ingress_duration = mongoengine.IntField()
+    dialed_number = mongoengine.IntField()
+    cdr = mongoengine.ReferenceField(Cdr2)
+    valid = mongoengine.BooleanField()
+    invoiced = mongoengine.BooleanField(default=False)
+    observation = mongoengine.StringField()
+    company = mongoengine.ReferenceField(Company)
+
+
+class Outgoing(mongoengine.Document):
+
+    """Modelo de las llamdas salientes."""
+
+    connect_time = mongoengine.DateTimeField()
+    ani_number = mongoengine.IntField()
+    ingress_duration = mongoengine.IntField()
+    dialed_number = mongoengine.IntField()
+    cdr = mongoengine.ReferenceField(Cdr2)
+    valid = mongoengine.BooleanField()
+    invoiced = mongoengine.BooleanField(default=False)
+    observation = mongoengine.StringField()
+    company = mongoengine.ReferenceField(Company)
+
+
+class Portability(mongoengine.Document):
+
+    """Modelo de los numeros portados."""
+
+    number = mongoengine.IntField(unique=True)
+    company = mongoengine.ReferenceField(Company)
+    date = mongoengine.DateTimeField()
+
+
+class Holiday(mongoengine.Document):
+
+    """Modelo de los feriados."""
+
+    date = mongoengine.DateTimeField()
