@@ -2820,4 +2820,4 @@ class Holiday(mongoengine.Document):
 
     """Modelo de los feriados."""
 
-    date = mongoengine.DateTimeField()
+    date = mongoengine.DateTimeField(unique=True)
