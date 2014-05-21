@@ -1971,6 +1971,10 @@ class Numeration(mongoengine.Document):
     _range = mongoengine.IntField()
     company = mongoengine.ReferenceField(Company)
 
+    meta = {
+        'indexes': [('zone', '_range')]
+    }
+
     def __unicode__(self):
         return u'{0}{1}'.format(self.zone, self._range)
 
