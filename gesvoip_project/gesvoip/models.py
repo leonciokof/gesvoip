@@ -2770,6 +2770,7 @@ class Cdr2(mongoengine.Document):
                     entity=entity
                 ))
 
+        print('Insertando registros')
         Incoming.objects.insert(incomings)
 
         return True
