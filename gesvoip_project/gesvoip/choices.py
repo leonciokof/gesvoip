@@ -444,3 +444,12 @@ TIPOS = (
     ('especial', 'especial'),
     ('nacional', 'nacional'),
 )
+
+NORMAL = 'normal'
+REDUCIDO = 'reducido'
+NOCTURNO = 'nocturno'
+TIPO_CHOICES = (
+    (NORMAL, 'Normal'),
+    (REDUCIDO, 'Reducido'),
+    (NOCTURNO, 'Nocturno')
+)

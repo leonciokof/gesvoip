@@ -2793,6 +2793,7 @@ class Incoming(mongoengine.Document):
     observation = mongoengine.StringField()
     company = mongoengine.ReferenceField(Company)
     _type = mongoengine.StringField(choices=choices.TIPOS)
+    schedule = mongoengine.StringField(choices=choices.TIPO_CHOICES)
     entity = mongoengine.StringField(choices=choices.ENTITIES)
 
 
@@ -2825,3 +2826,42 @@ class Holiday(mongoengine.Document):
     """Modelo de los feriados."""
 
     date = mongoengine.DateTimeField(unique=True)
+
+
+class Invoice(mongoengine.Document):
+
+    """Modelo de facturas."""
+
+    company = mongoengine.ReferenceField(Company)
+    month = mongoengine.StringField(
+        max_length=2, choices=choices.MONTHS)
+    year = mongoengine.StringField(
+        max_length=4, choices=choices.YEARS)
+    call_number = mongoengine.IntField()
+    call_duration = mongoengine.IntField()
+    total = mongoengine.FloatField()
+    invoiced = mongoengine.BooleanField(default=False)
+
+
+class Period(mongoengine.Document):
+
+    """Modelo que representa los periodos de las facturas"""
+
+    invoice = mongoengine.ReferenceField(Invoice)
+    start = mongoengine.DateTimeField()
+    end = mongoengine.DateTimeField()
+    call_number = mongoengine.IntField()
+    call_duration = mongoengine.IntField()
+    total = mongoengine.FloatField()
+
+
+class Rate(mongoengine.Document):
+
+    """Modelo que representa las tarifas de las compañias"""
+
+    period = mongoengine.ReferenceField(Period)
+    _type = mongoengine.StringField(choices=choices.TIPO_CHOICES)
+    price = mongoengine.FloatField()
+    call_number = mongoengine.IntField()
+    call_duration = mongoengine.IntField()
+    total = mongoengine.FloatField()
