@@ -2670,16 +2670,17 @@ class Cdr2(mongoengine.Document):
         return None if linea is None else linea.entity
 
     def insert_incoming(self, name):
+        incomings = []
         if name == 'ENTEL':
             lines = [
                 r.split(',')
-                for r in self.incoming_entel.read().split('\r\n')[:-1]]
+                for r in self.incoming_entel.read().decode().split('\r\n')[:-1]]
             get_activado = self.get_activado_entel
 
         else:
             lines = [
                 r.split(',')
-                for r in self.incoming_ctc.read().split('\r\n')[:-1]]
+                for r in self.incoming_ctc.read().decode().split('\r\n')[:-1]]
             get_activado = self.get_activado_ctc
 
         head = lines[0]
@@ -2741,7 +2742,7 @@ class Cdr2(mongoengine.Document):
                     duracion = rango['duracion']
                     connect_time2 = dt.datetime.combine(
                         fecha_llamada, hora_llamada)
-                    Incoming(
+                    incomings.append(Incoming(
                         connect_time=connect_time2,
                         ani_number=ani_number,
                         ingress_duration=duracion,
@@ -2753,10 +2754,10 @@ class Cdr2(mongoengine.Document):
                         _type=tipo,
                         schedule=horario,
                         entity=entity
-                    ).save()
+                    ))
 
             else:
-                Incoming(
+                incomings.append(Incoming(
                     connect_time=connect_time,
                     ani_number=ani_number,
                     ingress_duration=ingress_duration,
@@ -2767,7 +2768,9 @@ class Cdr2(mongoengine.Document):
                     company=company,
                     _type=tipo,
                     entity=entity
-                ).save()
+                ))
+
+        Incoming.objects.insert(incomings)
 
         return True
 
