@@ -2674,7 +2674,7 @@ class Cdr2(mongoengine.Document):
         return None if linea is None else linea.entity
 
     def insert_incoming(self, name):
-        incomings = []
+        startTime = dt.datetime.now()
         if name == 'ENTEL':
             lines = [
                 r.split(',')
@@ -2746,7 +2746,7 @@ class Cdr2(mongoengine.Document):
                     duracion = rango['duracion']
                     connect_time2 = dt.datetime.combine(
                         fecha_llamada, hora_llamada)
-                    incomings.append(Incoming(
+                    Incoming(
                         connect_time=connect_time2,
                         ani_number=ani_number,
                         ingress_duration=duracion,
@@ -2758,10 +2758,10 @@ class Cdr2(mongoengine.Document):
                         _type=tipo,
                         schedule=horario,
                         entity=entity
-                    ))
+                    ).save()
 
             else:
-                incomings.append(Incoming(
+                Incoming(
                     connect_time=connect_time,
                     ani_number=ani_number,
                     ingress_duration=ingress_duration,
@@ -2772,10 +2772,9 @@ class Cdr2(mongoengine.Document):
                     company=company,
                     _type=tipo,
                     entity=entity
-                ))
+                ).save()
 
-        print('Insertando registros')
-        Incoming.objects.insert(incomings)
+        print(dt.datetime.now() - startTime)
 
         return True
 
