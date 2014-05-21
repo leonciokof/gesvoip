@@ -1979,15 +1979,9 @@ class Line(mongoengine.Document):
 
     """Modelo de los clientes de convergia."""
 
-    PERSON = 'persona'
-    COMPANY = 'empresa'
-    ENTITIES = (
-        (PERSON, 'Persona'),
-        (PERSON, 'Empresa'),
-    )
     number = mongoengine.IntField(unique=True)
     name = mongoengine.StringField()
-    entity = mongoengine.StringField(choices=ENTITIES)
+    entity = mongoengine.StringField(choices=choices.ENTITIES)
     comments = mongoengine.StringField()
     zone = mongoengine.IntField(choices=choices.ZONES)
     city = mongoengine.IntField(choices=choices.CITIES)
@@ -2118,170 +2112,182 @@ class Cdr2(mongoengine.Document):
 
     def horario_compania(self, fecha_llamada, hora_llamada, compania):
         dia = self.get_dia(fecha_llamada)
-        normal = compania.schedules.get(dia).get('normal')
-        reducido = compania.schedules.get(dia).get('reducido')
-        nocturno = compania.schedules.get(dia).get('nocturno')
+        normal = compania.schedules.get(dia)
+        if normal:
+            normal = normal.get('normal')
+        reducido = compania.schedules.get(dia)
+        if reducido:
+            reducido = reducido.get('reducido')
+        nocturno = compania.schedules.get(dia)
+        if nocturno:
+            nocturno = nocturno.get('nocturno')
 
         if normal:
-            if normal.inicio < normal.fin:
-                if normal.inicio <= hora_llamada <= normal.fin:
+            if dt.datetime.strptime(normal['start'],'%H:%M:%S').time() < dt.datetime.strptime(normal['end'],'%H:%M:%S').time():
+                if dt.datetime.strptime(normal['start'],'%H:%M:%S').time() <= hora_llamada <= dt.datetime.strptime(normal['end'],'%H:%M:%S').time():
                     return 'normal'
             else:
-                if normal.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                if dt.datetime.strptime(normal['start'],'%H:%M:%S').time() <= hora_llamada <= dt.time(23, 59, 59):
                     return 'normal'
-                elif dt.time(0, 0) <= hora_llamada <= normal.fin:
+                elif dt.time(0, 0) <= hora_llamada <= dt.datetime.strptime(normal['end'],'%H:%M:%S').time():
                     return 'normal'
 
         if reducido:
-            if reducido.inicio < reducido.fin:
-                if reducido.inicio <= hora_llamada <= reducido.fin:
+            if dt.datetime.strptime(reducido['start'],'%H:%M:%S').time() < dt.datetime.strptime(reducido['end'],'%H:%M:%S').time():
+                if dt.datetime.strptime(reducido['start'],'%H:%M:%S').time() <= hora_llamada <= dt.datetime.strptime(reducido['end'],'%H:%M:%S').time():
                     return 'reducido'
             else:
-                if reducido.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                if dt.datetime.strptime(reducido['start'],'%H:%M:%S').time() <= hora_llamada <= dt.time(23, 59, 59):
                     return 'reducido'
-                elif dt.time(0, 0) <= hora_llamada <= reducido.fin:
+                elif dt.time(0, 0) <= hora_llamada <= dt.datetime.strptime(reducido['end'],'%H:%M:%S').time():
                     return 'reducido'
 
         if nocturno:
-            if nocturno.inicio < nocturno.fin:
-                if nocturno.inicio <= hora_llamada <= nocturno.fin:
+            if dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time() < dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time():
+                if dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time() <= hora_llamada <= dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time():
                     return 'nocturno'
             else:
-                if nocturno.inicio <= hora_llamada <= dt.time(23, 59, 59):
+                if dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time() <= hora_llamada <= dt.time(23, 59, 59):
                     return 'nocturno'
-                elif dt.time(0, 0) <= hora_llamada <= nocturno.fin:
+                elif dt.time(0, 0) <= hora_llamada <= dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time():
                     return 'nocturno'
 
     def split_horario(self, connect_time, duracion, compania):
         fecha_llamada = connect_time.date()
         dia = self.get_dia(fecha_llamada)
-        normal = compania.schedules.get(dia).get('normal')
-        reducido = compania.schedules.get(dia).get('reducido')
-        nocturno = compania.schedules.get(dia).get('nocturno')
+        normal = compania.schedules.get(dia)
+        if normal:
+            normal = normal.get('normal')
+        reducido = compania.schedules.get(dia)
+        if reducido:
+            reducido = reducido.get('reducido')
+        nocturno = compania.schedules.get(dia)
+        if nocturno:
+            nocturno = nocturno.get('nocturno')
         hora_inicio = nptime().from_time(connect_time.time())
         hora_fin = hora_inicio + dt.timedelta(seconds=float(duracion))
 
         if hora_inicio <= hora_fin:
             if normal:
-                if hora_inicio < normal.inicio < hora_fin:
+                if hora_inicio < dt.datetime.strptime(normal['start'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    normal.inicio) - hora_inicio
+                                    dt.datetime.strptime(normal['start'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                normal.inicio
+                                dt.datetime.strptime(normal['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
-                                hora_fin - nptime().from_time(normal.inicio)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(normal['start'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
-                elif hora_inicio < normal.fin < hora_fin:
+                elif hora_inicio < dt.datetime.strptime(normal['end'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
-                                nptime().from_time(normal.fin) - hora_inicio
+                                nptime().from_time(dt.datetime.strptime(normal['end'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                normal.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(normal['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
-                                hora_fin - nptime().from_time(normal.fin)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(normal['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
             if reducido:
-                if hora_inicio < reducido.inicio < hora_fin:
+                if hora_inicio < dt.datetime.strptime(reducido['start'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    reducido.inicio) - hora_inicio
+                                    dt.datetime.strptime(reducido['start'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                reducido.inicio
+                                dt.datetime.strptime(reducido['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
                                 hora_fin -
                                             nptime().from_time(
-                                                reducido.inicio)
+                                                dt.datetime.strptime(reducido['start'],'%H:%M:%S').time())
                                             ).total_seconds())
                         },
                     )
-                elif hora_inicio < reducido.fin < hora_fin:
+                elif hora_inicio < dt.datetime.strptime(reducido['end'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    reducido.fin) - hora_inicio
+                                    dt.datetime.strptime(reducido['end'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                reducido.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(reducido['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
-                                hora_fin - nptime().from_time(reducido.fin)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(reducido['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
             if nocturno:
-                if hora_inicio < nocturno.inicio < hora_fin:
+                if hora_inicio < dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    nocturno.inicio) - hora_inicio
+                                    dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                nocturno.inicio
+                                dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
                                 hora_fin -
                                             nptime().from_time(
-                                                nocturno.inicio)
+                                                dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time())
                                             ).total_seconds())
                         },
                     )
-                elif hora_inicio < nocturno.fin < hora_fin:
+                elif hora_inicio < dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    nocturno.fin) - hora_inicio
+                                    dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                nocturno.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
-                                hora_fin - nptime().from_time(nocturno.fin)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
@@ -2294,24 +2300,24 @@ class Cdr2(mongoengine.Document):
             )
         else:
             if normal:
-                if hora_inicio < normal.inicio < dt.time(23, 59, 59):
+                if hora_inicio < dt.datetime.strptime(normal['start'],'%H:%M:%S').time() < dt.time(23, 59, 59):
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    normal.inicio) - hora_inicio
+                                    dt.datetime.strptime(normal['start'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                normal.inicio
+                                dt.datetime.strptime(normal['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
                                 nptime(23, 59, 59) - nptime().from_time(
-                                    normal.inicio)
+                                    dt.datetime.strptime(normal['start'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                         {
@@ -2323,22 +2329,22 @@ class Cdr2(mongoengine.Document):
                             ).total_seconds()) + 1
                         }
                     )
-                elif hora_inicio < normal.fin < dt.time(23, 59, 59):
+                elif hora_inicio < dt.datetime.strptime(normal['end'],'%H:%M:%S').time() < dt.time(23, 59, 59):
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
-                                nptime().from_time(normal.fin) - hora_inicio
+                                nptime().from_time(dt.datetime.strptime(normal['end'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                normal.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(normal['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
                                 nptime(23, 59, 59) - nptime().from_time(
-                                    normal.fin)
+                                    dt.datetime.strptime(normal['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                         {
@@ -2351,7 +2357,7 @@ class Cdr2(mongoengine.Document):
                         }
                     )
 
-                elif dt.time(0, 0) < normal.inicio < hora_fin:
+                elif dt.time(0, 0) < dt.datetime.strptime(normal['start'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
@@ -2366,21 +2372,21 @@ class Cdr2(mongoengine.Document):
                             'hora_inicio': nptime(0, 0),
                             'duracion': int((
                                 nptime().from_time(
-                                    normal.inicio) - nptime(0, 0)
+                                    dt.datetime.strptime(normal['start'],'%H:%M:%S').time()) - nptime(0, 0)
                             ).total_seconds()) + 1
                         },
                         {
                             'fecha_llamada': fecha_llamada + dt.timedelta(
                                 days=1),
                             'hora_inicio': nptime().from_time(
-                                normal.inicio
+                                dt.datetime.strptime(normal['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
-                                hora_fin - nptime().from_time(normal.inicio)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(normal['start'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
-                elif dt.time(0, 0) <= normal.fin <= hora_fin:
+                elif dt.time(0, 0) <= dt.datetime.strptime(normal['end'],'%H:%M:%S').time() <= hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
@@ -2395,38 +2401,38 @@ class Cdr2(mongoengine.Document):
                             'hora_inicio': nptime(0, 0),
                             'duracion': int((
                                 nptime().from_time(
-                                    normal.fin) - nptime(0, 0)
+                                    dt.datetime.strptime(normal['end'],'%H:%M:%S').time()) - nptime(0, 0)
                             ).total_seconds()) + 1
                         },
                         {
                             'fecha_llamada': fecha_llamada + dt.timedelta(
                                 days=1),
                             'hora_inicio': nptime().from_time(
-                                normal.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(normal['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
-                                hora_fin - nptime().from_time(normal.fin)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(normal['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
             if reducido:
-                if hora_inicio < reducido.inicio < dt.time(23, 59, 59):
+                if hora_inicio < dt.datetime.strptime(reducido['start'],'%H:%M:%S').time() < dt.time(23, 59, 59):
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    reducido.inicio) - hora_inicio
+                                    dt.datetime.strptime(reducido['start'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                reducido.inicio
+                                dt.datetime.strptime(reducido['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
                                 nptime(23, 59, 59) - nptime().from_time(
-                                    reducido.inicio)
+                                    dt.datetime.strptime(reducido['start'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                         {
@@ -2438,23 +2444,23 @@ class Cdr2(mongoengine.Document):
                             ).total_seconds()) + 1
                         }
                     )
-                elif hora_inicio < reducido.fin < dt.time(23, 59, 59):
+                elif hora_inicio < dt.datetime.strptime(reducido['end'],'%H:%M:%S').time() < dt.time(23, 59, 59):
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    reducido.fin) - hora_inicio
+                                    dt.datetime.strptime(reducido['end'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                reducido.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(reducido['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
                                 nptime(23, 59, 59) - nptime().from_time(
-                                    reducido.fin)
+                                    dt.datetime.strptime(reducido['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                         {
@@ -2467,7 +2473,7 @@ class Cdr2(mongoengine.Document):
                         }
                     )
 
-                elif dt.time(0, 0) < reducido.inicio < hora_fin:
+                elif dt.time(0, 0) < dt.datetime.strptime(reducido['start'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
@@ -2482,23 +2488,23 @@ class Cdr2(mongoengine.Document):
                             'hora_inicio': nptime(0, 0),
                             'duracion': int((
                                 nptime().from_time(
-                                    reducido.inicio) - nptime(0, 0)
+                                    dt.datetime.strptime(reducido['start'],'%H:%M:%S').time()) - nptime(0, 0)
                             ).total_seconds()) + 1
                         },
                         {
                             'fecha_llamada': fecha_llamada + dt.timedelta(
                                 days=1),
                             'hora_inicio': nptime().from_time(
-                                reducido.inicio
+                                dt.datetime.strptime(reducido['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
                                 hora_fin -
                                             nptime().from_time(
-                                                reducido.inicio)
+                                                dt.datetime.strptime(reducido['start'],'%H:%M:%S').time())
                                             ).total_seconds())
                         },
                     )
-                elif dt.time(0, 0) <= reducido.fin <= hora_fin:
+                elif dt.time(0, 0) <= dt.datetime.strptime(reducido['end'],'%H:%M:%S').time() <= hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
@@ -2513,38 +2519,38 @@ class Cdr2(mongoengine.Document):
                             'hora_inicio': nptime(0, 0),
                             'duracion': int((
                                 nptime().from_time(
-                                    reducido.fin) - nptime(0, 0)
+                                    dt.datetime.strptime(reducido['end'],'%H:%M:%S').time()) - nptime(0, 0)
                             ).total_seconds()) + 1
                         },
                         {
                             'fecha_llamada': fecha_llamada + dt.timedelta(
                                 days=1),
                             'hora_inicio': nptime().from_time(
-                                reducido.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(reducido['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
-                                hora_fin - nptime().from_time(reducido.fin)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(reducido['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
             if nocturno:
-                if hora_inicio < nocturno.inicio < dt.time(23, 59, 59):
+                if hora_inicio < dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time() < dt.time(23, 59, 59):
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    nocturno.inicio) - hora_inicio
+                                    dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                nocturno.inicio
+                                dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
                                 nptime(23, 59, 59) - nptime().from_time(
-                                    nocturno.inicio)
+                                    dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                         {
@@ -2556,23 +2562,23 @@ class Cdr2(mongoengine.Document):
                             ).total_seconds()) + 1
                         }
                     )
-                elif hora_inicio < nocturno.fin < dt.time(23, 59, 59):
+                elif hora_inicio < dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time() < dt.time(23, 59, 59):
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': hora_inicio,
                             'duracion': int((
                                 nptime().from_time(
-                                    nocturno.fin) - hora_inicio
+                                    dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time()) - hora_inicio
                             ).total_seconds())
                         },
                         {
                             'fecha_llamada': fecha_llamada,
                             'hora_inicio': nptime().from_time(
-                                nocturno.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
                                 nptime(23, 59, 59) - nptime().from_time(
-                                    nocturno.fin)
+                                    dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                         {
@@ -2585,7 +2591,7 @@ class Cdr2(mongoengine.Document):
                         }
                     )
 
-                elif dt.time(0, 0) < nocturno.inicio < hora_fin:
+                elif dt.time(0, 0) < dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time() < hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
@@ -2600,23 +2606,23 @@ class Cdr2(mongoengine.Document):
                             'hora_inicio': nptime(0, 0),
                             'duracion': int((
                                 nptime().from_time(
-                                    nocturno.inicio) - nptime(0, 0)
+                                    dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time()) - nptime(0, 0)
                             ).total_seconds()) + 1
                         },
                         {
                             'fecha_llamada': fecha_llamada + dt.timedelta(
                                 days=1),
                             'hora_inicio': nptime().from_time(
-                                nocturno.inicio
+                                dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time()
                             ),
                             'duracion': int((
                                 hora_fin -
                                             nptime().from_time(
-                                                nocturno.inicio)
+                                                dt.datetime.strptime(nocturno['start'],'%H:%M:%S').time())
                                             ).total_seconds())
                         },
                     )
-                elif dt.time(0, 0) <= nocturno.fin <= hora_fin:
+                elif dt.time(0, 0) <= dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time() <= hora_fin:
                     return (
                         {
                             'fecha_llamada': fecha_llamada,
@@ -2631,16 +2637,16 @@ class Cdr2(mongoengine.Document):
                             'hora_inicio': nptime(0, 0),
                             'duracion': int((
                                 nptime().from_time(
-                                    nocturno.fin) - nptime(0, 0)
+                                    dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time()) - nptime(0, 0)
                             ).total_seconds()) + 1
                         },
                         {
                             'fecha_llamada': fecha_llamada + dt.timedelta(
                                 days=1),
                             'hora_inicio': nptime().from_time(
-                                nocturno.fin) + dt.timedelta(seconds=1),
+                                dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time()) + dt.timedelta(seconds=1),
                             'duracion': int((
-                                hora_fin - nptime().from_time(nocturno.fin)
+                                hora_fin - nptime().from_time(dt.datetime.strptime(nocturno['end'],'%H:%M:%S').time())
                             ).total_seconds())
                         },
                     )
@@ -2659,10 +2665,9 @@ class Cdr2(mongoengine.Document):
 
         else:
             numero = int('56' + dialed_number)
+        linea = Line.objects.filter(number=numero).first()
 
-        linea = Line.objects.filter(numero=numero).first()
-
-        return None if linea is None else linea.number
+        return None if linea is None else linea.entity
 
     def insert_incoming(self, name):
         if name == 'ENTEL':
@@ -2697,12 +2702,17 @@ class Cdr2(mongoengine.Document):
                 if company is None:
                     valid = False
                     observation = 'ani_number sin numeracion'
+                    tipo = None
+                    entity = None
 
-                tipo = self.get_tipo(row['ANI'], row['DIALED_NUMBER'])
+                else:
+                    tipo = self.get_tipo(row['ANI'], row['DIALED_NUMBER'])
+                    entity = self.get_entity(row['DIALED_NUMBER'])
 
             else:
                 company = None
                 tipo = None
+                entity = None
                 observation = 'No cumple con los filtros'
 
             ani_number = int(row['ANI_NUMBER']) if row[
@@ -2711,7 +2721,6 @@ class Cdr2(mongoengine.Document):
                 'INGRESS_DURATION'].isdigit() else None
             is_digit = row['DIALED_NUMBER'].isdigit()
             length = len(row['DIALED_NUMBER']) < 20
-            entity = self.get_entity(row['DIALED_NUMBER'])
             dialed_number = int(
                 row['DIALED_NUMBER']) if is_digit and length else None
             connect_time = dt.datetime.strptime(
@@ -2747,7 +2756,7 @@ class Cdr2(mongoengine.Document):
                     ).save()
 
             else:
-                LogLlamadas(
+                Incoming(
                     connect_time=connect_time,
                     ani_number=ani_number,
                     ingress_duration=ingress_duration,
@@ -2776,6 +2785,8 @@ class Incoming(mongoengine.Document):
     invoiced = mongoengine.BooleanField(default=False)
     observation = mongoengine.StringField()
     company = mongoengine.ReferenceField(Company)
+    _type = mongoengine.StringField(choices=choices.TIPOS)
+    entity = mongoengine.StringField(choices=choices.ENTITIES)
 
 
 class Outgoing(mongoengine.Document):

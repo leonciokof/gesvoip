@@ -426,3 +426,21 @@ ZONES = (
     (67, 'Coyhaique'),
     (61, 'Punta Arenas'),
 )
+
+NATURAL = 'natural'
+COMPANY = 'empresa'
+ENTITIES = (
+    (NATURAL, 'natural'),
+    (COMPANY, 'Empresa'),
+)
+
+TIPOS = (
+    ('voip-movil', 'voip-movil'),
+    ('voip-ldi', 'voip-ldi'),
+    ('voip-local', 'voip-local'),
+    ('movil', 'movil'),
+    ('internacional', 'internacional'),
+    ('local', 'local'),
+    ('especial', 'especial'),
+    ('nacional', 'nacional'),
+)
