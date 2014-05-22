@@ -1,0 +1,12 @@
+{% extends "gesvoip/base_intranet.html" %}
+
+{% block title %}Cargar CDR - GesVoIP{% endblock title %}
+{% block title2 %}<h1>Cargar CDR</h1>{% endblock title2 %}
+
+{% block content %}
+  <form name="cargaCdr" id="cargaCdr" class="formulario" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" name="enviar" id="enviar" value="Enviar" />
+  </form>
+{% endblock content %}

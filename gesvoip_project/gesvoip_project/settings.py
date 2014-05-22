@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 import os
 
 import dj_database_url
+import djcelery
+
+djcelery.setup_loader()
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -42,8 +45,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'south',
-    'cacheops',
+    'djcelery',
     'gesvoip',
     'sti',
 )
@@ -122,13 +124,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
 
-CACHEOPS_REDIS = {
-    'host': 'localhost',
-    'port': 6379,
-    'db': 1,
-    'socket_timeout': 3,
-}
+BROKER_URL = 'redis://localhost:6379/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-CACHEOPS = {
-    'gesvoip.*': ('all', 60 * 60 * 24),
-}
+DEFAULT_FROM_EMAIL = 'lgaticastyle@gmail.com'

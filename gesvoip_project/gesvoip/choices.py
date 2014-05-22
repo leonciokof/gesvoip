@@ -453,3 +453,10 @@ TIPO_CHOICES = (
     (REDUCIDO, 'Reducido'),
     (NOCTURNO, 'Nocturno')
 )
+
+INVOICING = (
+    ('monthly', 'Mensual'),
+    ('biannual', 'Semestral'),
+    ('quarterly', 'Trimestral'),
+    ('annual', 'Anual'),
+)
