@@ -128,4 +128,6 @@ BROKER_URL = 'redis://localhost:6379/0'
 BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
+EMAIL_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'
 DEFAULT_FROM_EMAIL = 'lgaticastyle@gmail.com'
+MANDRILL_API_KEY = os.environ.get('MANDRILL_API_KEY', '')

@@ -52,6 +52,7 @@ def insert_incoming(cdr):
         'Proceso finalizado',
         'gesvoip/email.html',
         {})
+    print('finish')
 
 
 def send_email(to, subject, template, context):
