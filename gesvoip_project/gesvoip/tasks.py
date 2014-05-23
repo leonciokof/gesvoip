@@ -47,7 +47,7 @@ def insert_incoming(cdr):
         i.save()
 
     send_email(
-        settings.DEFAULT_FROM_EMAIL,
+        [settings.DEFAULT_FROM_EMAIL],
         'Proceso finalizado',
         'gesvoip/email.html',
         {})

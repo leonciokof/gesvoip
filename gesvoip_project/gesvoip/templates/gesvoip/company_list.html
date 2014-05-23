@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% load pagination_tags %}
+
+{% block title %}Compañias{% endblock title %}
+
+{% block content %}
+<div id="page-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header">Compañias</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              {% if object_list %}
+              <div class="table-responsive">
+                <div class="row">
+                  <div class="col-lg-12">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Nombre</th>
+                          <th>Codigo</th>
+                          <th>Facturacion</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for obj in object_list %}
+                        <tr>
+                          <td>{{ obj.name }}</td>
+                          <td>{{ obj.code|default:"---" }}</td>
+                          <td>{{ obj.get_invoicing_display }}</td>
+                          <th>
+                            <a href="{% url 'gesvoip:company_update' obj.pk %}" class="btn btn-xs">
+                              <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                          </th>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-12">
+                    {% paginate %}
+                  </div>
+                </div>
+              </div>
+
+              {% else %}
+              <h2>No existen registros.</h2>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% include 'gesvoip/modals/company_form.html' %}
+{% endblock content %}

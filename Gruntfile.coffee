@@ -7,9 +7,10 @@ module.exports = (grunt) ->
     app: "app"
     config: "config"
     src:
-      coffee: "src/coffee"
+      coffee: "gesvoip_project/gesvoip/src/coffee"
       js: "gesvoip_project/gesvoip/src/js"
       css: "gesvoip_project/gesvoip/src/css"
+      stylus: "gesvoip_project/gesvoip/src/stylus"
       images: "src/images"
     public:
       js: "gesvoip_project/gesvoip/static/gesvoip/js"
@@ -51,24 +52,30 @@ module.exports = (grunt) ->
             "<%= bower %>/jquery/dist/jquery.js"
             "<%= bower %>/bootstrap/dist/js/bootstrap.js"
             "<%= bower %>/metisMenu/jquery.metisMenu.js"
-            "<%= bower %>/humanize/humanize.js"
-            "<%= bower %>/momentjs/moment.js"
-            "<%= src.js %>/plugins/jquery.dataTables.js"
-            "<%= src.js %>/plugins/dataTables.bootstrap.js"
-            "<%= src.js %>/plugins/sb-admin.js"
+            "<%= bower %>/bootstrap-3-timepicker/js/bootstrap-timepicker.js"
             "<%= src.js %>/*.js"
           ]
 
     clean:
       js: ["<%= src.js %>/*.js"]
 
+    stylus:
+      compile:
+        files: [
+          expand: true
+          cwd: "<%= src.stylus %>"
+          src: ["*.styl"]
+          dest: "<%= src.css %>"
+          ext: ".css"
+        ]
+
     cssmin:
       css:
         src: [
           "<%= bower %>/bootstrap/dist/css/bootstrap.css"
           "<%= bower %>/font-awesome/css/font-awesome.css"
-          "<%= src.css %>/dataTables.bootstrap.css"
-          "<%= src.css %>/sb-admin.css"
+          "<%= bower %>/bootstrap-3-timepicker/css/bootstrap-timepicker.css"
+          "<%= src.css %>/*.css"
         ]
         dest: "<%= public.css %>/combined.min.css"
 
@@ -189,8 +196,10 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-concurrent"
   grunt.loadNpmTasks "grunt-shell"
   grunt.loadNpmTasks "grunt-newer"
+  grunt.loadNpmTasks "grunt-contrib-stylus"
 
   grunt.registerTask "default", ["build", "concurrent"]
+  grunt.registerTask "build2", ["coffee", "uglify", "clean", "stylus", "cssmin"]
   grunt.registerTask "build", [
     "coffeelint"
     "coffee"

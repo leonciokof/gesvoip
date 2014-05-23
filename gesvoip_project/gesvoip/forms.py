@@ -2,6 +2,8 @@
 
 from django import forms
 
+from mongodbforms import DocumentForm
+
 from . import choices, models
 
 
@@ -71,3 +73,46 @@ class RateForm(forms.Form):
             'min': '0.0001',
             'step': '0.0001',
             'placeholder': '0.0001'}))
+
+
+class CompanyForm(DocumentForm):
+    bussines_normal_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_normal_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_reduced_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_reduced_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_nightly_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_nightly_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_normal_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_normal_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_reduced_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_reduced_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_nightly_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_nightly_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_normal_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_normal_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_reduced_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_reduced_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_nightly_start = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_nightly_end = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+
+    class Meta:
+        document = models.Company
+        exclude = ('schedules',)

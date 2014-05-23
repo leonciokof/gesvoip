@@ -11,9 +11,10 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-import dj_database_url
+from mongoengine import connect
 import djcelery
 
+connect('gesvoip')
 djcelery.setup_loader()
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -40,16 +41,15 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
+    'mongoengine.django.mongo_auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'djcelery',
-    'django_rq',
     'crispy_forms',
+    'pagination_bootstrap',
     'gesvoip',
-    'sti',
 )
 
 if DEBUG:
@@ -62,6 +62,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'pagination_bootstrap.middleware.PaginationMiddleware',
 )
 
 ROOT_URLCONF = 'gesvoip_project.urls'
@@ -73,26 +74,10 @@ WSGI_APPLICATION = 'gesvoip_project.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.parse(
-        os.environ.get(
-            'GESVOIP_DB_URL', 'postgres://postgres@127.0.0.1/gesvoip'
-        )
-    ),
-    'sti': dj_database_url.parse(
-        os.environ.get(
-            'STI_DB_URL', 'postgres://postgres@127.0.0.1/sti'
-        )
-    ),
-    'portabilidad': dj_database_url.parse(
-        os.environ.get(
-            'PORTABILIDAD_DB_URL', 'postgres://postgres@127.0.0.1/portabilidad'
-        )
-    ),
+    'default': {
+        'ENGINE': 'django.db.backends.dummy'
+    }
 }
-
-DATABASE_ROUTERS = [
-    'gesvoip_project.routers.ModelDatabaseRouter'
-]
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -150,3 +135,27 @@ RQ_QUEUES = {
 }
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+AUTHENTICATION_BACKENDS = (
+    'mongoengine.django.auth.MongoEngineBackend',
+)
+SESSION_ENGINE = 'mongoengine.django.sessions'
+
+AUTH_USER_MODEL = 'mongo_auth.MongoUser'
+
+MONGOENGINE_USER_DOCUMENT = 'mongoengine.django.auth.User'
+
+TEMPLATE_DIRS = (
+    os.path.join(BASE_DIR, 'templates'),
+)
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+    'django.core.context_processors.tz',
+    'django.contrib.messages.context_processors.messages',
+    'django.core.context_processors.request',
+)

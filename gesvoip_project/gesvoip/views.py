@@ -1,6 +1,8 @@
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
 from django.views import generic
 
+from mongogeneric import ListView, UpdateView
 import django_rq
 
 from . import forms, models, tasks
@@ -36,7 +38,7 @@ class NewRateView(generic.FormView):
 
         return super(NewRateView, self).form_valid(form)
 
-new_rate = NewRateView.as_view()
+new_rate = login_required(NewRateView.as_view())
 
 
 class NewCdrView(generic.FormView):
@@ -62,4 +64,37 @@ class NewCdrView(generic.FormView):
 
         return super(NewCdrView, self).form_valid(form)
 
-new_cdr = NewCdrView.as_view()
+new_cdr = login_required(NewCdrView.as_view())
+
+
+class IncomingListView(ListView):
+
+    document = models.Incoming
+    paginate_by = 10
+
+incoming_list = login_required(IncomingListView.as_view())
+
+
+class InvoiceListView(ListView):
+
+    document = models.Invoice
+    paginate_by = 10
+
+invoice_list = login_required(InvoiceListView.as_view())
+
+
+class CompanyListView(ListView):
+
+    document = models.Company
+    paginate_by = 10
+
+company_list = login_required(CompanyListView.as_view())
+
+
+class CompanyUpdateView(UpdateView):
+
+    document = models.Company
+    form_class = forms.CompanyForm
+    success_url = reverse_lazy('gesvoip:company_list')
+
+company_update = login_required(CompanyUpdateView.as_view())

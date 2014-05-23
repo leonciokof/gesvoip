@@ -3,47 +3,27 @@
 from re import search
 import datetime as dt
 
-from django.db import models
-
 from nptime import nptime
 import mongoengine
 
 from . import choices, patterns
-
-mongoengine.connect('gesvoip')
 
 
 class Company(mongoengine.Document):
 
     """Modelo de compañias."""
 
-    name = mongoengine.StringField(unique=True)
+    name = mongoengine.StringField(unique=True, max_length=255)
     code = mongoengine.IntField()
     schedules = mongoengine.DictField()
     invoicing = mongoengine.StringField(choices=choices.INVOICING)
 
+    meta = {
+        'ordering': ['name']
+    }
+
     def __unicode__(self):
         return self.name
-
-
-class Company2(models.Model):
-
-    """Modelo de compañias."""
-
-    name = models.CharField(max_length=255, unique=True)
-    code = models.IntegerField(null=True)
-    invoicing = models.CharField(max_length=255, choices=choices.INVOICING)
-
-
-class Schedule(models.Model):
-
-    """Modelo de horario."""
-
-    company = models.ForeignKey(Company2)
-    day = models.CharField(max_length=255)
-    schedule = models.CharField(max_length=255)
-    start = models.TimeField()
-    end = models.TimeField()
 
 
 class Numeration(mongoengine.Document):
@@ -54,14 +34,11 @@ class Numeration(mongoengine.Document):
     _range = mongoengine.IntField()
     company = mongoengine.ReferenceField(Company)
 
+    def __str__(self):
+        return str(self.id)
 
-class Numeration2(models.Model):
-
-    """Modelo de las numeraciones."""
-
-    zone = models.IntegerField()
-    _range = models.IntegerField()
-    company = models.ForeignKey(Company2)
+    def __unicode__(self):
+        return unicode(self.__str__())
 
 
 class Line(mongoengine.Document):
@@ -75,29 +52,11 @@ class Line(mongoengine.Document):
     zone = mongoengine.IntField(choices=choices.ZONES)
     city = mongoengine.IntField(choices=choices.CITIES)
 
+    def __str__(self):
+        return str(self.id)
 
-class Line2(models.Model):
-
-    """Modelo de los clientes de convergia."""
-
-    number = models.IntegerField(unique=True)
-    name = models.CharField(max_length=255)
-    entity = models.CharField(max_length=255, choices=choices.ENTITIES)
-    comments = models.CharField(max_length=255)
-    zone = models.IntegerField(choices=choices.ZONES)
-    city = models.IntegerField(choices=choices.CITIES)
-
-
-class Line3(models.Model):
-
-    """Modelo de los clientes de convergia."""
-
-    number = models.BigIntegerField(unique=True)
-    name = models.CharField(max_length=255)
-    entity = models.CharField(max_length=255, choices=choices.ENTITIES)
-    comments = models.CharField(max_length=255)
-    zone = models.IntegerField(choices=choices.ZONES)
-    city = models.IntegerField(choices=choices.CITIES)
+    def __unicode__(self):
+        return unicode(self.__str__())
 
 
 class Cdr(mongoengine.Document):
@@ -112,6 +71,12 @@ class Cdr(mongoengine.Document):
     incoming_entel = mongoengine.FileField()
     outgoing = mongoengine.FileField()
     processed = mongoengine.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())
 
     def valida_ani(self, ani):
         if len(ani) == 11:
@@ -574,6 +539,12 @@ class Incoming(mongoengine.Document):
     schedule = mongoengine.StringField(choices=choices.TIPO_CHOICES)
     entity = mongoengine.StringField(choices=choices.ENTITIES)
 
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())
+
 
 class Outgoing(mongoengine.Document):
 
@@ -589,6 +560,12 @@ class Outgoing(mongoengine.Document):
     observation = mongoengine.StringField()
     company = mongoengine.ReferenceField(Company)
 
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())
+
 
 class Portability(mongoengine.Document):
 
@@ -598,12 +575,24 @@ class Portability(mongoengine.Document):
     company = mongoengine.ReferenceField(Company)
     date = mongoengine.DateTimeField()
 
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())
+
 
 class Holiday(mongoengine.Document):
 
     """Modelo de los feriados."""
 
     date = mongoengine.DateTimeField(unique=True)
+
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())
 
 
 class Invoice(mongoengine.Document):
@@ -620,6 +609,15 @@ class Invoice(mongoengine.Document):
     total = mongoengine.FloatField()
     invoiced = mongoengine.BooleanField(default=False)
 
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())
+
+    def get_date(self):
+        return u'{0}-{1}'.format(self.year, self.month)
+
 
 class Period(mongoengine.Document):
 
@@ -632,6 +630,12 @@ class Period(mongoengine.Document):
     call_duration = mongoengine.IntField()
     total = mongoengine.FloatField()
 
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())
+
 
 class Rate(mongoengine.Document):
 
@@ -643,3 +647,9 @@ class Rate(mongoengine.Document):
     call_number = mongoengine.IntField()
     call_duration = mongoengine.IntField()
     total = mongoengine.FloatField()
+
+    def __str__(self):
+        return str(self.id)
+
+    def __unicode__(self):
+        return unicode(self.__str__())

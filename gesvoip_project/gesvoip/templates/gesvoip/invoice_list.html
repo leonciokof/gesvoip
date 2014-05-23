@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% load pagination_tags %}
+
+{% block title %}Cargar CDR{% endblock title %}
+
+{% block content %}
+<div id="page-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header">Cargar CDR</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              {% if object_list %}
+              <div class="table-responsive">
+                <div class="row">
+                  <div class="col-lg-12">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Compañia</th>
+                          <th>Total llamadas</th>
+                          <th>Total segundos</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for obj in object_list %}
+                        <tr>
+                          <td>{{ obj.get_date }}</td>
+                          <td>{{ obj.company }}</td>
+                          <td>{{ obj.call_number }}</td>
+                          <td>{{ obj.call_duration }}</td>
+                          <td>{{ obj.total }}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-12">
+                    {% paginate %}
+                  </div>
+                </div>
+              </div>
+
+              {% else %}
+              <h2>No existen registros.</h2>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
