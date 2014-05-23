@@ -3,6 +3,8 @@
 from re import search
 import datetime as dt
 
+from django.db import models
+
 from nptime import nptime
 import mongoengine
 
@@ -24,6 +26,26 @@ class Company(mongoengine.Document):
         return self.name
 
 
+class Company2(models.Model):
+
+    """Modelo de compañias."""
+
+    name = models.CharField(max_length=255, unique=True)
+    code = models.IntegerField(null=True)
+    invoicing = models.CharField(max_length=255, choices=choices.INVOICING)
+
+
+class Schedule(models.Model):
+
+    """Modelo de horario."""
+
+    company = models.ForeignKey(Company2)
+    day = models.CharField(max_length=255)
+    schedule = models.CharField(max_length=255)
+    start = models.TimeField()
+    end = models.TimeField()
+
+
 class Numeration(mongoengine.Document):
 
     """Modelo de las numeraciones."""
@@ -32,12 +54,14 @@ class Numeration(mongoengine.Document):
     _range = mongoengine.IntField()
     company = mongoengine.ReferenceField(Company)
 
-    meta = {
-        'indexes': [('zone', '_range')]
-    }
 
-    def __unicode__(self):
-        return u'{0}{1}'.format(self.zone, self._range)
+class Numeration2(models.Model):
+
+    """Modelo de las numeraciones."""
+
+    zone = models.IntegerField()
+    _range = models.IntegerField()
+    company = models.ForeignKey(Company2)
 
 
 class Line(mongoengine.Document):
@@ -50,6 +74,30 @@ class Line(mongoengine.Document):
     comments = mongoengine.StringField()
     zone = mongoengine.IntField(choices=choices.ZONES)
     city = mongoengine.IntField(choices=choices.CITIES)
+
+
+class Line2(models.Model):
+
+    """Modelo de los clientes de convergia."""
+
+    number = models.IntegerField(unique=True)
+    name = models.CharField(max_length=255)
+    entity = models.CharField(max_length=255, choices=choices.ENTITIES)
+    comments = models.CharField(max_length=255)
+    zone = models.IntegerField(choices=choices.ZONES)
+    city = models.IntegerField(choices=choices.CITIES)
+
+
+class Line3(models.Model):
+
+    """Modelo de los clientes de convergia."""
+
+    number = models.BigIntegerField(unique=True)
+    name = models.CharField(max_length=255)
+    entity = models.CharField(max_length=255, choices=choices.ENTITIES)
+    comments = models.CharField(max_length=255)
+    zone = models.IntegerField(choices=choices.ZONES)
+    city = models.IntegerField(choices=choices.CITIES)
 
 
 class Cdr(mongoengine.Document):

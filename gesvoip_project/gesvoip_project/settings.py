@@ -46,6 +46,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'djcelery',
+    'django_rq',
+    'crispy_forms',
     'gesvoip',
     'sti',
 )
@@ -131,3 +133,20 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 EMAIL_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'
 DEFAULT_FROM_EMAIL = 'lgaticastyle@gmail.com'
 MANDRILL_API_KEY = os.environ.get('MANDRILL_API_KEY', '')
+
+RQ_QUEUES = {
+    'default': {
+        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379'),
+        'DB': 0,
+    },
+    'high': {
+        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379'),
+        'DB': 0,
+    },
+    'low': {
+        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379'),
+        'DB': 0,
+    }
+}
+
+CRISPY_TEMPLATE_PACK = 'bootstrap3'

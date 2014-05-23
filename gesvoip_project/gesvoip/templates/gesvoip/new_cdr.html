@@ -1,12 +1,32 @@
-{% extends "gesvoip/base_intranet.html" %}
+{% extends 'gesvoip/base.html' %}
 
-{% block title %}Cargar CDR - GesVoIP{% endblock title %}
-{% block title2 %}<h1>Cargar CDR</h1>{% endblock title2 %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cargar CDR{% endblock title %}
 
 {% block content %}
-  <form name="cargaCdr" id="cargaCdr" class="formulario" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit" name="enviar" id="enviar" value="Enviar" />
-  </form>
+<div id="page-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header">Cargar CDR</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              <form role="form" method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button class="btn btn-primary" type="submit">Crear</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock content %}

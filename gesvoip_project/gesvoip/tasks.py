@@ -8,9 +8,8 @@ from celery.task import task
 from . import models
 
 
-@task
 def insert_incoming(cdr):
-    for name in ['ENTEL', 'CTC']:
+    for name in ['ENTEL']:
         cdr.insert_incoming(name)
 
     for c in models.Company.objects.filter(invoicing='monthly'):
