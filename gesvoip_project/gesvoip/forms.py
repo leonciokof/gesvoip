@@ -77,42 +77,66 @@ class RateForm(forms.Form):
 
 class CompanyForm(DocumentForm):
     bussines_normal_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     bussines_normal_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     bussines_reduced_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     bussines_reduced_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     bussines_nightly_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     bussines_nightly_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     saturday_normal_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     saturday_normal_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     saturday_reduced_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     saturday_reduced_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     saturday_nightly_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     saturday_nightly_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     festive_normal_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     festive_normal_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     festive_reduced_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     festive_reduced_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     festive_nightly_start = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
     festive_nightly_end = forms.CharField(
+        required=False,
         widget=forms.TextInput(attrs={'class': 'timepicker'}))
 
     class Meta:
         document = models.Company
         exclude = ('schedules',)
+
+    # def __init__(self, *args, **kwargs):
+    #     super(CompanyForm, self).__init__(*args, **kwargs)
+    #     company = kwargs.get('instance')
+    #     self.fields[
+    #         'bussines_normal_start'].initial = company.schedules['bussines']['normal']['start']
