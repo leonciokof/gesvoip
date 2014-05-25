@@ -2,13 +2,13 @@
 
 {% load pagination_tags humanize %}
 
-{% block title %}Facturas{% endblock title %}
+{% block title %}Periodos{% endblock title %}
 
 {% block content %}
 <div id="page-wrapper">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Facturas</h1>
+      <h1 class="page-header">Periodos</h1>
     </div>
   </div>
   <div class="row">
@@ -24,8 +24,8 @@
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Fecha</th>
-                          <th>Compañia</th>
+                          <th>Inicio</th>
+                          <th>Fin</th>
                           <th>Total llamadas</th>
                           <th>Total segundos</th>
                           <th>Total</th>
@@ -35,12 +35,12 @@
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.get_date }}</td>
-                          <td>{{ obj.company }}</td>
+                          <td>{{ obj.get_start }}</td>
+                          <td>{{ obj.get_end }}</td>
                           <td>{{ obj.call_number|intcomma }}</td>
                           <td>{{ obj.call_duration|intcomma }}</td>
                           <td>{{ obj.get_total|intcomma }}</td>
-                          <td><a href="{% url 'gesvoip:period_list' obj.pk %}" class="btn btn-xs btn-default">Periodos</a></td>
+                          <td><a href="{% url 'gesvoip:rate_list' obj.pk %}" class="btn btn-xs btn-default">Tarifas</a></td>
                         </tr>
                         {% endfor %}
                       </tbody>

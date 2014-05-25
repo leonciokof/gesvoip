@@ -13,10 +13,12 @@ class Company(mongoengine.Document):
 
     """Modelo de compañias."""
 
-    name = mongoengine.StringField(unique=True, max_length=255)
-    code = mongoengine.IntField()
-    schedules = mongoengine.DictField()
-    invoicing = mongoengine.StringField(choices=choices.INVOICING)
+    name = mongoengine.StringField(
+        unique=True, max_length=255, verbose_name=u'nombre')
+    code = mongoengine.IntField(verbose_name=u'codigo')
+    schedules = mongoengine.DictField(verbose_name=u'horarios')
+    invoicing = mongoengine.StringField(
+        choices=choices.INVOICING, verbose_name=u'facturación')
 
     meta = {
         'ordering': ['name']
@@ -618,6 +620,12 @@ class Invoice(mongoengine.Document):
     def get_date(self):
         return u'{0}-{1}'.format(self.year, self.month)
 
+    def get_total(self):
+        return int(round(self.total)) if self.total else 0
+
+    def get_periods(self):
+        return Period.objects.filter(invoice=self)
+
 
 class Period(mongoengine.Document):
 
@@ -636,6 +644,21 @@ class Period(mongoengine.Document):
     def __unicode__(self):
         return unicode(self.__str__())
 
+    def get_start(self):
+        return self.start.strftime('%Y-%m-%d')
+
+    def get_end(self):
+        return self.end.strftime('%Y-%m-%d')
+
+    def get_range(self):
+        return u'{0} - {1}'.format(self.get_start(), self.get_end())
+
+    def get_rates(self):
+        return Rate.objects.filter(period=self)
+
+    def get_total(self):
+        return int(round(self.total)) if self.total else 0
+
 
 class Rate(mongoengine.Document):
 
@@ -653,3 +676,9 @@ class Rate(mongoengine.Document):
 
     def __unicode__(self):
         return unicode(self.__str__())
+
+    def get_type(self):
+        return self.get__type_display()
+
+    def get_total(self):
+        return int(round(self.total)) if self.total else 0

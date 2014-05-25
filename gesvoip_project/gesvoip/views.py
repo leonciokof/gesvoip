@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
 from django.views import generic
 
-from mongogeneric import ListView, UpdateView
+from mongogeneric import DetailView, ListView, UpdateView
 import django_rq
 
 from . import forms, models, tasks
@@ -295,3 +295,36 @@ class CompanyUpdateView(UpdateView):
         return initial
 
 company_update = login_required(CompanyUpdateView.as_view())
+
+
+class PeriodListView(ListView):
+
+    document = models.Period
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super(PeriodListView, self).get_queryset()
+        invoice = models.Invoice.objects.get(pk=self.kwargs.get('pk'))
+        return queryset.filter(invoice=invoice)
+
+period_list = login_required(PeriodListView.as_view())
+
+
+class RateListView(ListView):
+
+    document = models.Rate
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super(RateListView, self).get_queryset()
+        period = models.Period.objects.get(pk=self.kwargs.get('pk'))
+        return queryset.filter(period=period)
+
+rate_list = login_required(RateListView.as_view())
+
+
+class InvoiceResumenView(DetailView):
+
+    document = models.Invoice
+
+invoice_resumen = login_required(InvoiceResumenView.as_view())
