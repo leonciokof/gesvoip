@@ -43,6 +43,9 @@
       </nav>
       {% block content %}{% endblock content %}
     </div>
+    {% if debug %}
+    <script src="//localhost:35729/livereload.js"></script>
+    {% endif %}
     <script src="{% static 'gesvoip/js/combined.min.js' %}"></script>
   </body>
 </html>

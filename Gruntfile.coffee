@@ -110,6 +110,8 @@ module.exports = (grunt) ->
         ]
 
     watch:
+      options:
+        livereload: true
       gruntfile:
         files: ["Gruntfile.coffee"]
         tasks: ["build"]
