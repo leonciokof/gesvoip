@@ -1,20 +1,25 @@
 {% extends 'base.html' %}
 
-{% load pagination_tags humanize %}
+{% load pagination_tags %}
 
-{% block title %}Periodos{% endblock title %}
+{% block title %}Feriados{% endblock title %}
 
 {% block content %}
 <div id="page-wrapper">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Periodos</h1>
+      <h1 class="page-header">Feriados</h1>
     </div>
   </div>
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-default">
         <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              <a href="{% url 'gesvoip:holiday_create' %}" class="btn btn-primary">Nuevo</a>
+            </div>
+          </div>
           <div class="row">
             <div class="col-lg-12">
               {% if object_list %}
@@ -24,23 +29,19 @@
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Inicio</th>
-                          <th>Fin</th>
-                          <th>Total llamadas</th>
-                          <th>Total segundos</th>
-                          <th>Total</th>
+                          <th>Fecha</th>
                           <th></th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.get_start }}</td>
-                          <td>{{ obj.get_end }}</td>
-                          <td>{{ obj.call_number|intcomma }}</td>
-                          <td>{{ obj.call_duration|intcomma }}</td>
-                          <td>{{ obj.get_total|intcomma }}</td>
-                          <td><a href="{% url 'gesvoip:rate_list' obj.pk %}" class="btn btn-xs btn-default">Tarifas</a></td>
+                          <td>{{ obj }}</td>
+                          <td>
+                            <a href="{% url 'gesvoip:holiday_update' obj.pk %}" class="btn btn-xs">
+                              <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                          </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -64,4 +65,5 @@
     </div>
   </div>
 </div>
+{% include 'gesvoip/modals/company_form.html' %}
 {% endblock content %}

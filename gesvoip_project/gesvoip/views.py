@@ -1,8 +1,11 @@
+import datetime as dt
+
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
+from django.http import HttpResponseRedirect
 from django.views import generic
 
-from mongogeneric import DetailView, ListView, UpdateView
+from mongogeneric import CreateView, DetailView, ListView, UpdateView
 import django_rq
 
 from . import forms, models, tasks
@@ -297,34 +300,224 @@ class CompanyUpdateView(UpdateView):
 company_update = login_required(CompanyUpdateView.as_view())
 
 
-class PeriodListView(ListView):
-
-    document = models.Period
-    paginate_by = 10
-
-    def get_queryset(self):
-        queryset = super(PeriodListView, self).get_queryset()
-        invoice = models.Invoice.objects.get(pk=self.kwargs.get('pk'))
-        return queryset.filter(invoice=invoice)
-
-period_list = login_required(PeriodListView.as_view())
-
-
-class RateListView(ListView):
-
-    document = models.Rate
-    paginate_by = 10
-
-    def get_queryset(self):
-        queryset = super(RateListView, self).get_queryset()
-        period = models.Period.objects.get(pk=self.kwargs.get('pk'))
-        return queryset.filter(period=period)
-
-rate_list = login_required(RateListView.as_view())
-
-
-class InvoiceResumenView(DetailView):
+class InvoiceDetailView(DetailView):
 
     document = models.Invoice
 
-invoice_resumen = login_required(InvoiceResumenView.as_view())
+invoice_datail = login_required(InvoiceDetailView.as_view())
+
+
+class CompanyCreateView(CreateView):
+
+    document = models.Company
+    form_class = forms.CompanyForm
+    success_url = reverse_lazy('gesvoip:company_list')
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        bussines_normal_start = form.cleaned_data.get('bussines_normal_start')
+        bussines_normal_end = form.cleaned_data.get('bussines_normal_end')
+        bussines_reduced_start = form.cleaned_data.get(
+            'bussines_reduced_start')
+        bussines_reduced_end = form.cleaned_data.get('bussines_reduced_end')
+        bussines_nightly_start = form.cleaned_data.get(
+            'bussines_nightly_start')
+        bussines_nightly_end = form.cleaned_data.get('bussines_nightly_end')
+        saturday_normal_start = form.cleaned_data.get('saturday_normal_start')
+        saturday_normal_end = form.cleaned_data.get('saturday_normal_end')
+        saturday_reduced_start = form.cleaned_data.get(
+            'saturday_reduced_start')
+        saturday_reduced_end = form.cleaned_data.get('saturday_reduced_end')
+        saturday_nightly_start = form.cleaned_data.get(
+            'saturday_nightly_start')
+        saturday_nightly_end = form.cleaned_data.get('saturday_nightly_end')
+        festive_normal_start = form.cleaned_data.get('festive_normal_start')
+        festive_normal_end = form.cleaned_data.get('festive_normal_end')
+        festive_reduced_start = form.cleaned_data.get('festive_reduced_start')
+        festive_reduced_end = form.cleaned_data.get('festive_reduced_end')
+        festive_nightly_start = form.cleaned_data.get('festive_nightly_start')
+        festive_nightly_end = form.cleaned_data.get('festive_nightly_end')
+
+        if bussines_normal_start and bussines_normal_end:
+            if self.object.schedules.get('bussines'):
+                self.object.schedules.get('bussines').update({
+                    'normal': {
+                        'start': bussines_normal_start,
+                        'end': bussines_normal_end}})
+
+            else:
+                self.object.schedules.update({
+                    'bussines': {
+                        'normal': {
+                            'start': bussines_normal_start,
+                            'end': bussines_normal_end}}})
+
+        if bussines_reduced_start and bussines_reduced_end:
+            if self.object.schedules.get('bussines'):
+                self.object.schedules.get('bussines').update({
+                    'reduced': {
+                        'start': bussines_reduced_start,
+                        'end': bussines_reduced_end}})
+
+            else:
+                self.object.schedules.update({
+                    'bussines': {
+                        'reduced': {
+                            'start': bussines_reduced_start,
+                            'end': bussines_reduced_end}}})
+
+        if bussines_nightly_start and bussines_nightly_end:
+            if self.object.schedules.get('bussines'):
+                self.object.schedules.get('bussines').update({
+                    'nightly': {
+                        'start': bussines_nightly_start,
+                        'end': bussines_nightly_end}})
+
+            else:
+                self.object.schedules.update({
+                    'bussines': {
+                        'nightly': {
+                            'start': bussines_nightly_start,
+                            'end': bussines_nightly_end}}})
+
+        if saturday_normal_start and saturday_normal_end:
+            if self.object.schedules.get('saturday'):
+                self.object.schedules.get('saturday').update({
+                    'normal': {
+                        'start': saturday_normal_start,
+                        'end': saturday_normal_end}})
+
+            else:
+                self.object.schedules.update({
+                    'saturday': {
+                        'normal': {
+                            'start': saturday_normal_start,
+                            'end': saturday_normal_end}}})
+
+        if saturday_reduced_start and saturday_reduced_end:
+            if self.object.schedules.get('saturday'):
+                self.object.schedules.get('saturday').update({
+                    'reduced': {
+                        'start': saturday_reduced_start,
+                        'end': saturday_reduced_end}})
+
+            else:
+                self.object.schedules.update({
+                    'saturday': {
+                        'reduced': {
+                            'start': saturday_reduced_start,
+                            'end': saturday_reduced_end}}})
+
+        if saturday_nightly_start and saturday_nightly_end:
+            if self.object.schedules.get('saturday'):
+                self.object.schedules.get('saturday').update({
+                    'nightly': {
+                        'start': saturday_nightly_start,
+                        'end': saturday_nightly_end}})
+
+            else:
+                self.object.schedules.update({
+                    'saturday': {
+                        'nightly': {
+                            'start': saturday_nightly_start,
+                            'end': saturday_nightly_end}}})
+
+        if festive_normal_start and festive_normal_end:
+            if self.object.schedules.get('festive'):
+                self.object.schedules.get('festive').update({
+                    'normal': {
+                        'start': festive_normal_start,
+                        'end': festive_normal_end}})
+
+            else:
+                self.object.schedules.update({
+                    'festive': {
+                        'normal': {
+                            'start': festive_normal_start,
+                            'end': festive_normal_end}}})
+
+        if festive_reduced_start and festive_reduced_end:
+            if self.object.schedules.get('festive'):
+                self.object.schedules.get('festive').update({
+                    'reduced': {
+                        'start': festive_reduced_start,
+                        'end': festive_reduced_end}})
+
+            else:
+                self.object.schedules.update({
+                    'festive': {
+                        'reduced': {
+                            'start': festive_reduced_start,
+                            'end': festive_reduced_end}}})
+
+        if festive_nightly_start and festive_nightly_end:
+            if self.object.schedules.get('festive'):
+                self.object.schedules.get('festive').update({
+                    'nightly': {
+                        'start': festive_nightly_start,
+                        'end': festive_nightly_end}})
+
+            else:
+                self.object.schedules.update({
+                    'festive': {
+                        'nightly': {
+                            'start': festive_nightly_start,
+                            'end': festive_nightly_end}}})
+
+        self.object.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+company_create = login_required(CompanyCreateView.as_view())
+
+
+class HolidayListView(ListView):
+
+    document = models.Holiday
+    paginate_by = 10
+
+holiday_list = login_required(HolidayListView.as_view())
+
+
+class HolidayCreateView(CreateView):
+
+    document = models.Holiday
+    form_class = forms.HolidayForm
+    success_url = reverse_lazy('gesvoip:holiday_list')
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        date = form.cleaned_data.get('date')
+        try:
+            self.object.date = dt.datetime.strptime(date, '%Y-%m-%d')
+            self.object.save()
+            return HttpResponseRedirect(self.get_success_url())
+        except:
+            return self.form_invalid(form)
+
+holiday_create = login_required(HolidayCreateView.as_view())
+
+
+class HolidayUpdateView(UpdateView):
+
+    document = models.Holiday
+    form_class = forms.HolidayForm
+    success_url = reverse_lazy('gesvoip:holiday_list')
+
+    def form_valid(self, form):
+        date = form.cleaned_data.get('date')
+        try:
+            self.object.date = dt.datetime.strptime(date, '%Y-%m-%d')
+            self.object.save()
+            return HttpResponseRedirect(self.get_success_url())
+        except:
+            return self.form_invalid(form)
+
+    def get_initial(self):
+        initial = super(HolidayUpdateView, self).get_initial()
+        initial = initial.copy()
+        initial.update({'date': self.object.date.strftime('%Y-%m-%d')})
+
+        return initial
+
+holiday_update = login_required(HolidayUpdateView.as_view())

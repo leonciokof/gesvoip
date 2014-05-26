@@ -45,6 +45,9 @@ module.exports = (grunt) ->
             "<%= bower %>/bootstrap/dist/js/bootstrap.js"
             "<%= bower %>/metisMenu/jquery.metisMenu.js"
             "<%= bower %>/bootstrap-3-timepicker/js/bootstrap-timepicker.js"
+            "<%= bower %>/moment/moment.js"
+            "<%= bower %>/eonasdan-bootstrap-datetimepicker/" +
+            "build/js/bootstrap-datetimepicker.min.js"
             "<%= src.js %>/*.js"
           ]
 
@@ -64,6 +67,8 @@ module.exports = (grunt) ->
           "<%= bower %>/bootstrap/dist/css/bootstrap.css"
           "<%= bower %>/font-awesome/css/font-awesome.css"
           "<%= bower %>/bootstrap-3-timepicker/css/bootstrap-timepicker.css"
+          "<%= bower %>/eonasdan-bootstrap-datetimepicker/" +
+          "build/css/bootstrap-datetimepicker.css"
           "<%= src.css %>/*.css"
         ]
         dest: "<%= public.css %>/combined.min.css"

@@ -17,6 +17,11 @@
         <div class="panel-body">
           <div class="row">
             <div class="col-lg-12">
+              <a href="{% url 'gesvoip:company_create' %}" class="btn btn-primary">Nuevo</a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12">
               {% if object_list %}
               <div class="table-responsive">
                 <div class="row">
@@ -36,11 +41,11 @@
                           <td>{{ obj.name }}</td>
                           <td>{{ obj.code|default:"---" }}</td>
                           <td>{{ obj.get_invoicing_display }}</td>
-                          <th>
+                          <td>
                             <a href="{% url 'gesvoip:company_update' obj.pk %}" class="btn btn-xs">
                               <span class="glyphicon glyphicon-pencil"></span>
                             </a>
-                          </th>
+                          </td>
                         </tr>
                         {% endfor %}
                       </tbody>

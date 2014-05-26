@@ -588,13 +588,14 @@ class Holiday(mongoengine.Document):
 
     """Modelo de los feriados."""
 
-    date = mongoengine.DateTimeField(unique=True)
+    date = mongoengine.DateTimeField(unique=True, verbose_name=u'fecha')
 
-    def __str__(self):
-        return str(self.id)
+    meta = {
+        'ordering': ['-date']
+    }
 
     def __unicode__(self):
-        return unicode(self.__str__())
+        return self.date.strftime('%Y-%m-%d')
 
 
 class Invoice(mongoengine.Document):

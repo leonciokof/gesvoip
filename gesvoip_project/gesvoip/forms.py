@@ -152,3 +152,13 @@ class CompanyForm(DocumentForm):
     class Meta:
         document = models.Company
         exclude = ('schedules',)
+
+
+class HolidayForm(DocumentForm):
+    date = forms.CharField(
+        label='Fecha',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+
+    class Meta:
+        document = models.Holiday
