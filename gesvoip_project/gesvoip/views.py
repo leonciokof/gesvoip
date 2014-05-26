@@ -521,3 +521,16 @@ class HolidayUpdateView(UpdateView):
         return initial
 
 holiday_update = login_required(HolidayUpdateView.as_view())
+
+
+class NumerationListView(ListView):
+
+    document = models.Numeration
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super(NumerationListView, self).get_queryset()
+        company = models.Company.objects.get(pk=self.kwargs.get('pk'))
+        return queryset.filter(company=company)
+
+numeration_list = login_required(NumerationListView.as_view())

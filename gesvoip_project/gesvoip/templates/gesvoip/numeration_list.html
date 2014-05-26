@@ -2,24 +2,19 @@
 
 {% load pagination_tags %}
 
-{% block title %}Compañias{% endblock title %}
+{% block title %}Numeración{% endblock title %}
 
 {% block content %}
 <div id="page-wrapper">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Compañias</h1>
+      <h1 class="page-header">Numeración</h1>
     </div>
   </div>
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-default">
         <div class="panel-body">
-          <div class="row">
-            <div class="col-lg-12">
-              <a href="{% url 'gesvoip:company_create' %}" class="btn btn-primary">Nuevo</a>
-            </div>
-          </div>
           <div class="row">
             <div class="col-lg-12">
               {% if object_list %}
@@ -29,25 +24,15 @@
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Nombre</th>
-                          <th>Codigo</th>
-                          <th>Facturacion</th>
-                          <th></th>
-                          <th></th>
+                          <th>Zona</th>
+                          <th>Rango</th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.name }}</td>
-                          <td>{{ obj.code|default:"---" }}</td>
-                          <td>{{ obj.get_invoicing_display }}</td>
-                          <td>
-                            <a href="{% url 'gesvoip:company_update' obj.pk %}" class="btn btn-xs">
-                              <span class="glyphicon glyphicon-pencil"></span>
-                            </a>
-                          </td>
-                          <td><a href="{% url 'gesvoip:numeration_list' obj.pk %}" class="btn btn-xs btn-default">Numeración</a></td>
+                          <td>{{ obj.zone }}</td>
+                          <td>{{ obj.get_range }}</td>
                         </tr>
                         {% endfor %}
                       </tbody>

@@ -42,6 +42,9 @@ class Numeration(mongoengine.Document):
     def __unicode__(self):
         return unicode(self.__str__())
 
+    def get_range(self):
+        return self._range
+
 
 class Line(mongoengine.Document):
 

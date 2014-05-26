@@ -16,4 +16,6 @@ urlpatterns = patterns(
     url(r'^holiday_create/$', 'holiday_create', name='holiday_create'),
     url(r'^holiday_update/(?P<pk>\w+)/$',
         'holiday_update', name='holiday_update'),
+    url(r'^numeration_list/(?P<pk>\w+)/$',
+        'numeration_list', name='numeration_list'),
 )
