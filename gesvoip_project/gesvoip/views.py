@@ -1,14 +1,30 @@
+import csv
 import datetime as dt
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.views import generic
 
 from mongogeneric import CreateView, DetailView, ListView, UpdateView
 import django_rq
 
 from . import forms, models, tasks
+
+
+class CSVResponseMixin(object):
+
+    def render_to_response(self, context, **response_kwargs):
+        r = HttpResponse(content_type='text/csv')
+        r['Content-Disposition'] = 'attachment; filename="{0}"'.format(
+            context['title'])
+        writer = csv.writer(
+            r, delimiter=';', lineterminator='\n', dialect='excel')
+
+        for item in context['items']:
+            writer.writerow(item)
+
+        return r
 
 
 class NewRateView(generic.FormView):
@@ -534,3 +550,132 @@ class NumerationListView(ListView):
         return queryset.filter(company=company)
 
 numeration_list = login_required(NumerationListView.as_view())
+
+
+class IncomingValidListView(ListView):
+
+    document = models.Incoming
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super(IncomingValidListView, self).get_queryset()
+        invoice = models.Invoice.objects.get(pk=self.kwargs.get('pk'))
+        cdr = models.Cdr.objects.get(year=invoice.year, month=invoice.month)
+        return queryset.filter(cdr=cdr, company=invoice.company, invoiced=True)
+
+incoming_valid_list = login_required(IncomingValidListView.as_view())
+
+
+class PnMtcListView(ListView):
+
+    document = models.PnMtc
+    paginate_by = 10
+
+pnmtc_list = login_required(PnMtcListView.as_view())
+
+
+class PnMtcCreateView(CreateView):
+
+    document = models.PnMtc
+    success_url = reverse_lazy('gesvoip:pnmtc_list')
+
+pnmtc_create = login_required(PnMtcCreateView.as_view())
+
+
+class PnMtcUpdateView(UpdateView):
+
+    document = models.PnMtc
+    success_url = reverse_lazy('gesvoip:pnmtc_list')
+
+pnmtc_update = login_required(PnMtcUpdateView.as_view())
+
+
+class PnMtcRangeView(generic.FormView):
+
+    document = models.PnMtc
+    form_class = forms.PnMtcRangeForm
+    success_url = reverse_lazy('gesvoip:pnmtc_list')
+    template_name = 'gesvoip/pnmtc_form.html'
+
+    def form_valid(self, form):
+        start = form.cleaned_data.get('start')
+        end = form.cleaned_data.get('end')
+        rut = form.cleaned_data.get('rut')
+        service = form.cleaned_data.get('service')
+        mode = form.cleaned_data.get('mode')
+        due = form.cleaned_data.get('due')
+        active = form.cleaned_data.get('active')
+        document = form.cleaned_data.get('document')
+        special_service = form.cleaned_data.get('special_service')
+        name = form.cleaned_data.get('name')
+        entity = form.cleaned_data.get('entity')
+        comments = form.cleaned_data.get('comments')
+        zone = form.cleaned_data.get('zone')
+        city = form.cleaned_data.get('city')
+
+        if start < end:
+            for i in range(start, end + 1):
+                models.PnMtc(
+                    rut=rut,
+                    number=i,
+                    service=service,
+                    mode=mode,
+                    due=due,
+                    active=active,
+                    document=document,
+                    special_service=special_service).save()
+                models.Line(
+                    number=i,
+                    name=name,
+                    entity=entity,
+                    comments=comments,
+                    zone=zone,
+                    city=city).save()
+            return super(PnMtcRangeView, self).form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+pnmtc_range = login_required(PnMtcRangeView.as_view())
+
+
+class LocalCenterListView(ListView):
+
+    document = models.LocalCenter
+    paginate_by = 10
+
+localcenter_list = login_required(LocalCenterListView.as_view())
+
+
+class LocalCenterCreateView(CreateView):
+
+    document = models.LocalCenter
+    success_url = reverse_lazy('gesvoip:localcenter_list')
+
+localcenter_create = login_required(LocalCenterCreateView.as_view())
+
+
+class LocalCenterUpdateView(UpdateView):
+
+    document = models.LocalCenter
+    success_url = reverse_lazy('gesvoip:localcenter_list')
+
+localcenter_update = login_required(LocalCenterUpdateView.as_view())
+
+
+class LocalCenterReportView(CSVResponseMixin, generic.TemplateView):
+
+    template_name = 'gesvoip/localcenter_report.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LocalCenterReportView, self).get_context_data(**kwargs)
+        date = dt.date.today().strftime('%Y-%m')
+        title = 'TL_314_{0}_CL.txt'.format(date)
+        items = [
+            [i.company, date, i.code, i.name]
+            for i in models.LocalCenter.objects.all()
+        ]
+        context.update({'title': title, 'items': items})
+
+        return context
+
+localcenter_report = LocalCenterReportView.as_view()

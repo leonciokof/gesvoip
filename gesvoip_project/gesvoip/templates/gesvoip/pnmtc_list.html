@@ -2,19 +2,25 @@
 
 {% load pagination_tags %}
 
-{% block title %}Llamadas{% endblock title %}
+{% block title %}Lineas{% endblock title %}
 
 {% block content %}
 <div id="page-wrapper">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Llamadas</h1>
+      <h1 class="page-header">Lineas</h1>
     </div>
   </div>
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-default">
         <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              <a href="{% url 'gesvoip:pnmtc_create' %}" class="btn btn-primary">Nueva</a>
+              <a href="{% url 'gesvoip:pnmtc_range' %}" class="btn btn-primary">Rango</a>
+            </div>
+          </div>
           <div class="row">
             <div class="col-lg-12">
               {% if object_list %}
@@ -24,25 +30,29 @@
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Fecha</th>
-                          <th>Origen</th>
-                          <th>Destino</th>
-                          <th>Duracion</th>
-                          <th>Compañia</th>
-                          <th>Estado</th>
-                          <th>Observación</th>
+                          <th>Numero</th>
+                          <th>Nombre</th>
+                          <th>Entidad</th>
+                          <th>Area</th>
+                          <th>Comuna</th>
+                          <th>Comentarios</th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.connect_time }}</td>
-                          <td>{{ obj.ani_number }}</td>
-                          <td>{{ obj.dialed_number }}</td>
-                          <td>{{ obj.ingress_duration }}</td>
-                          <td>{{ obj.company|default:"Sin compañia" }}</td>
-                          <td>{{ obj.valid|yesno:"valido,invalido" }}</td>
-                          <td>{{ obj.observation|default:"" }}</td>
+                          <td>{{ obj.number }}</td>
+                          <td>{{ obj.name }}</td>
+                          <td>{{ obj.get_entity_display|default:"" }}</td>
+                          <td>{{ obj.get_zone_display|default:"" }}</td>
+                          <td>{{ obj.get_city_display|default:"" }}</td>
+                          <td>{{ obj.comments|default:"" }}</td>
+                          <td>
+                            <a href="{% url 'gesvoip:pnmtc_update' obj.pk %}" class="btn btn-xs">
+                              <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                          </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -55,7 +65,6 @@
                   </div>
                 </div>
               </div>
-
               {% else %}
               <p>No existen registros.</p>
               {% endif %}

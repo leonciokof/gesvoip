@@ -430,7 +430,7 @@ ZONES = (
 NATURAL = 'natural'
 COMPANY = 'empresa'
 ENTITIES = (
-    (NATURAL, 'natural'),
+    (NATURAL, 'Natural'),
     (COMPANY, 'Empresa'),
 )
 
@@ -459,4 +459,22 @@ INVOICING = (
     ('biannual', 'Semestral'),
     ('quarterly', 'Trimestral'),
     ('annual', 'Anual'),
+)
+
+SERVICES = (
+    ('movil', 'Movil'),
+    ('fijo', 'Fijo'),
+    ('voip', 'Voip'),
+    ('rural', 'Rural'),
+    ('mppc', 'MPPC'),
+)
+
+MODES = (
+    ('prepago', 'Prepago'),
+    ('postpago', 'Postpago'),
+)
+
+SPECIAL_SERVICES = (
+    ('isdn', 'ISDN'),
+    ('pabx', 'PABX'),
 )

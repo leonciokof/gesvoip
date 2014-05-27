@@ -2,19 +2,25 @@
 
 {% load pagination_tags %}
 
-{% block title %}Llamadas{% endblock title %}
+{% block title %}Centros Locales{% endblock title %}
 
 {% block content %}
 <div id="page-wrapper">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Llamadas</h1>
+      <h1 class="page-header">Centros Locales</h1>
     </div>
   </div>
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-default">
         <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              <a href="{% url 'gesvoip:localcenter_create' %}" class="btn btn-primary">Nuevo</a>
+              <a href="{% url 'gesvoip:localcenter_report' %}" class="btn btn-success">Informe</a>
+            </div>
+          </div>
           <div class="row">
             <div class="col-lg-12">
               {% if object_list %}
@@ -24,25 +30,23 @@
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Fecha</th>
-                          <th>Origen</th>
-                          <th>Destino</th>
-                          <th>Duracion</th>
-                          <th>Compañia</th>
-                          <th>Estado</th>
-                          <th>Observación</th>
+                          <th>Codigo empresa</th>
+                          <th>Codigo Local</th>
+                          <th>Descripción Local</th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.connect_time }}</td>
-                          <td>{{ obj.ani_number }}</td>
-                          <td>{{ obj.dialed_number }}</td>
-                          <td>{{ obj.ingress_duration }}</td>
-                          <td>{{ obj.company|default:"Sin compañia" }}</td>
-                          <td>{{ obj.valid|yesno:"valido,invalido" }}</td>
-                          <td>{{ obj.observation|default:"" }}</td>
+                          <td>{{ obj.company }}</td>
+                          <td>{{ obj.code }}</td>
+                          <td>{{ obj.name }}</td>
+                          <td>
+                            <a href="{% url 'gesvoip:localcenter_update' obj.pk %}" class="btn btn-xs">
+                              <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                          </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -55,7 +59,6 @@
                   </div>
                 </div>
               </div>
-
               {% else %}
               <p>No existen registros.</p>
               {% endif %}

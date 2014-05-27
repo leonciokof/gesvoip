@@ -30,6 +30,7 @@
                           <th>Total segundos</th>
                           <th>Total</th>
                           <th></th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -41,6 +42,7 @@
                           <td>{{ obj.call_duration|intcomma }}</td>
                           <td>{{ obj.get_total|intcomma }}</td>
                           <td><a href="{% url 'gesvoip:invoice_datail' obj.pk %}" class="btn btn-xs btn-default">Resumen</a></td>
+                          <td><a href="{% url 'gesvoip:incoming_valid_list' obj.pk %}" class="btn btn-xs btn-default">Llamadas</a></td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -55,7 +57,7 @@
               </div>
 
               {% else %}
-              <h2>No existen registros.</h2>
+              <p>No existen registros.</p>
               {% endif %}
             </div>
           </div>

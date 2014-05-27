@@ -50,12 +50,13 @@ class Line(mongoengine.Document):
 
     """Modelo de los clientes de convergia."""
 
-    number = mongoengine.IntField(unique=True)
-    name = mongoengine.StringField()
-    entity = mongoengine.StringField(choices=choices.ENTITIES)
-    comments = mongoengine.StringField()
-    zone = mongoengine.IntField(choices=choices.ZONES)
-    city = mongoengine.IntField(choices=choices.CITIES)
+    number = mongoengine.IntField(unique=True, verbose_name=u'numero')
+    name = mongoengine.StringField(max_length=255, verbose_name=u'nombre')
+    entity = mongoengine.StringField(
+        choices=choices.ENTITIES, verbose_name=u'entidad')
+    comments = mongoengine.StringField(verbose_name=u'comentarios')
+    zone = mongoengine.IntField(choices=choices.ZONES, verbose_name=u'area')
+    city = mongoengine.IntField(choices=choices.CITIES, verbose_name=u'comuna')
 
     def __str__(self):
         return str(self.id)
@@ -77,11 +78,8 @@ class Cdr(mongoengine.Document):
     outgoing = mongoengine.FileField()
     processed = mongoengine.BooleanField(default=False)
 
-    def __str__(self):
-        return str(self.id)
-
     def __unicode__(self):
-        return unicode(self.__str__())
+        return u'{0}-{1}'.format(self.year, self.month)
 
     def valida_ani(self, ani):
         if len(ani) == 11:
@@ -686,3 +684,32 @@ class Rate(mongoengine.Document):
 
     def get_total(self):
         return int(round(self.total)) if self.total else 0
+
+
+class LocalCenter(mongoengine.Document):
+    company = mongoengine.IntField(default=314, verbose_name=u'codigo empresa')
+    code = mongoengine.IntField(unique=True, verbose_name=u'codigo local')
+    name = mongoengine.StringField(
+        max_length=255, verbose_name=u'descripción local')
+
+    def __unicode__(self):
+        return self.name
+
+
+class PnMtc(mongoengine.Document):
+    company = mongoengine.IntField(default=333)
+    rut = mongoengine.StringField(
+        max_length=12, verbose_name=u'rut propietario')
+    number = mongoengine.IntField(unique=True, verbose_name=u'numero telefono')
+    service = mongoengine.StringField(
+        choices=choices.SERVICES, verbose_name=u'servicio', default='voip')
+    mode = mongoengine.StringField(
+        choices=choices.MODES, verbose_name=u'modalidad', default='postpago')
+    due = mongoengine.FloatField(verbose_name=u'deuda vencida', default=0.0000)
+    active = mongoengine.BooleanField(default=False, verbose_name=u'activo')
+    document = mongoengine.IntField(verbose_name=u'documento')
+    special_service = mongoengine.StringField(
+        choices=choices.SPECIAL_SERVICES, verbose_name=u'servicio especial')
+
+    def __unicode__(self):
+        return unicode(self.number)

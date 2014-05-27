@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Gesvoip{% endblock title %}</title>
+    <link href="{% static 'gesvoip/favicon.ico' %}" rel="shortcut icon" type="image/png">
     <link href="{% static 'gesvoip/css/combined.min.css' %}" rel="stylesheet">
   </head>
   <body>
@@ -40,6 +41,8 @@
             <li><a href="{% url 'gesvoip:new_rate' %}">Cargar Tarifas</a></li>
             <li><a href="{% url 'gesvoip:invoice_list' %}">Facturas</a></li>
             <li><a href="{% url 'gesvoip:holiday_list' %}">Feriados</a></li>
+            <li><a href="{% url 'gesvoip:pnmtc_list' %}">Lineas</a></li>
+            <li><a href="{% url 'gesvoip:localcenter_list' %}">Centros Locales</a></li>
           </ul>
         </div>
       </nav>
