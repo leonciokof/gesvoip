@@ -9,7 +9,7 @@ from django.views import generic
 from mongogeneric import CreateView, DetailView, ListView, UpdateView
 import django_rq
 
-from . import forms, models, tasks
+from . import choices, forms, models, tasks
 
 
 class CSVResponseMixin(object):
@@ -566,36 +566,36 @@ class IncomingValidListView(ListView):
 incoming_valid_list = login_required(IncomingValidListView.as_view())
 
 
-class PnMtcListView(ListView):
+class LineListView(ListView):
 
-    document = models.PnMtc
+    document = models.Line
     paginate_by = 10
 
-pnmtc_list = login_required(PnMtcListView.as_view())
+line_list = login_required(LineListView.as_view())
 
 
-class PnMtcCreateView(CreateView):
+class LineCreateView(CreateView):
 
-    document = models.PnMtc
-    success_url = reverse_lazy('gesvoip:pnmtc_list')
+    document = models.Line
+    success_url = reverse_lazy('gesvoip:line_list')
 
-pnmtc_create = login_required(PnMtcCreateView.as_view())
-
-
-class PnMtcUpdateView(UpdateView):
-
-    document = models.PnMtc
-    success_url = reverse_lazy('gesvoip:pnmtc_list')
-
-pnmtc_update = login_required(PnMtcUpdateView.as_view())
+line_create = login_required(LineCreateView.as_view())
 
 
-class PnMtcRangeView(generic.FormView):
+class LineUpdateView(UpdateView):
 
-    document = models.PnMtc
-    form_class = forms.PnMtcRangeForm
-    success_url = reverse_lazy('gesvoip:pnmtc_list')
-    template_name = 'gesvoip/pnmtc_form.html'
+    document = models.Line
+    success_url = reverse_lazy('gesvoip:line_list')
+
+line_update = login_required(LineUpdateView.as_view())
+
+
+class LineRangeView(generic.FormView):
+
+    document = models.Line
+    form_class = forms.LineRangeForm
+    success_url = reverse_lazy('gesvoip:line_list')
+    template_name = 'gesvoip/line_form.html'
 
     def form_valid(self, form):
         start = form.cleaned_data.get('start')
@@ -615,7 +615,7 @@ class PnMtcRangeView(generic.FormView):
 
         if start < end:
             for i in range(start, end + 1):
-                models.PnMtc(
+                l = models.Line(
                     rut=rut,
                     number=i,
                     service=service,
@@ -623,19 +623,22 @@ class PnMtcRangeView(generic.FormView):
                     due=due,
                     active=active,
                     document=document,
-                    special_service=special_service).save()
-                models.Line(
-                    number=i,
                     name=name,
                     entity=entity,
                     comments=comments,
                     zone=zone,
-                    city=city).save()
-            return super(PnMtcRangeView, self).form_valid(form)
+                    city=city)
+
+                if special_service:
+                    l.special_service = special_service
+
+                l.save()
+
+            return super(LineRangeView, self).form_valid(form)
         else:
             return self.form_invalid(form)
 
-pnmtc_range = login_required(PnMtcRangeView.as_view())
+line_range = login_required(LineRangeView.as_view())
 
 
 class LocalCenterListView(ListView):
@@ -664,8 +667,6 @@ localcenter_update = login_required(LocalCenterUpdateView.as_view())
 
 class LocalCenterReportView(CSVResponseMixin, generic.TemplateView):
 
-    template_name = 'gesvoip/localcenter_report.html'
-
     def get_context_data(self, **kwargs):
         context = super(LocalCenterReportView, self).get_context_data(**kwargs)
         date = dt.date.today().strftime('%Y-%m')
@@ -679,3 +680,75 @@ class LocalCenterReportView(CSVResponseMixin, generic.TemplateView):
         return context
 
 localcenter_report = LocalCenterReportView.as_view()
+
+
+class LineServiceReportView(CSVResponseMixin, generic.TemplateView):
+
+    """ Vista de sti_informe_lineas2 """
+
+    def get_context_data(self, **kwargs):
+        context = super(LineServiceReportView, self).get_context_data(**kwargs)
+        items = []
+        cod_empresa = 314
+        local = 1
+        date = dt.date.today().strftime('%Y%m')
+        title = 'TL_314_{0}_LS.txt'.format(date)
+        primary = ''
+
+        for zone, name1 in choices.ZONES:
+            for city, name2 in choices.CITIES:
+                if zone == 58:
+                    primary = '01'
+                elif zone == 57:
+                    primary = '02'
+                elif zone == 55:
+                    primary = '03'
+                elif zone in (51, 52, 53):
+                    primary = '04'
+                elif zone in (32, 33, 34, 35):
+                    primary = '05'
+                elif zone == 2:
+                    primary = '06'
+                elif zone == 72:
+                    primary = '07'
+                elif zone in (75, 73, 71):
+                    primary = '08'
+                elif zone in (41, 42, 43):
+                    primary = '09'
+                elif zone == 45:
+                    primary = 10
+                elif zone in (63, 65, 64):
+                    primary = 11
+                elif zone == 67:
+                    primary = 12
+                elif zone == 61:
+                    primary = 13
+
+                post_natural = models.Line.objects.filter(
+                    zone=zone, city=city, entity='natural',
+                    mode='postpago').count()
+                pre_natural = models.Line.objects.filter(
+                    zone=zone, city=city, entity='natural',
+                    mode='prepago').count()
+                post_empresa = models.Line.objects.filter(
+                    zone=zone, city=city, entity='empresa',
+                    mode='postpago').count()
+
+                if post_natural > 0:
+                    items.append([
+                        cod_empresa, date, primary, zone, city, local,
+                        'TB', 'RE', 'H', 'PA', 'D', '0', post_natural])
+                elif pre_natural > 0:
+                    items.append([
+                        cod_empresa, date, primary, zone, city, local,
+                        'TB', 'CO', 'H', 'PA', 'D', '0', pre_natural])
+                elif post_empresa > 0:
+                    items.append([
+                        cod_empresa, date, primary, zone, city, local,
+                        'TB', 'RE', 'H', 'PP', 'D', '0', post_empresa])
+
+        context.update({'title': title, 'items': items})
+
+        return context
+
+line_service_report = LineServiceReportView.as_view()

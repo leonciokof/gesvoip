@@ -164,22 +164,33 @@ class HolidayForm(DocumentForm):
         document = models.Holiday
 
 
-class PnMtcRangeForm(forms.Form):
+class LineRangeForm(DocumentForm):
     start = forms.IntegerField(
         label='Inicio',
         widget=NumberTextInput())
     end = forms.IntegerField(
         label='Fin',
         widget=NumberTextInput())
-    rut = forms.CharField()
-    service = forms.ChoiceField(choices=choices.SERVICES)
-    mode = forms.ChoiceField(choices=choices.MODES)
-    due = forms.FloatField()
-    active = forms.BooleanField()
-    document = forms.IntegerField()
-    special_service = forms.ChoiceField(choices=choices.SPECIAL_SERVICES)
-    name = forms.CharField()
-    entity = forms.ChoiceField(choices=choices.ENTITIES)
-    comments = forms.CharField()
-    zone = forms.ChoiceField(choices=choices.ZONES)
-    city = forms.ChoiceField(choices=choices.CITIES)
+
+    class Meta:
+        document = models.Line
+        exclude = ('number',)
+
+    def __init__(self, *args, **kwargs):
+        super(LineRangeForm, self).__init__(*args, **kwargs)
+        self.fields.keyOrder = [
+            'start',
+            'end',
+            'rut',
+            'service',
+            'mode',
+            'due',
+            'active',
+            'document',
+            'special_service',
+            'name',
+            'entity',
+            'comments',
+            'zone',
+            'city',
+        ]

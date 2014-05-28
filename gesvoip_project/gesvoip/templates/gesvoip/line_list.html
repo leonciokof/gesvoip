@@ -17,8 +17,9 @@
         <div class="panel-body">
           <div class="row">
             <div class="col-lg-12">
-              <a href="{% url 'gesvoip:pnmtc_create' %}" class="btn btn-primary">Nueva</a>
-              <a href="{% url 'gesvoip:pnmtc_range' %}" class="btn btn-primary">Rango</a>
+              <a href="{% url 'gesvoip:line_create' %}" class="btn btn-primary">Nueva</a>
+              <a href="{% url 'gesvoip:line_range' %}" class="btn btn-primary">Rango</a>
+              <a href="{% url 'gesvoip:line_service_report' %}" class="btn btn-success">Informe Lineas en Servicio</a>
             </div>
           </div>
           <div class="row">
@@ -36,6 +37,14 @@
                           <th>Area</th>
                           <th>Comuna</th>
                           <th>Comentarios</th>
+                          <th>Compañia</th>
+                          <th>RUT</th>
+                          <th>Servicio</th>
+                          <th>Modalidad</th>
+                          <th>Deuda</th>
+                          <th>Activado</th>
+                          <th>Documento</th>
+                          <th>Servicio especial</th>
                           <th></th>
                         </tr>
                       </thead>
@@ -48,8 +57,16 @@
                           <td>{{ obj.get_zone_display|default:"" }}</td>
                           <td>{{ obj.get_city_display|default:"" }}</td>
                           <td>{{ obj.comments|default:"" }}</td>
+                          <td>{{ obj.company }}</td>
+                          <td>{{ obj.rut }}</td>
+                          <td>{{ obj.get_service_display }}</td>
+                          <td>{{ obj.get_mode_display }}</td>
+                          <td>{{ obj.due }}</td>
+                          <td>{{ obj.active|yesno:"Si,No" }}</td>
+                          <td>{{ obj.document|default:"" }}</td>
+                          <td>{{ obj.get_special_service_display|default:"" }}</td>
                           <td>
-                            <a href="{% url 'gesvoip:pnmtc_update' obj.pk %}" class="btn btn-xs">
+                            <a href="{% url 'gesvoip:line_update' obj.pk %}" class="btn btn-xs">
                               <span class="glyphicon glyphicon-pencil"></span>
                             </a>
                           </td>
