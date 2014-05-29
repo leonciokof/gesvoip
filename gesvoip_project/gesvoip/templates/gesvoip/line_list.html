@@ -19,7 +19,12 @@
             <div class="col-lg-12">
               <a href="{% url 'gesvoip:line_create' %}" class="btn btn-primary">Nueva</a>
               <a href="{% url 'gesvoip:line_range' %}" class="btn btn-primary">Rango</a>
-              <a href="{% url 'gesvoip:line_service_report' %}" class="btn btn-success">Informe Lineas en Servicio</a>
+              <button class="btn btn-success" data-toggle="modal" data-target="#line_service_report_form">
+                Informe Lineas en Servicio
+              </button>
+              <button class="btn btn-success" data-toggle="modal" data-target="#line_subscriber_report_form">
+                Informe Suscriptores
+              </button>
             </div>
           </div>
           <div class="row">
@@ -92,4 +97,6 @@
     </div>
   </div>
 </div>
+{% include 'gesvoip/modals/line_service_report_form.html' %}
+{% include 'gesvoip/modals/line_subscriber_report_form.html' %}
 {% endblock content %}

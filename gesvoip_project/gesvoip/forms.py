@@ -194,3 +194,15 @@ class LineRangeForm(DocumentForm):
             'zone',
             'city',
         ]
+
+
+class ReportForm(forms.Form):
+
+    year = forms.ChoiceField(
+        label='Seleccionar año',
+        choices=choices.YEARS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    month = forms.ChoiceField(
+        label='Seleccionar mes',
+        choices=choices.MONTHS,
+        widget=forms.Select(attrs={'required': 'required'}))

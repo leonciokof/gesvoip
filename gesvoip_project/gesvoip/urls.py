@@ -34,4 +34,6 @@ urlpatterns = patterns(
         'localcenter_report', name='localcenter_report'),
     url(r'^line_service_report/$',
         'line_service_report', name='line_service_report'),
+    url(r'^line_subscriber_report/$',
+        'line_subscriber_report', name='line_subscriber_report'),
 )

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from re import search
 import datetime as dt
+import re
 
 from nptime import nptime
 import mongoengine
@@ -78,6 +78,82 @@ class Line(mongoengine.Document):
     def __unicode__(self):
         return unicode(self.number)
 
+    @classmethod
+    def get_services(cls, date):
+        items = []
+        primary = ''
+
+        for zone, name1 in choices.ZONES:
+            for city, name2 in choices.CITIES:
+                if zone == 58:
+                    primary = '01'
+                elif zone == 57:
+                    primary = '02'
+                elif zone == 55:
+                    primary = '03'
+                elif zone in (51, 52, 53):
+                    primary = '04'
+                elif zone in (32, 33, 34, 35):
+                    primary = '05'
+                elif zone == 2:
+                    primary = '06'
+                elif zone == 72:
+                    primary = '07'
+                elif zone in (75, 73, 71):
+                    primary = '08'
+                elif zone in (41, 42, 43):
+                    primary = '09'
+                elif zone == 45:
+                    primary = 10
+                elif zone in (63, 65, 64):
+                    primary = 11
+                elif zone == 67:
+                    primary = 12
+                elif zone == 61:
+                    primary = 13
+
+                post_natural = cls.objects.filter(
+                    zone=zone, city=city, entity='natural',
+                    mode='postpago').count()
+                pre_natural = cls.objects.filter(
+                    zone=zone, city=city, entity='natural',
+                    mode='prepago').count()
+                post_empresa = cls.objects.filter(
+                    zone=zone, city=city, entity='empresa',
+                    mode='postpago').count()
+
+                if post_natural > 0:
+                    items.append([
+                        314, date, primary, zone, city, 1,
+                        'TB', 'RE', 'H', 'PA', 'D', '0', post_natural])
+                if pre_natural > 0:
+                    items.append([
+                        314, date, primary, zone, city, 1,
+                        'TB', 'CO', 'H', 'PA', 'D', '0', pre_natural])
+                if post_empresa > 0:
+                    items.append([
+                        314, date, primary, zone, city, 1,
+                        'TB', 'RE', 'H', 'PP', 'D', '0', post_empresa])
+
+        return items
+
+    @classmethod
+    def get_subscriptors(cls, date):
+        items = []
+        natural = cls.objects.filter(
+            entity='natural', number__gte=56446900000,
+            number__lte=56446999999).count()
+        empresa = cls.objects.filter(
+            entity='empresa', number__gte=56446900000,
+            number__lte=56446999999).count()
+
+        if natural > 0:
+            items.append([314, date, 'RE', natural])
+        if empresa > 0:
+            items.append([314, date, 'CO', empresa])
+
+        return items
+
 
 class Cdr(mongoengine.Document):
 
@@ -104,14 +180,14 @@ class Cdr(mongoengine.Document):
 
     def get_activado_ctc(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
-        if search(patterns.pattern_569, ani):
+        if re.search(patterns.pattern_569, ani):
             return True
 
-        elif (search(patterns.pattern_562, ani)
-                and not search(patterns.pattern_800, dialed_number)):
+        elif (re.search(patterns.pattern_562, ani)
+                and not re.search(patterns.pattern_800, dialed_number)):
             return True
 
-        elif search(patterns.pattern_4469v2, dialed_number):
+        elif re.search(patterns.pattern_4469v2, dialed_number):
             return True
 
         else:
@@ -119,11 +195,11 @@ class Cdr(mongoengine.Document):
 
     def get_activado_entel(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
-        if search(patterns.pattern_0234469v2, dialed_number):
+        if re.search(patterns.pattern_0234469v2, dialed_number):
             return True
 
-        elif (search(patterns.pattern_64469, dialed_number) and
-                not search(patterns.pattern_112, dialed_number)):
+        elif (re.search(patterns.pattern_64469, dialed_number) and
+                not re.search(patterns.pattern_112, dialed_number)):
             return True
 
         else:
@@ -131,13 +207,13 @@ class Cdr(mongoengine.Document):
 
     def get_zona_rango(self, ani):
         """Retorna la zona y rango del ani_number"""
-        if search(patterns.pattern_569, ani):
+        if re.search(patterns.pattern_569, ani):
             return ani[2:][:1], ani[3:][:4]
 
-        elif search(patterns.pattern_9, ani):
+        elif re.search(patterns.pattern_9, ani):
             return ani[2:][:2], ani[4:][:4]
 
-        elif search(patterns.pattern_562, ani):
+        elif re.search(patterns.pattern_562, ani):
             return ani[2:][:1], ani[3:][:5]
 
         else:
@@ -163,27 +239,27 @@ class Cdr(mongoengine.Document):
 
     def get_tipo(self, ani, final_number):
         """Funcion que determina el tipo de llamada"""
-        if search(patterns.pattern_564469, final_number):
-            if search(patterns.pattern_569, ani):
+        if re.search(patterns.pattern_564469, final_number):
+            if re.search(patterns.pattern_569, ani):
                 return 'voip-movil'
 
-            elif not search(patterns.pattern_56, ani):
+            elif not re.search(patterns.pattern_56, ani):
                 return 'voip-ldi'
 
             else:
                 return 'voip-local'
 
         else:
-            if search(patterns.pattern_569, ani):
+            if re.search(patterns.pattern_569, ani):
                 return 'movil'
 
-            elif not search(patterns.pattern_56, ani):
+            elif not re.search(patterns.pattern_56, ani):
                 return 'internacional'
 
-            elif search(patterns.pattern_562, ani):
+            elif re.search(patterns.pattern_562, ani):
                 return 'local'
 
-            elif search(patterns.pattern_5610, ani):
+            elif re.search(patterns.pattern_5610, ani):
                 return 'especial'
 
             else:
@@ -626,6 +702,7 @@ class Invoice(mongoengine.Document):
     call_duration = mongoengine.IntField()
     total = mongoengine.FloatField()
     invoiced = mongoengine.BooleanField(default=False)
+    code = mongoengine.SequenceField()
 
     def __str__(self):
         return str(self.id)
@@ -641,6 +718,21 @@ class Invoice(mongoengine.Document):
 
     def get_periods(self):
         return Period.objects.filter(invoice=self)
+
+    @classmethod
+    def get_ccaa_report(cls, year, month):
+        date = year + month
+        items = []
+
+        for i in cls.objects.filter(year=year, month=month, invoiced=True):
+            for p in Period.objects.filter(invoice=i):
+                for r in Rate.objects.filter(period=p):
+                    items.append([
+                        314, date, i.company.name, i.code, p.start.date(),
+                        p.end.date(), 'PCA', i.date, r._type, '',
+                        r.call_number, r.total])
+
+        return items
 
 
 class Period(mongoengine.Document):
@@ -701,6 +793,9 @@ class Rate(mongoengine.Document):
 
 
 class LocalCenter(mongoengine.Document):
+
+    """Modelo que representa los centros locales"""
+
     company = mongoengine.IntField(default=314, verbose_name=u'codigo empresa')
     code = mongoengine.IntField(unique=True, verbose_name=u'codigo local')
     name = mongoengine.StringField(

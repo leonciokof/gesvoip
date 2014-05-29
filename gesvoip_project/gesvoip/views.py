@@ -9,7 +9,7 @@ from django.views import generic
 from mongogeneric import CreateView, DetailView, ListView, UpdateView
 import django_rq
 
-from . import choices, forms, models, tasks
+from . import forms, models, tasks
 
 
 class CSVResponseMixin(object):
@@ -571,6 +571,12 @@ class LineListView(ListView):
     document = models.Line
     paginate_by = 10
 
+    def get_context_data(self, **kwargs):
+        context = super(LineListView, self).get_context_data(**kwargs)
+        context.update({'form_date': forms.ReportForm})
+
+        return context
+
 line_list = login_required(LineListView.as_view())
 
 
@@ -679,76 +685,53 @@ class LocalCenterReportView(CSVResponseMixin, generic.TemplateView):
 
         return context
 
-localcenter_report = LocalCenterReportView.as_view()
+localcenter_report = login_required(LocalCenterReportView.as_view())
 
 
 class LineServiceReportView(CSVResponseMixin, generic.TemplateView):
 
-    """ Vista de sti_informe_lineas2 """
-
     def get_context_data(self, **kwargs):
         context = super(LineServiceReportView, self).get_context_data(**kwargs)
-        items = []
-        cod_empresa = 314
-        local = 1
-        date = dt.date.today().strftime('%Y%m')
+        year = self.request.GET.get('year')
+        month = self.request.GET.get('month')
+        date = year + month
         title = 'TL_314_{0}_LS.txt'.format(date)
-        primary = ''
-
-        for zone, name1 in choices.ZONES:
-            for city, name2 in choices.CITIES:
-                if zone == 58:
-                    primary = '01'
-                elif zone == 57:
-                    primary = '02'
-                elif zone == 55:
-                    primary = '03'
-                elif zone in (51, 52, 53):
-                    primary = '04'
-                elif zone in (32, 33, 34, 35):
-                    primary = '05'
-                elif zone == 2:
-                    primary = '06'
-                elif zone == 72:
-                    primary = '07'
-                elif zone in (75, 73, 71):
-                    primary = '08'
-                elif zone in (41, 42, 43):
-                    primary = '09'
-                elif zone == 45:
-                    primary = 10
-                elif zone in (63, 65, 64):
-                    primary = 11
-                elif zone == 67:
-                    primary = 12
-                elif zone == 61:
-                    primary = 13
-
-                post_natural = models.Line.objects.filter(
-                    zone=zone, city=city, entity='natural',
-                    mode='postpago').count()
-                pre_natural = models.Line.objects.filter(
-                    zone=zone, city=city, entity='natural',
-                    mode='prepago').count()
-                post_empresa = models.Line.objects.filter(
-                    zone=zone, city=city, entity='empresa',
-                    mode='postpago').count()
-
-                if post_natural > 0:
-                    items.append([
-                        cod_empresa, date, primary, zone, city, local,
-                        'TB', 'RE', 'H', 'PA', 'D', '0', post_natural])
-                elif pre_natural > 0:
-                    items.append([
-                        cod_empresa, date, primary, zone, city, local,
-                        'TB', 'CO', 'H', 'PA', 'D', '0', pre_natural])
-                elif post_empresa > 0:
-                    items.append([
-                        cod_empresa, date, primary, zone, city, local,
-                        'TB', 'RE', 'H', 'PP', 'D', '0', post_empresa])
-
+        items = models.Line.get_services(date)
         context.update({'title': title, 'items': items})
 
         return context
 
-line_service_report = LineServiceReportView.as_view()
+line_service_report = login_required(LineServiceReportView.as_view())
+
+
+class LineSubscriberReportView(CSVResponseMixin, generic.TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            LineSubscriberReportView, self).get_context_data(**kwargs)
+        year = self.request.GET.get('year')
+        month = self.request.GET.get('month')
+        date = year + month
+        title = 'VI_314_{0}_SUSCRIPTORES.txt'.format(date)
+        items = models.Line.get_subscriptors(date)
+        context.update({'title': title, 'items': items})
+
+        return context
+
+line_subscriber_report = login_required(LineSubscriberReportView.as_view())
+
+
+class CcaaReportView(CSVResponseMixin, generic.TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(CcaaReportView, self).get_context_data(**kwargs)
+        year = self.request.GET.get('year')
+        month = self.request.GET.get('month')
+        date = year + month
+        title = 'OT_314_{0}_CARGOS_ACC.txt'.format(date)
+        items = models.invoice.get_ccaa_report(year, month)
+        context.update({'title': title, 'items': items})
+
+        return context
+
+ccaa_report = login_required(CcaaReportView.as_view())
