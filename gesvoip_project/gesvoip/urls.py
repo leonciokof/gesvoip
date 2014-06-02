@@ -36,4 +36,8 @@ urlpatterns = patterns(
         'line_service_report', name='line_service_report'),
     url(r'^line_subscriber_report/$',
         'line_subscriber_report', name='line_subscriber_report'),
+    url(r'^ccaa_list/$', 'ccaa_list', name='ccaa_list'),
+    url(r'^ccaa_create/$', 'ccaa_create', name='ccaa_create'),
+    url(r'^ccaa_update/(?P<pk>\w+)/$', 'ccaa_update', name='ccaa_update'),
+    url(r'^ccaa_report/$', 'ccaa_report', name='ccaa_report'),
 )

@@ -206,3 +206,21 @@ class ReportForm(forms.Form):
         label='Seleccionar mes',
         choices=choices.MONTHS,
         widget=forms.Select(attrs={'required': 'required'}))
+
+
+class CcaaForm(DocumentForm):
+    start = forms.CharField(
+        label='Fecha inicio',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+    end = forms.CharField(
+        label='Fecha fin',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+    invoice_date = forms.CharField(
+        label='Fecha emision factura',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+
+    class Meta:
+        document = models.Ccaa

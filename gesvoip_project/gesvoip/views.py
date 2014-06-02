@@ -721,6 +721,44 @@ class LineSubscriberReportView(CSVResponseMixin, generic.TemplateView):
 line_subscriber_report = login_required(LineSubscriberReportView.as_view())
 
 
+class CcaaListView(ListView):
+
+    document = models.Ccaa
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super(CcaaListView, self).get_context_data(**kwargs)
+        context.update({'form_date': forms.ReportForm})
+
+        return context
+
+ccaa_list = login_required(CcaaListView.as_view())
+
+
+class CcaaCreateView(CreateView):
+
+    document = models.Ccaa
+    form_class = forms.CcaaForm
+    success_url = reverse_lazy('gesvoip:ccaa_list')
+
+ccaa_create = login_required(CcaaCreateView.as_view())
+
+
+class CcaaUpdateView(UpdateView):
+
+    document = models.Ccaa
+    form_class = forms.CcaaForm
+    success_url = reverse_lazy('gesvoip:ccaa_list')
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+ccaa_update = login_required(CcaaUpdateView.as_view())
+
+
 class CcaaReportView(CSVResponseMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
@@ -729,7 +767,7 @@ class CcaaReportView(CSVResponseMixin, generic.TemplateView):
         month = self.request.GET.get('month')
         date = year + month
         title = 'OT_314_{0}_CARGOS_ACC.txt'.format(date)
-        items = models.invoice.get_ccaa_report(year, month)
+        items = models.Ccaa.get_report(year, month)
         context.update({'title': title, 'items': items})
 
         return context

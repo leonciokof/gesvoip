@@ -719,21 +719,6 @@ class Invoice(mongoengine.Document):
     def get_periods(self):
         return Period.objects.filter(invoice=self)
 
-    @classmethod
-    def get_ccaa_report(cls, year, month):
-        date = year + month
-        items = []
-
-        for i in cls.objects.filter(year=year, month=month, invoiced=True):
-            for p in Period.objects.filter(invoice=i):
-                for r in Rate.objects.filter(period=p):
-                    items.append([
-                        314, date, i.company.name, i.code, p.start.date(),
-                        p.end.date(), 'PCA', i.date, r._type, '',
-                        r.call_number, r.total])
-
-        return items
-
 
 class Period(mongoengine.Document):
 
@@ -803,3 +788,54 @@ class LocalCenter(mongoengine.Document):
 
     def __unicode__(self):
         return self.name
+
+
+class Ccaa(mongoengine.Document):
+
+    """Modelo que representa los cargos de acceso"""
+
+    month = mongoengine.StringField(
+        max_length=2, choices=choices.MONTHS, verbose_name=u'mes')
+    year = mongoengine.StringField(
+        max_length=4, choices=choices.YEARS, verbose_name=u'año')
+    company = mongoengine.ReferenceField(
+        Company, verbose_name=u'concecionaria interconectada')
+    invoice = mongoengine.IntField(verbose_name=u'número factura')
+    start = mongoengine.DateTimeField(verbose_name=u'fecha inicio')
+    end = mongoengine.DateTimeField(verbose_name=u'fecha fin')
+    invoice_date = mongoengine.DateTimeField(
+        verbose_name=u'fecha emision factura')
+    schedule = mongoengine.StringField(
+        choices=choices.TIPO_CHOICES, verbose_name=u'tipo horario')
+    call_duration = mongoengine.IntField(verbose_name=u'trafico')
+    total = mongoengine.IntField(verbose_name=u'monto')
+
+    def __unicode__(self):
+        return u'{0}-{1} {2}'.format(self.year, self.month, self.company)
+
+    def get_date(self):
+        return u'{0}-{1}'.format(self.year, self.month)
+
+    def get_schedule(self):
+        if self.schedule == 'normal':
+            return 'N'
+
+        elif self.schedule == 'reducido':
+            return 'R'
+
+        else:
+            return 'O'
+
+    @classmethod
+    def get_report(cls, year, month):
+        date = year + month
+        items = []
+
+        for c in cls.objects.filter(year=year, month=month):
+            items.append([
+                314, date, c.company.code, c.invoice,
+                c.start.strftime('%Y%m%d'), c.end.strftime('%Y%m%d'), 'PCA',
+                c.invoice_date.strftime('%Y%m%d'), c.get_schedule(), '',
+                c.call_duration, c.total])
+
+        return items

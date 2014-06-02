@@ -8,7 +8,7 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('in_db',)
 
 
 class Ccaa(models.Model):
-    id_ccaa = models.IntegerField()
+    id_ccaa = models.IntegerField(primary_key=True)
     periodo = models.CharField(max_length=100, blank=True)
     concecionaria = models.CharField(max_length=100, blank=True)
     n_factura = models.IntegerField(blank=True, null=True)

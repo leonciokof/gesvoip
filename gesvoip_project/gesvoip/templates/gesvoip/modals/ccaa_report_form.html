@@ -1,0 +1,21 @@
+{% load crispy_forms_tags %}
+
+<div id="ccaa_report_form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="ccaa_report_form_label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form role="form" method="get" action="{% url 'gesvoip:ccaa_report' %}">
+        <div class="modal-header">
+          <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 id="ccaa_report_form_label" class="modal-title">Seleccionar fecha</h4>
+        </div>
+        <div class="modal-body">
+          {{ form_date|crispy }}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" type="button" data-dismiss="modal">Cerrar</button>
+          <button class="btn btn-primary" type="submit">Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
