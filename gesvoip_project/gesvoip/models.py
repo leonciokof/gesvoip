@@ -180,10 +180,10 @@ class Cdr(mongoengine.Document):
 
     def get_activado_ctc(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
-        if re.search(patterns.pattern_569, ani):
+        if re.search(patterns.movil, ani):
             return True
 
-        elif (re.search(patterns.pattern_562, ani)
+        elif (re.search(patterns.santiago, ani)
                 and not re.search(patterns.pattern_800, dialed_number)):
             return True
 
@@ -207,13 +207,13 @@ class Cdr(mongoengine.Document):
 
     def get_zona_rango(self, ani):
         """Retorna la zona y rango del ani_number"""
-        if re.search(patterns.pattern_569, ani):
+        if re.search(patterns.movil, ani):
             return ani[2:][:1], ani[3:][:4]
 
-        elif re.search(patterns.pattern_9, ani):
+        elif re.search(patterns.province, ani):
             return ani[2:][:2], ani[4:][:4]
 
-        elif re.search(patterns.pattern_562, ani):
+        elif re.search(patterns.santiago, ani):
             return ani[2:][:1], ani[3:][:5]
 
         else:
@@ -240,26 +240,26 @@ class Cdr(mongoengine.Document):
     def get_tipo(self, ani, final_number):
         """Funcion que determina el tipo de llamada"""
         if re.search(patterns.pattern_564469, final_number):
-            if re.search(patterns.pattern_569, ani):
+            if re.search(patterns.movil, ani):
                 return 'voip-movil'
 
-            elif not re.search(patterns.pattern_56, ani):
+            elif not re.search(patterns.national, ani):
                 return 'voip-ldi'
 
             else:
                 return 'voip-local'
 
         else:
-            if re.search(patterns.pattern_569, ani):
+            if re.search(patterns.movil, ani):
                 return 'movil'
 
-            elif not re.search(patterns.pattern_56, ani):
+            elif not re.search(patterns.national, ani):
                 return 'internacional'
 
-            elif re.search(patterns.pattern_562, ani):
+            elif re.search(patterns.santiago, ani):
                 return 'local'
 
-            elif re.search(patterns.pattern_5610, ani):
+            elif re.search(patterns.special, ani):
                 return 'especial'
 
             else:
@@ -644,20 +644,119 @@ class Outgoing(mongoengine.Document):
     """Modelo de las llamdas salientes."""
 
     connect_time = mongoengine.DateTimeField()
-    ani_number = mongoengine.IntField()
+    ani = mongoengine.IntField()
     ingress_duration = mongoengine.IntField()
-    dialed_number = mongoengine.IntField()
+    final_number = mongoengine.IntField()
     cdr = mongoengine.ReferenceField(Cdr)
     valid = mongoengine.BooleanField()
-    invoiced = mongoengine.BooleanField(default=False)
-    observation = mongoengine.StringField()
     company = mongoengine.ReferenceField(Company)
 
-    def __str__(self):
-        return str(self.id)
-
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(self.connect_time)
+
+    def get_zone_range(final_number):
+        if re.search(patterns.movil, final_number):
+            return final_number[2:][:1], final_number[3:][:4]
+
+        elif re.search(patterns.province, final_number):
+            return final_number[2:][:2], final_number[4:][:4]
+
+        elif re.search(patterns.santiago, final_number):
+            return final_number[2:][:1], final_number[3:][:5]
+
+        else:
+            return final_number[2:][:2], final_number[4:][:3]
+
+    def get_company(self, final_number):
+        p = Portability.objects.filter(number=final_number).first()
+
+        if p is not None:
+            return p.company
+
+        else:
+            zone, _range = self.get_zone_range(final_number)
+            n = Numeration.objects.filter(zone=zone, _range=_range).first()
+            if n is not None:
+                return p.company
+
+            else:
+                return None
+
+    def get_type(self, ani, final_number):
+        if re.search(patterns.voip_sti, ani):
+            if re.search(patterns.national, final_number):
+                return 'voip-local'
+
+            elif re.search(patterns.movil, final_number):
+                return 'voip-movil'
+
+            elif not re.search(patterns.national, final_number):
+                return 'voip-ldi'
+
+            else:
+                return None
+
+        elif (re.search(patterns.santiago, final_number)
+                and not re.search(patterns.pattern_564469v2, ani)):
+            return 'local'
+
+        elif (re.search(patterns.movil, final_number)
+                and not re.search(patterns.pattern_564469v2, ani)):
+            return 'movil'
+
+        elif (re.search(patterns.movil, final_number)
+                and not re.search(patterns.santiago, final_number)
+                and not re.search(patterns.pattern_564469v2, ani)):
+            if re.search(patterns.special, final_number):
+                return 'especial'
+
+            else:
+                return 'nacional'
+
+        elif (not re.search(patterns.movil, final_number)
+                and not re.search(patterns.pattern_564469v2, ani)):
+            return 'internacional'
+
+        else:
+            return None
+
+    def insert_outgoing(self):
+        lines = [
+            r.split(',')
+            for r in self.outgoing.read().decode().split('\r\n')[:-1]
+        ]
+        head = lines[0]
+
+        for line in lines[1:]:
+            row = dict(zip(head, line))
+            _type = self.get_type(row['ANI'], row['FINAL_NUMBER'])
+            company = self.get_company(row['FINAL_NUMBER'])
+            connect_time = dt.datetime.strptime(
+                row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
+            ingress_duration = int(row['INGRESS_DURATION']) if row[
+                'INGRESS_DURATION'].isdigit() else None
+            ani = int(row['ANI']) if row['ANI'].isdigit() else None
+            final_number = int(row['FINAL_NUMBER']) if row[
+                'FINAL_NUMBER'].isdigit() else None
+
+            if company and _type and ingress_duration and ani and final_number:
+                valid = True
+
+            else:
+                valid = False
+
+            Outgoing(
+                connect_time=connect_time,
+                ani=ani,
+                final_number=final_number,
+                ingress_duration=ingress_duration,
+                cdr=self,
+                valid=valid,
+                company=company,
+                _type=_type
+            ).save()
+
+        return True
 
 
 class Portability(mongoengine.Document):
