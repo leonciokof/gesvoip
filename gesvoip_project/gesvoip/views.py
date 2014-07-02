@@ -27,6 +27,13 @@ class CSVResponseMixin(object):
         return r
 
 
+class IndexView(generic.RedirectView):
+
+    url = reverse_lazy('gesvoip:new_cdr')
+
+index = IndexView.as_view()
+
+
 class NewRateView(generic.FormView):
 
     """ Vista de new_rate """

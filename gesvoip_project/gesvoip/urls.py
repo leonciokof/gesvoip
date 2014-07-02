@@ -2,6 +2,7 @@ from django.conf.urls import patterns, url
 
 urlpatterns = patterns(
     'gesvoip.views',
+    url(r'^$', 'index', name='index'),
     url(r'^new_cdr/$', 'new_cdr', name='new_cdr'),
     url(r'^new_rate/$', 'new_rate', name='new_rate'),
     url(r'^incoming_list/$', 'incoming_list', name='incoming_list'),
