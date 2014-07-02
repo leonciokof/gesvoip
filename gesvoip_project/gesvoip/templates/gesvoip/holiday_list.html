@@ -30,6 +30,7 @@
                       <thead>
                         <tr>
                           <th>Fecha</th>
+                          <th>Motivo</th>
                           <th></th>
                         </tr>
                       </thead>
@@ -37,6 +38,7 @@
                         {% for obj in object_list %}
                         <tr>
                           <td>{{ obj }}</td>
+                          <td>{{ obj.reason }}</td>
                           <td>
                             <a href="{% url 'gesvoip:holiday_update' obj.pk %}" class="btn btn-xs">
                               <span class="glyphicon glyphicon-pencil"></span>
@@ -65,5 +67,4 @@
     </div>
   </div>
 </div>
-{% include 'gesvoip/modals/company_form.html' %}
 {% endblock content %}

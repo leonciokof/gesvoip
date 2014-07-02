@@ -779,6 +779,7 @@ class Holiday(mongoengine.Document):
     """Modelo de los feriados."""
 
     date = mongoengine.DateTimeField(unique=True, verbose_name=u'fecha')
+    reason = mongoengine.StringField(max_length=255, choices=choices.HOLIDAYS)
 
     meta = {
         'ordering': ['-date']

@@ -478,3 +478,24 @@ SPECIAL_SERVICES = (
     ('isdn', 'ISDN'),
     ('pabx', 'PABX'),
 )
+
+HOLIDAYS = (
+    (u'Asunción de la Virgen', u'Asunción de la Virgen'),
+    (u'Año Nuevo', u'Año Nuevo'),
+    (u'Día de la Independencia Nacional', u'Día de la Independencia Nacional'),
+    (u'Día de las Glorias del Ejército', u'Día de las Glorias del Ejército'),
+    (u'Día de las Glorias Navales', u'Día de las Glorias Navales'),
+    (u'Día de Todos los Santos', u'Día de Todos los Santos'),
+    (u'Día Nacional de las Iglesias Evangélicas y Protestantes',
+     u'Día Nacional de las Iglesias Evangélicas y Protestantes'),
+    (u'Día Nacional del Trabajo', u'Día Nacional del Trabajo'),
+    (u'Encuentro de Dos Mundos', u'Encuentro de Dos Mundos'),
+    (u'Inmaculada Concepción de la Virgen',
+     u'Inmaculada Concepción de la Virgen'),
+    (u'Natividad del Señor', u'Natividad del Señor'),
+    (u'San Pedro y San Pablo', u'San Pedro y San Pablo'),
+    (u'Sandwich dieciochero', u'Sandwich dieciochero'),
+    (u'Sábado Santo', u'Sábado Santo'),
+    (u'Viernes Santo', u'Viernes Santo'),
+    (u'Virgen del Carmen', u'Virgen del Carmen'),
+)
