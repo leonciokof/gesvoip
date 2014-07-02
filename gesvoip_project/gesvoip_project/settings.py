@@ -12,10 +12,8 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 import os
 
 from mongoengine import connect
-import djcelery
 
 connect('gesvoip')
-djcelery.setup_loader()
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -39,7 +37,6 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
     'django.contrib.auth',
     'mongoengine.django.mongo_auth',
     'django.contrib.contenttypes',
