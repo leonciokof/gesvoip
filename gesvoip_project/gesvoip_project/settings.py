@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+from getenv import env
 from mongoengine import connect
 
 connect('gesvoip')
@@ -22,16 +23,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
+SECRET_KEY = env(
     'SECRET_KEY', 'lf&u5w0$1zicy4kxsl@2=%+orky(off#(ivx95^u4zjk@@0(!j'
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get('DEBUG', True))
+DEBUG = env('DEBUG', True)
 
 TEMPLATE_DEBUG = DEBUG
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = env('ALLOWED_HOSTS', ['*'])
 
 
 # Application definition
@@ -114,7 +115,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 EMAIL_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'
 DEFAULT_FROM_EMAIL = 'contacto@convergia.cl'
-MANDRILL_API_KEY = os.environ.get('MANDRILL_API_KEY', '')
+MANDRILL_API_KEY = env('MANDRILL_API_KEY', '')
 
 RQ_QUEUES = {
     'default': {
