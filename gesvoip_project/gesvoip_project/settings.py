@@ -38,6 +38,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS', ['*'])
 # Application definition
 
 INSTALLED_APPS = (
+    'django.contrib.admin',
     'django.contrib.auth',
     'mongoengine.django.mongo_auth',
     'django.contrib.contenttypes',
@@ -47,6 +48,8 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'crispy_forms',
     'pagination_bootstrap',
+    'django_rq',
+    'django_rq_dashboard',
     'gesvoip',
 )
 
@@ -108,10 +111,6 @@ STATICFILES_FINDERS = (
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
-
-BROKER_URL = 'redis://localhost:6379/0'
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 EMAIL_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'
 DEFAULT_FROM_EMAIL = 'contacto@convergia.cl'

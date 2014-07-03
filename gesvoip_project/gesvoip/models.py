@@ -584,7 +584,7 @@ class Cdr(mongoengine.Document):
 
         return True
 
-    def get_zone_range(final_number):
+    def get_zone_range(self, final_number):
         if re.search(patterns.movil, final_number):
             return final_number[2:][:1], final_number[3:][:4]
 
