@@ -36,11 +36,12 @@ class Numeration(mongoengine.Document):
     _range = mongoengine.IntField()
     company = mongoengine.ReferenceField(Company)
 
-    def __str__(self):
-        return str(self.id)
+    meta = {
+        'indexes': [('zone', '_range')]
+    }
 
     def __unicode__(self):
-        return unicode(self.__str__())
+        return u'{0}{1}'.format(self.zone, self._range)
 
     def get_range(self):
         return self._range
@@ -112,13 +113,13 @@ class Line(mongoengine.Document):
                 elif zone == 61:
                     primary = 13
 
-                post_natural = cls.objects.filter(
+                post_natural = cls.objects(
                     zone=zone, city=city, entity='natural',
                     mode='postpago').count()
-                pre_natural = cls.objects.filter(
+                pre_natural = cls.objects(
                     zone=zone, city=city, entity='natural',
                     mode='prepago').count()
-                post_empresa = cls.objects.filter(
+                post_empresa = cls.objects(
                     zone=zone, city=city, entity='empresa',
                     mode='postpago').count()
 
@@ -140,10 +141,10 @@ class Line(mongoengine.Document):
     @classmethod
     def get_subscriptors(cls, date):
         items = []
-        natural = cls.objects.filter(
+        natural = cls.objects(
             entity='natural', number__gte=56446900000,
             number__lte=56446999999).count()
-        empresa = cls.objects.filter(
+        empresa = cls.objects(
             entity='empresa', number__gte=56446900000,
             number__lte=56446999999).count()
 
@@ -171,14 +172,14 @@ class Cdr(mongoengine.Document):
     def __unicode__(self):
         return u'{0}-{1}'.format(self.year, self.month)
 
-    def valida_ani(self, ani):
+    def valid_ani(self, ani):
         if len(ani) == 11:
             return True
 
         else:
             return False
 
-    def get_activado_ctc(self, ani, dialed_number):
+    def get_active_ctc(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
         if re.search(patterns.movil, ani):
             return True
@@ -193,7 +194,7 @@ class Cdr(mongoengine.Document):
         else:
             return False
 
-    def get_activado_entel(self, ani, dialed_number):
+    def get_active_entel(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
         if re.search(patterns.pattern_0234469v2, dialed_number):
             return True
@@ -205,39 +206,7 @@ class Cdr(mongoengine.Document):
         else:
             return False
 
-    def get_zona_rango(self, ani):
-        """Retorna la zona y rango del ani_number"""
-        if re.search(patterns.movil, ani):
-            return ani[2:][:1], ani[3:][:4]
-
-        elif re.search(patterns.province, ani):
-            return ani[2:][:2], ani[4:][:4]
-
-        elif re.search(patterns.santiago, ani):
-            return ani[2:][:1], ani[3:][:5]
-
-        else:
-            return ani[2:][:2], ani[4:][:3]
-
-    def get_compania(self, ani):
-        """Funcion que retorna la compañia del numero de origen"""
-        portado = Portability.objects.filter(number=ani).first()
-
-        if portado is not None:
-            return portado.company
-
-        else:
-            zona, rango = self.get_zona_rango(ani)
-            numeracion = Numeration.objects.filter(
-                zone=zona, _range=rango).first()
-
-            if numeracion is not None:
-                return numeracion.company
-
-            else:
-                return None
-
-    def get_tipo(self, ani, final_number):
+    def get_type_incoming(self, ani, final_number):
         """Funcion que determina el tipo de llamada"""
         if re.search(patterns.pattern_564469, final_number):
             if re.search(patterns.movil, ani):
@@ -265,10 +234,10 @@ class Cdr(mongoengine.Document):
             else:
                 return 'nacional'
 
-    def get_dia(self, fecha):
-        feriado = Holiday.objects.filter(date=fecha).first()
+    def get_day(self, fecha):
+        holiday = Holiday.objects(date=fecha).first()
 
-        if feriado is not None:
+        if holiday is not None:
             return 'festivo'
 
         else:
@@ -281,8 +250,8 @@ class Cdr(mongoengine.Document):
             else:
                 return 'festivo'
 
-    def horario_compania(self, fecha_llamada, hora_llamada, compania):
-        def get_horario(name):
+    def schedule_compay(self, fecha_llamada, hora_llamada, compania):
+        def get_schedule(name):
             tipo = dia.get(name)
 
             if tipo:
@@ -303,11 +272,11 @@ class Cdr(mongoengine.Document):
             else:
                 return None
 
-        dia = compania.schedules.get(self.get_dia(fecha_llamada))
+        dia = compania.schedules.get(self.get_day(fecha_llamada))
 
         if dia:
             for n in ['normal', 'reducido', 'nocturno']:
-                tipo = get_horario(n)
+                tipo = get_schedule(n)
 
                 if tipo is not None:
                     return tipo
@@ -315,7 +284,7 @@ class Cdr(mongoengine.Document):
         else:
             return None
 
-    def split_horario(self, connect_time, duracion, compania):
+    def split_schedule(self, connect_time, duracion, compania):
         def split1(start, end):
             start = nptime().from_time(
                 dt.datetime.strptime(start, '%H:%M:%S').time())
@@ -463,7 +432,7 @@ class Cdr(mongoengine.Document):
         hora_fin = hora_inicio + dt.timedelta(seconds=float(duracion))
 
         if hora_inicio <= hora_fin:
-            dia = compania.schedules.get(self.get_dia(fecha_llamada))
+            dia = compania.schedules.get(self.get_day(fecha_llamada))
 
             if dia:
                 for n in ['normal', 'reducido', 'nocturno']:
@@ -481,7 +450,7 @@ class Cdr(mongoengine.Document):
                 'duracion': duracion},)
 
         else:
-            dia = compania.schedules.get(self.get_dia(fecha_llamada))
+            dia = compania.schedules.get(self.get_day(fecha_llamada))
 
             if dia:
                 for n in ['normal', 'reducido', 'nocturno']:
@@ -504,7 +473,7 @@ class Cdr(mongoengine.Document):
 
         else:
             numero = int('56' + dialed_number)
-        linea = Line.objects.filter(number=numero).first()
+        linea = Line.objects(number=numero).first()
 
         return None if linea is None else linea.entity
 
@@ -515,13 +484,13 @@ class Cdr(mongoengine.Document):
                 r.split(',')
                 for r in self.incoming_entel.read().decode().split('\r\n')[:-1]
             ]
-            get_activado = self.get_activado_entel
+            get_active = self.get_active_entel
 
         else:
             lines = [
                 r.split(',')
                 for r in self.incoming_ctc.read().decode().split('\r\n')[:-1]]
-            get_activado = self.get_activado_ctc
+            get_active = self.get_active_ctc
 
         head = lines[0]
 
@@ -529,8 +498,8 @@ class Cdr(mongoengine.Document):
             row = dict(zip(head, line))
             observation = None
 
-            if self.valida_ani(row['ANI']):
-                valid = get_activado(
+            if self.valid_ani(row['ANI']):
+                valid = get_active(
                     row['ANI'], row['DIALED_NUMBER'])
 
             else:
@@ -538,7 +507,7 @@ class Cdr(mongoengine.Document):
                 observation = 'ani invalido'
 
             if valid:
-                company = self.get_compania(row['ANI'])
+                company = self.get_company(row['ANI'])
 
                 if company is None:
                     valid = False
@@ -547,7 +516,8 @@ class Cdr(mongoengine.Document):
                     entity = None
 
                 else:
-                    tipo = self.get_tipo(row['ANI'], row['DIALED_NUMBER'])
+                    tipo = self.get_type_incoming(
+                        row['ANI'], row['DIALED_NUMBER'])
                     entity = self.get_entity(row['DIALED_NUMBER'])
 
             else:
@@ -568,7 +538,7 @@ class Cdr(mongoengine.Document):
                 row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
 
             if valid and ingress_duration is not None:
-                for rango in self.split_horario(
+                for rango in self.split_schedule(
                         connect_time, ingress_duration,
                         company):
                     fecha_llamada = rango['fecha_llamada']
@@ -577,7 +547,7 @@ class Cdr(mongoengine.Document):
                         fecha_llamada = connect_time.date()
 
                     hora_llamada = rango['hora_inicio']
-                    horario = self.horario_compania(
+                    horario = self.schedule_compay(
                         fecha_llamada, hora_llamada, company)
                     duracion = rango['duracion']
                     connect_time2 = dt.datetime.combine(
@@ -614,46 +584,6 @@ class Cdr(mongoengine.Document):
 
         return True
 
-
-class Incoming(mongoengine.Document):
-
-    """Modelo de las llamdas entrantes."""
-
-    connect_time = mongoengine.DateTimeField()
-    ani_number = mongoengine.IntField()
-    ingress_duration = mongoengine.IntField()
-    dialed_number = mongoengine.IntField()
-    cdr = mongoengine.ReferenceField(Cdr)
-    valid = mongoengine.BooleanField()
-    invoiced = mongoengine.BooleanField(default=False)
-    observation = mongoengine.StringField()
-    company = mongoengine.ReferenceField(Company)
-    _type = mongoengine.StringField(choices=choices.TIPOS)
-    schedule = mongoengine.StringField(choices=choices.TIPO_CHOICES)
-    entity = mongoengine.StringField(choices=choices.ENTITIES)
-
-    def __str__(self):
-        return str(self.id)
-
-    def __unicode__(self):
-        return unicode(self.__str__())
-
-
-class Outgoing(mongoengine.Document):
-
-    """Modelo de las llamdas salientes."""
-
-    connect_time = mongoengine.DateTimeField()
-    ani = mongoengine.IntField()
-    ingress_duration = mongoengine.IntField()
-    final_number = mongoengine.IntField()
-    cdr = mongoengine.ReferenceField(Cdr)
-    valid = mongoengine.BooleanField()
-    company = mongoengine.ReferenceField(Company)
-
-    def __unicode__(self):
-        return unicode(self.connect_time)
-
     def get_zone_range(final_number):
         if re.search(patterns.movil, final_number):
             return final_number[2:][:1], final_number[3:][:4]
@@ -667,22 +597,23 @@ class Outgoing(mongoengine.Document):
         else:
             return final_number[2:][:2], final_number[4:][:3]
 
-    def get_company(self, final_number):
-        p = Portability.objects.filter(number=final_number).first()
+    def get_company(self, number):
+        p = Portability.objects(number=number).first()
 
         if p is not None:
             return p.company
 
         else:
-            zone, _range = self.get_zone_range(final_number)
-            n = Numeration.objects.filter(zone=zone, _range=_range).first()
+            zone, _range = self.get_zone_range(number)
+            n = Numeration.objects(zone=zone, _range=_range).first()
+
             if n is not None:
-                return p.company
+                return n.company
 
             else:
                 return None
 
-    def get_type(self, ani, final_number):
+    def get_type_outgoing(self, ani, final_number):
         if re.search(patterns.voip_sti, ani):
             if re.search(patterns.national, final_number):
                 return 'voip-local'
@@ -704,7 +635,7 @@ class Outgoing(mongoengine.Document):
                 and not re.search(patterns.pattern_564469v2, ani)):
             return 'movil'
 
-        elif (re.search(patterns.movil, final_number)
+        elif (re.search(patterns.nacional, final_number)
                 and not re.search(patterns.santiago, final_number)
                 and not re.search(patterns.pattern_564469v2, ani)):
             if re.search(patterns.special, final_number):
@@ -713,7 +644,7 @@ class Outgoing(mongoengine.Document):
             else:
                 return 'nacional'
 
-        elif (not re.search(patterns.movil, final_number)
+        elif (not re.search(patterns.nacional, final_number)
                 and not re.search(patterns.pattern_564469v2, ani)):
             return 'internacional'
 
@@ -729,7 +660,7 @@ class Outgoing(mongoengine.Document):
 
         for line in lines[1:]:
             row = dict(zip(head, line))
-            _type = self.get_type(row['ANI'], row['FINAL_NUMBER'])
+            _type = self.get_type_outgoing(row['ANI'], row['FINAL_NUMBER'])
             company = self.get_company(row['FINAL_NUMBER'])
             connect_time = dt.datetime.strptime(
                 row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
@@ -759,6 +690,43 @@ class Outgoing(mongoengine.Document):
         return True
 
 
+class Incoming(mongoengine.Document):
+
+    """Modelo de las llamdas entrantes."""
+
+    connect_time = mongoengine.DateTimeField()
+    ani_number = mongoengine.IntField()
+    ingress_duration = mongoengine.IntField()
+    dialed_number = mongoengine.IntField()
+    cdr = mongoengine.ReferenceField(Cdr)
+    valid = mongoengine.BooleanField()
+    invoiced = mongoengine.BooleanField(default=False)
+    observation = mongoengine.StringField()
+    company = mongoengine.ReferenceField(Company)
+    _type = mongoengine.StringField(choices=choices.TIPOS)
+    schedule = mongoengine.StringField(choices=choices.TIPO_CHOICES)
+    entity = mongoengine.StringField(choices=choices.ENTITIES)
+
+    def __unicode__(self):
+        return unicode(self.connect_time)
+
+
+class Outgoing(mongoengine.Document):
+
+    """Modelo de las llamdas salientes."""
+
+    connect_time = mongoengine.DateTimeField()
+    ani = mongoengine.IntField()
+    ingress_duration = mongoengine.IntField()
+    final_number = mongoengine.IntField()
+    cdr = mongoengine.ReferenceField(Cdr)
+    valid = mongoengine.BooleanField()
+    company = mongoengine.ReferenceField(Company)
+
+    def __unicode__(self):
+        return unicode(self.connect_time)
+
+
 class Portability(mongoengine.Document):
 
     """Modelo de los numeros portados."""
@@ -767,11 +735,8 @@ class Portability(mongoengine.Document):
     company = mongoengine.ReferenceField(Company)
     date = mongoengine.DateTimeField()
 
-    def __str__(self):
-        return str(self.id)
-
     def __unicode__(self):
-        return unicode(self.__str__())
+        return unicode(self.number)
 
 
 class Holiday(mongoengine.Document):
@@ -786,7 +751,7 @@ class Holiday(mongoengine.Document):
     }
 
     def __unicode__(self):
-        return self.date.strftime('%Y-%m-%d')
+        return unicode(self.date)
 
 
 class Invoice(mongoengine.Document):
@@ -804,11 +769,8 @@ class Invoice(mongoengine.Document):
     invoiced = mongoengine.BooleanField(default=False)
     code = mongoengine.SequenceField()
 
-    def __str__(self):
-        return str(self.id)
-
     def __unicode__(self):
-        return unicode(self.__str__())
+        return self.get_date()
 
     def get_date(self):
         return u'{0}-{1}'.format(self.year, self.month)
@@ -817,7 +779,7 @@ class Invoice(mongoengine.Document):
         return int(round(self.total)) if self.total else 0
 
     def get_periods(self):
-        return Period.objects.filter(invoice=self)
+        return Period.objects(invoice=self)
 
 
 class Period(mongoengine.Document):
@@ -831,11 +793,8 @@ class Period(mongoengine.Document):
     call_duration = mongoengine.IntField()
     total = mongoengine.FloatField()
 
-    def __str__(self):
-        return str(self.id)
-
     def __unicode__(self):
-        return unicode(self.__str__())
+        return self.get_range()
 
     def get_start(self):
         return self.start.strftime('%Y-%m-%d')
@@ -847,7 +806,7 @@ class Period(mongoengine.Document):
         return u'{0} - {1}'.format(self.get_start(), self.get_end())
 
     def get_rates(self):
-        return Rate.objects.filter(period=self)
+        return Rate.objects(period=self)
 
     def get_total(self):
         return int(round(self.total)) if self.total else 0
@@ -864,11 +823,8 @@ class Rate(mongoengine.Document):
     call_duration = mongoengine.IntField()
     total = mongoengine.FloatField()
 
-    def __str__(self):
-        return str(self.id)
-
     def __unicode__(self):
-        return unicode(self.__str__())
+        return self._type
 
     def get_type(self):
         return self.get__type_display()
@@ -911,7 +867,7 @@ class Ccaa(mongoengine.Document):
     total = mongoengine.IntField(verbose_name=u'monto')
 
     def __unicode__(self):
-        return u'{0}-{1} {2}'.format(self.year, self.month, self.company)
+        return u'{0} {1}'.format(self.get_date(), self.company)
 
     def get_date(self):
         return u'{0}-{1}'.format(self.year, self.month)
@@ -931,7 +887,7 @@ class Ccaa(mongoengine.Document):
         date = year + month
         items = []
 
-        for c in cls.objects.filter(year=year, month=month):
+        for c in cls.objects(year=year, month=month):
             items.append([
                 314, date, c.company.code, c.invoice,
                 c.start.strftime('%Y%m%d'), c.end.strftime('%Y%m%d'), 'PCA',

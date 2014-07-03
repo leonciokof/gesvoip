@@ -51,7 +51,7 @@ class NewRateView(generic.FormView):
         nightly_price = form.cleaned_data.get('nightly_price')
         start = form.cleaned_data.get('start')
         end = form.cleaned_data.get('end')
-        i = models.Invoice.objects.filter(
+        i = models.Invoice.objects(
             company=company, month=month, year=year).first()
 
         if i is None:
@@ -85,7 +85,7 @@ class NewCdrView(generic.FormView):
         cdr = models.Cdr(
             year=year, month=month, incoming_entel=incoming_entel,
             incoming_ctc=incoming_ctc, outgoing=outgoing).save()
-        django_rq.enqueue(tasks.insert_incoming, cdr, timeout=60 * 60 * 60)
+        django_rq.enqueue(tasks.insert_cdr, cdr, timeout=60 * 60 * 60)
 
         return super(NewCdrView, self).form_valid(form)
 
