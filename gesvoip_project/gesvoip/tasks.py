@@ -1,7 +1,5 @@
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
+from django.core.mail import EmailMessage
 
 from . import models
 
@@ -45,19 +43,18 @@ def insert_incoming(cdr):
         i.save()
 
     send_email(
-        [settings.DEFAULT_FROM_EMAIL],
+        [{'name': 'Leonardo Gatica', 'email': 'lgaticastyle@gmail.com'}],
         'Proceso finalizado',
-        'gesvoip/email.html',
+        'gesvoip_success',
         {})
-    print('finish')
 
 
-def send_email(to, subject, template, context):
+def send_email(to, subject, template_name, global_merge_vars):
     """Envia emails."""
-    html_content = render_to_string(template, context)
-    text_content = strip_tags(html_content)
-    msg = EmailMultiAlternatives(
-        subject=subject, body=text_content,
-        from_email=settings.DEFAULT_FROM_EMAIL, to=to)
-    msg.attach_alternative(html_content, 'text/html')
+    msg = EmailMessage(
+        subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=to)
+    msg.template_name = template_name
+    msg.global_merge_vars = global_merge_vars
     msg.send()
