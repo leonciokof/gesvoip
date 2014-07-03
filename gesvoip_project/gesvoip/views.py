@@ -85,7 +85,6 @@ class NewCdrView(generic.FormView):
         cdr = models.Cdr(
             year=year, month=month, incoming_entel=incoming_entel,
             incoming_ctc=incoming_ctc, outgoing=outgoing).save()
-        # tasks.insert_incoming.delay(cdr)
         django_rq.enqueue(tasks.insert_incoming, cdr, timeout=60 * 60 * 60)
 
         return super(NewCdrView, self).form_valid(form)
@@ -590,6 +589,7 @@ line_list = login_required(LineListView.as_view())
 class LineCreateView(CreateView):
 
     document = models.Line
+    form_class = forms.LineForm
     success_url = reverse_lazy('gesvoip:line_list')
 
 line_create = login_required(LineCreateView.as_view())

@@ -24,7 +24,7 @@ module.exports = (grunt) ->
         ]
       client:
         src: [
-          "<%= src %>/*.coffee"
+          "<%= src.coffee %>/*.coffee"
         ]
 
     coffee:
@@ -48,6 +48,8 @@ module.exports = (grunt) ->
             "<%= bower %>/moment/moment.js"
             "<%= bower %>/eonasdan-bootstrap-datetimepicker/" +
             "build/js/bootstrap-datetimepicker.min.js"
+            "<%= bower %>/select2/select2.js"
+            "<%= bower %>/select2/select2_locale_es.js"
             "<%= src.js %>/*.js"
           ]
 
@@ -69,6 +71,8 @@ module.exports = (grunt) ->
           "<%= bower %>/bootstrap-3-timepicker/css/bootstrap-timepicker.css"
           "<%= bower %>/eonasdan-bootstrap-datetimepicker/" +
           "build/css/bootstrap-datetimepicker.css"
+          "<%= bower %>/select2/select2.css"
+          "<%= bower %>/select2/select2-bootstrap.css"
           "<%= src.css %>/*.css"
         ]
         dest: "<%= public.css %>/combined.min.css"
@@ -89,29 +93,20 @@ module.exports = (grunt) ->
           src: ["**"]
           dest: "<%= public.fonts %>"
           expand: true
+        ,
+          cwd: "<%= bower %>/select2"
+          src: ["**/*.{png,jpg,gif}"]
+          dest: "<%= public.css %>"
+          expand: true
         ]
 
     imagemin:
-      png:
-        options:
-          optimizationLevel: 7
-          pngquant: true
-        files: [
-          expand: true,
-          cwd: "<%= src.images %>"
-          src: ["**/*.png"]
-          dest: "<%= public.images %>"
-          ext: ".png"
-        ]
-      jpg:
-        options:
-          progressive: true
+      dynamic:
         files: [
           expand: true
           cwd: "<%= src.images %>"
-          src: ["**/*.jpg"]
+          src: ["**/*.{png,jpg,gif}"]
           dest: "<%= public.images %>"
-          ext: ".jpg"
         ]
 
     watch:

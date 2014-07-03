@@ -43,7 +43,8 @@ class RateForm(forms.Form):
     company = forms.ModelChoiceField(
         label='Seleccionar compañia',
         queryset=models.Company.objects.all(),
-        widget=forms.Select(attrs={'required': 'required'}))
+        widget=forms.Select(
+            attrs={'required': 'required', 'class': 'select2'}))
     year = forms.ChoiceField(
         label='Seleccionar año',
         choices=choices.YEARS,
@@ -164,6 +165,16 @@ class HolidayForm(DocumentForm):
         document = models.Holiday
 
 
+class LineForm(DocumentForm):
+
+    class Meta:
+        document = models.Line
+        widgets = {
+            'zone': forms.Select(attrs={'class': 'select2'}),
+            'city': forms.Select(attrs={'class': 'select2'}),
+        }
+
+
 class LineRangeForm(DocumentForm):
     start = forms.IntegerField(
         label='Inicio',
@@ -175,6 +186,10 @@ class LineRangeForm(DocumentForm):
     class Meta:
         document = models.Line
         exclude = ('number',)
+        widgets = {
+            'zone': forms.Select(attrs={'class': 'select2'}),
+            'city': forms.Select(attrs={'class': 'select2'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super(LineRangeForm, self).__init__(*args, **kwargs)
@@ -224,3 +239,6 @@ class CcaaForm(DocumentForm):
 
     class Meta:
         document = models.Ccaa
+        widgets = {
+            'company': forms.Select(attrs={'class': 'select2'}),
+        }
