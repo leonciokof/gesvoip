@@ -5,22 +5,22 @@
   "author": "Leonardo Gatica <lgaticastyle@gmail.com> (http://about.me/leonciokof)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leonciokof/django-gesvoip.git"
+    "url": "https://github.com/leonciokof/gesvoip2.git"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-coffeelint": "0.0.10",
     "grunt-contrib-coffee": "^0.10.1",
-    "grunt-contrib-uglify": "^0.4.0",
+    "grunt-contrib-uglify": "^0.5.0",
     "grunt-contrib-clean": "^0.5.0",
-    "grunt-contrib-cssmin": "^0.9.0",
+    "grunt-contrib-cssmin": "^0.10.0",
     "grunt-contrib-copy": "^0.5.0",
-    "grunt-contrib-imagemin": "^0.7.0",
+    "grunt-contrib-imagemin": "^0.7.1",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-nodemon": "^0.2.1",
     "grunt-concurrent": "^0.5.0",
     "grunt-shell": "^0.7.0",
     "grunt-newer": "^0.7.0",
-    "grunt-contrib-stylus": "^0.16.0"
+    "grunt-contrib-stylus": "^0.18.0"
   }
 }
