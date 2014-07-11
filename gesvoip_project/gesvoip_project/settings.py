@@ -118,15 +118,15 @@ MANDRILL_API_KEY = env('MANDRILL_API_KEY', '')
 
 RQ_QUEUES = {
     'default': {
-        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379'),
+        'URL': env('REDISTOGO_URL', 'redis://localhost:6379'),
         'DB': 0,
     },
     'high': {
-        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379'),
+        'URL': env('REDISTOGO_URL', 'redis://localhost:6379'),
         'DB': 0,
     },
     'low': {
-        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379'),
+        'URL': env('REDISTOGO_URL', 'redis://localhost:6379'),
         'DB': 0,
     }
 }
