@@ -279,44 +279,72 @@ class CompanyUpdateView(UpdateView):
     def get_initial(self):
         initial = super(CompanyUpdateView, self).get_initial()
         initial = initial.copy()
-        initial.update({
-            'bussines_normal_start': self.object.schedules[
-                'bussines']['normal']['start'],
-            'bussines_normal_end': self.object.schedules[
-                'bussines']['normal']['end'],
-            'bussines_reduced_start': self.object.schedules[
-                'bussines']['reduced']['start'],
-            'bussines_reduced_end': self.object.schedules[
-                'bussines']['reduced']['end'],
-            'bussines_nightly_start': self.object.schedules[
-                'bussines']['nightly']['start'],
-            'bussines_nightly_end': self.object.schedules[
-                'bussines']['nightly']['end'],
-            'saturday_normal_start': self.object.schedules[
-                'saturday']['normal']['start'],
-            'saturday_normal_end': self.object.schedules[
-                'saturday']['normal']['end'],
-            'saturday_reduced_start': self.object.schedules[
-                'saturday']['reduced']['start'],
-            'saturday_reduced_end': self.object.schedules[
-                'saturday']['reduced']['end'],
-            'saturday_nightly_start': self.object.schedules[
-                'saturday']['nightly']['start'],
-            'saturday_nightly_end': self.object.schedules[
-                'saturday']['nightly']['end'],
-            'festive_normal_start': self.object.schedules[
-                'festive']['normal']['start'],
-            'festive_normal_end': self.object.schedules[
-                'festive']['normal']['end'],
-            'festive_reduced_start': self.object.schedules[
-                'festive']['reduced']['start'],
-            'festive_reduced_end': self.object.schedules[
-                'festive']['reduced']['end'],
-            'festive_nightly_start': self.object.schedules[
-                'festive']['nightly']['start'],
-            'festive_nightly_end': self.object.schedules[
-                'festive']['nightly']['end'],
-        })
+        if self.object.schedules.get('bussines'):
+            if self.object.schedules['bussines'].get('normal'):
+                initial.update({
+                    'bussines_normal_start': self.object.schedules[
+                        'bussines']['normal']['start']})
+                initial.update({
+                    'bussines_normal_end': self.object.schedules[
+                        'bussines']['normal']['end']})
+            if self.object.schedules['bussines'].get('reduced'):
+                initial.update({
+                    'bussines_reduced_start': self.object.schedules[
+                        'bussines']['reduced']['start']})
+                initial.update({
+                    'bussines_reduced_end': self.object.schedules[
+                        'bussines']['reduced']['end']})
+            if self.object.schedules['bussines'].get('nightly'):
+                initial.update({
+                    'bussines_nightly_start': self.object.schedules[
+                        'bussines']['nightly']['start']})
+                initial.update({
+                    'bussines_nightly_end': self.object.schedules[
+                        'bussines']['nightly']['end']})
+        if self.object.schedules.get('saturday'):
+            if self.object.schedules['saturday'].get('normal'):
+                initial.update({
+                    'saturday_normal_start': self.object.schedules[
+                        'saturday']['normal']['start']})
+                initial.update({
+                    'saturday_normal_end': self.object.schedules[
+                        'saturday']['normal']['end']})
+            if self.object.schedules['saturday'].get('reduced'):
+                initial.update({
+                    'saturday_reduced_start': self.object.schedules[
+                        'saturday']['reduced']['start']})
+                initial.update({
+                    'saturday_reduced_end': self.object.schedules[
+                        'saturday']['reduced']['end']})
+            if self.object.schedules['saturday'].get('nightly'):
+                initial.update({
+                    'saturday_nightly_start': self.object.schedules[
+                        'saturday']['nightly']['start']})
+                initial.update({
+                    'saturday_nightly_end': self.object.schedules[
+                        'saturday']['nightly']['end']})
+        if self.object.schedules.get('festive'):
+            if self.object.schedules['festive'].get('normal'):
+                initial.update({
+                    'festive_normal_start': self.object.schedules[
+                        'festive']['normal']['start']})
+                initial.update({
+                    'festive_normal_end': self.object.schedules[
+                        'festive']['normal']['end']})
+            if self.object.schedules['festive'].get('reduced'):
+                initial.update({
+                    'festive_reduced_start': self.object.schedules[
+                        'festive']['reduced']['start']})
+                initial.update({
+                    'festive_reduced_end': self.object.schedules[
+                        'festive']['reduced']['end']})
+            if self.object.schedules['festive'].get('nightly'):
+                initial.update({
+                    'festive_nightly_start': self.object.schedules[
+                        'festive']['nightly']['start']})
+                initial.update({
+                    'festive_nightly_end': self.object.schedules[
+                        'festive']['nightly']['end']})
         return initial
 
 company_update = login_required(CompanyUpdateView.as_view())
