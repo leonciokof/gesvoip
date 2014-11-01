@@ -16,6 +16,7 @@ djrill==1.2.0
 ecdsa==0.11
 gunicorn==19.1.1
 hiredis==0.1.5
+honcho==0.5.0
 moment==0.2.2
 mongodbforms==0.3
 mongoengine==0.8.7
