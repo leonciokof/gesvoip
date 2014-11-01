@@ -5,11 +5,11 @@ For more information on this file, see
 https://docs.djangoproject.com/en/1.6/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.6/ref/settings/
+https://docs.djangoproject.com/en/1.7/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import sys
 
 from getenv import env
 from mongoengine import connect
@@ -18,24 +18,14 @@ connect('gesvoip')
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env(
-    'SECRET_KEY', 'lf&u5w0$1zicy4kxsl@2=%+orky(off#(ivx95^u4zjk@@0(!j'
-)
+    'SECRET_KEY', 'lf&u5w0$1zicy4kxsl@2=%+orky(off#(ivx95^u4zjk@@0(!j')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', True)
 
 TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', ['*'])
-
-
-# Application definition
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -50,17 +40,20 @@ INSTALLED_APPS = (
     'pagination_bootstrap',
     'django_rq',
     'django_rq_dashboard',
+    'django_extensions',
+    'djrill',
+    'activelink',
+    'raven.contrib.django.raven_compat',
     'gesvoip',
 )
 
-if DEBUG:
-    INSTALLED_APPS += ('django_extensions',)
-
 MIDDLEWARE_CLASSES = (
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'pagination_bootstrap.middleware.PaginationMiddleware',
@@ -70,18 +63,11 @@ ROOT_URLCONF = 'gesvoip_project.urls'
 
 WSGI_APPLICATION = 'gesvoip_project.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy'
     }
 }
-
-# Internationalization
-# https://docs.djangoproject.com/en/1.6/topics/i18n/
 
 LANGUAGE_CODE = 'es-cl'
 
@@ -93,57 +79,27 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
-
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
+ADMINS = (
+    ('Leonardo Gatica', 'lgaticastyle@gmail.com'),
+)
+
+MANAGERS = ADMINS
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
 
-EMAIL_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'
-DEFAULT_FROM_EMAIL = 'contacto@convergia.cl'
-MANDRILL_API_KEY = env('MANDRILL_API_KEY', '')
-
-RQ_QUEUES = {
-    'default': {
-        'URL': env('REDISTOGO_URL', 'redis://localhost:6379'),
-        'DB': 0,
-    },
-    'high': {
-        'URL': env('REDISTOGO_URL', 'redis://localhost:6379'),
-        'DB': 0,
-    },
-    'low': {
-        'URL': env('REDISTOGO_URL', 'redis://localhost:6379'),
-        'DB': 0,
-    }
-}
-
-CRISPY_TEMPLATE_PACK = 'bootstrap3'
-
-AUTHENTICATION_BACKENDS = (
-    'mongoengine.django.auth.MongoEngineBackend',
-)
-SESSION_ENGINE = 'mongoengine.django.sessions'
-
-AUTH_USER_MODEL = 'mongo_auth.MongoUser'
-
-MONGOENGINE_USER_DOCUMENT = 'mongoengine.django.auth.User'
-
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, 'templates'),
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -156,3 +112,100 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.messages.context_processors.messages',
     'django.core.context_processors.request',
 )
+
+TEMPLATE_DIRS = (
+    os.path.join(BASE_DIR, 'templates'),
+)
+
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+SERVER_EMAIL = 'contacto@convergia.cl'
+
+DEFAULT_FROM_EMAIL = SERVER_EMAIL
+
+INTERNAL_IPS = ('127.0.0.1',)
+
+RQ_QUEUES = {
+    'default': {
+        'URL': env('REDIS_URL', 'redis://localhost:6379'),
+        'DB': 0,
+    }
+}
+
+AUTHENTICATION_BACKENDS = (
+    'mongoengine.django.auth.MongoEngineBackend',
+)
+SESSION_ENGINE = 'mongoengine.django.sessions'
+AUTH_USER_MODEL = 'mongo_auth.MongoUser'
+MONGOENGINE_USER_DOCUMENT = 'mongoengine.django.auth.User'
+
+# Credenciales de conexion sftp para obtener portados
+TEP_HOST = env('TEP_HOST')
+TEP_USERNAME = env('TEP_USERNAME')
+TEP_PASSWORD = env('TEP_PASSWORD')
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+else:
+    EMAIL_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'
+    MANDRILL_API_KEY = env('MANDRILL_APIKEY')
+    RAVEN_CONFIG = {
+        'dsn': env('RAVEN_DSN'),
+    }
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'root': {
+            'level': 'WARNING',
+            'handlers': ['sentry'],
+        },
+        'formatters': {
+            'verbose': {
+                'format': (
+                    '%(levelname)s %(asctime)s %(module)s %(process)d '
+                    '%(thread)d %(message)s')
+            },
+        },
+        'handlers': {
+            'sentry': {
+                'level': 'ERROR',
+                'class': (
+                    'raven.contrib.django.raven_compat.handlers.SentryHandler')
+            },
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose'
+            }
+        },
+        'loggers': {
+            'django.db.backends': {
+                'level': 'ERROR',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+            'raven': {
+                'level': 'DEBUG',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+            'sentry.errors': {
+                'level': 'DEBUG',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+        },
+    }
+    MIDDLEWARE_CLASSES += ((
+        'raven.contrib.django.raven_compat.middleware.'
+        'SentryResponseErrorIdMiddleware'),
+    )
+
+if 'test' in sys.argv:
+    PASSWORD_HASHERS = (
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    )
+    DEBUG = False
+    TEMPLATE_DEBUG = False
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import csv
+import StringIO
 import datetime as dt
 import re
 
@@ -478,24 +480,18 @@ class Cdr(mongoengine.Document):
         return None if linea is None else linea.entity
 
     def insert_incoming(self, name):
-        startTime = dt.datetime.now()
         if name == 'ENTEL':
-            lines = [
-                r.split(',')
-                for r in self.incoming_entel.read().decode().split('\r\n')[:-1]
-            ]
             get_active = self.get_active_entel
+            incoming = self.incoming_entel.read()
 
         else:
-            lines = [
-                r.split(',')
-                for r in self.incoming_ctc.read().decode().split('\r\n')[:-1]]
             get_active = self.get_active_ctc
+            incoming = self.incoming_ctc.read()
 
-        head = lines[0]
+        incoming_file = StringIO.StringIO(incoming)
+        incoming_dict = csv.DictReader(incoming_file, delimiter=',')
 
-        for line in lines[1:]:
-            row = dict(zip(head, line))
+        for row in incoming_dict:
             observation = None
 
             if self.valid_ani(row['ANI']):
@@ -526,18 +522,11 @@ class Cdr(mongoengine.Document):
                 entity = None
                 observation = 'No cumple con los filtros'
 
-            ani_number = int(row['ANI_NUMBER']) if row[
-                'ANI_NUMBER'].isdigit() else None
-            ingress_duration = int(row['INGRESS_DURATION']) if row[
-                'INGRESS_DURATION'].isdigit() else None
-            is_digit = row['DIALED_NUMBER'].isdigit()
-            length = len(row['DIALED_NUMBER']) < 20
-            dialed_number = int(
-                row['DIALED_NUMBER']) if is_digit and length else None
+            ingress_duration = int(row['INGRESS_DURATION'])
             connect_time = dt.datetime.strptime(
                 row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
 
-            if valid and ingress_duration is not None:
+            if valid and ingress_duration > 0:
                 for rango in self.split_schedule(
                         connect_time, ingress_duration,
                         company):
@@ -554,9 +543,11 @@ class Cdr(mongoengine.Document):
                         fecha_llamada, hora_llamada)
                     Incoming(
                         connect_time=connect_time2,
-                        ani_number=ani_number,
+                        ani=row['ANI'],
+                        ani_number=row['ANI_NUMBER'],
                         ingress_duration=duracion,
-                        dialed_number=dialed_number,
+                        dialed_number=row['DIALED_NUMBER'],
+                        final_number=row['FINAL_NUMBER'],
                         cdr=self,
                         valid=valid,
                         observation=observation,
@@ -569,9 +560,11 @@ class Cdr(mongoengine.Document):
             else:
                 Incoming(
                     connect_time=connect_time,
-                    ani_number=ani_number,
+                    ani=row['ANI'],
+                    ani_number=row['ANI_NUMBER'],
                     ingress_duration=ingress_duration,
-                    dialed_number=dialed_number,
+                    dialed_number=row['DIALED_NUMBER'],
+                    final_number=row['FINAL_NUMBER'],
                     cdr=self,
                     valid=valid,
                     observation=observation,
@@ -579,8 +572,6 @@ class Cdr(mongoengine.Document):
                     _type=tipo,
                     entity=entity
                 ).save()
-
-        print(dt.datetime.now() - startTime)
 
         return True
 
@@ -635,7 +626,7 @@ class Cdr(mongoengine.Document):
                 and not re.search(patterns.pattern_564469v2, ani)):
             return 'movil'
 
-        elif (re.search(patterns.nacional, final_number)
+        elif (re.search(patterns.national, final_number)
                 and not re.search(patterns.santiago, final_number)
                 and not re.search(patterns.pattern_564469v2, ani)):
             if re.search(patterns.special, final_number):
@@ -644,7 +635,7 @@ class Cdr(mongoengine.Document):
             else:
                 return 'nacional'
 
-        elif (not re.search(patterns.nacional, final_number)
+        elif (not re.search(patterns.national, final_number)
                 and not re.search(patterns.pattern_564469v2, ani)):
             return 'internacional'
 
@@ -652,25 +643,18 @@ class Cdr(mongoengine.Document):
             return None
 
     def insert_outgoing(self):
-        lines = [
-            r.split(',')
-            for r in self.outgoing.read().decode().split('\r\n')[:-1]
-        ]
-        head = lines[0]
+        outgoing = self.outgoing.read()
+        outgoing_file = StringIO.StringIO(outgoing)
+        outgoing_dict = csv.DictReader(outgoing_file, delimiter=',')
 
-        for line in lines[1:]:
-            row = dict(zip(head, line))
+        for row in outgoing_dict:
             _type = self.get_type_outgoing(row['ANI'], row['FINAL_NUMBER'])
             company = self.get_company(row['FINAL_NUMBER'])
             connect_time = dt.datetime.strptime(
                 row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
-            ingress_duration = int(row['INGRESS_DURATION']) if row[
-                'INGRESS_DURATION'].isdigit() else None
-            ani = int(row['ANI']) if row['ANI'].isdigit() else None
-            final_number = int(row['FINAL_NUMBER']) if row[
-                'FINAL_NUMBER'].isdigit() else None
+            ingress_duration = int(row['INGRESS_DURATION'])
 
-            if company and _type and ingress_duration and ani and final_number:
+            if company and _type and ingress_duration > 0:
                 valid = True
 
             else:
@@ -678,8 +662,10 @@ class Cdr(mongoengine.Document):
 
             Outgoing(
                 connect_time=connect_time,
-                ani=ani,
-                final_number=final_number,
+                ani=row['ANI'],
+                ani_number=row['ANI_NUMBER'],
+                final_number=row['FINAL_NUMBER'],
+                dialed_number=row['DIALED_NUMBER'],
                 ingress_duration=ingress_duration,
                 cdr=self,
                 valid=valid,
@@ -695,9 +681,11 @@ class Incoming(mongoengine.Document):
     """Modelo de las llamdas entrantes."""
 
     connect_time = mongoengine.DateTimeField()
-    ani_number = mongoengine.IntField()
+    ani = mongoengine.StringField()
+    final_number = mongoengine.StringField()
+    ani_number = mongoengine.StringField()
     ingress_duration = mongoengine.IntField()
-    dialed_number = mongoengine.IntField()
+    dialed_number = mongoengine.StringField()
     cdr = mongoengine.ReferenceField(Cdr)
     valid = mongoengine.BooleanField()
     invoiced = mongoengine.BooleanField(default=False)
@@ -716,9 +704,11 @@ class Outgoing(mongoengine.Document):
     """Modelo de las llamdas salientes."""
 
     connect_time = mongoengine.DateTimeField()
-    ani = mongoengine.IntField()
+    ani = mongoengine.StringField()
+    final_number = mongoengine.StringField()
+    ani_number = mongoengine.StringField()
     ingress_duration = mongoengine.IntField()
-    final_number = mongoengine.IntField()
+    dialed_number = mongoengine.StringField()
     cdr = mongoengine.ReferenceField(Cdr)
     valid = mongoengine.BooleanField()
     company = mongoengine.ReferenceField(Company)
@@ -731,12 +721,22 @@ class Portability(mongoengine.Document):
 
     """Modelo de los numeros portados."""
 
-    number = mongoengine.IntField(unique=True)
+    number = mongoengine.StringField(unique=True)
     company = mongoengine.ReferenceField(Company)
+    _type = mongoengine.IntField()
     date = mongoengine.DateTimeField()
 
     def __unicode__(self):
         return unicode(self.number)
+
+    @mongoengine.queryset_manager
+    def create(doc_cls, queryset, reader):
+        for row in reader:
+            date = dt.datetime.strptime(row['date'], '%Y%m%d')
+            company = Company.objects.filter(code=int(row['code'])).first()
+            queryset.get_or_create(
+                date=date, number=row['number'], _type=row['type'],
+                company=company)
 
 
 class Holiday(mongoengine.Document):

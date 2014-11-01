@@ -1,10 +1,34 @@
+import csv
+import datetime as dt
+
 from django.conf import settings
 from django.core.mail import EmailMessage
+
+import pysftp
 
 from . import choices, models
 
 
+def load_portability():
+    with pysftp.Connection(
+            settings.TEP_HOST, username=settings.TEP_USERNAME,
+            password=settings.TEP_PASSWORD) as sftp:
+        today = dt.date.today().strftime('%Y%m%d')
+        tep_file = 'Dailyfiles/TEP_%s.txt' % today
+        destination = '/tmp/TEP_%s.txt' % today
+        sftp.get(tep_file, destination)
+
+        with open(destination, 'rb') as f:
+            f.next()
+            reader = csv.DictReader(f, delimiter=';')
+            reader.fieldnames = 'date', 'number', 'type', 'company'
+            models.Portability.create(reader)
+
+
 def insert_cdr(cdr):
+    # Carga previa de portados
+    load_portability()
+
     for c in choices.COMPANIAS:
         cdr.insert_incoming(c[0])
 
