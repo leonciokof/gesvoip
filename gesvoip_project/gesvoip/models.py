@@ -733,7 +733,7 @@ class Portability(mongoengine.Document):
     def create(doc_cls, queryset, reader):
         for row in reader:
             date = dt.datetime.strptime(row['date'], '%Y%m%d')
-            company = Company.objects.filter(code=int(row['code'])).first()
+            company = Company.objects.filter(code=int(row['company'])).first()
             queryset.get_or_create(
                 date=date, number=row['number'], _type=row['type'],
                 company=company)
