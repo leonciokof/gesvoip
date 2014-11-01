@@ -4,7 +4,11 @@ import sys
 
 import dotenv
 
-dotenv.read_dotenv()
+env_file = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+
+if os.path.isfile(env_file):
+    dotenv.read_dotenv(env_file)
 
 
 if __name__ == "__main__":
