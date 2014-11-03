@@ -144,6 +144,8 @@ TEP_HOST = env('TEP_HOST')
 TEP_USERNAME = env('TEP_USERNAME')
 TEP_PASSWORD = env('TEP_PASSWORD')
 
+GESVOIP_URL = env('GESVOIP_URL')
+
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
