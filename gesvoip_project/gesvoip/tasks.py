@@ -258,3 +258,55 @@ def load_data():
                 i.call_number = i_call_number
                 i.total = i_total
                 i.save()
+
+
+def get_trafico_local(cdr):
+    items = []
+    date = cdr.get_date()
+
+    for c in models.Company.objects(invoicing=monthly):
+        for i, s in enumerate(map(lambda x: x[0], TIPO_CHOICES), start=4):
+            ingress_duration = models.Incoming.objects(
+                cdr=cdr, company=c, _type='local', schedule='Empresa', 
+                entity=e).sum('ingress_duration')
+            count = models.Incoming.objects(
+                cdr=cdr, company=c, _type='local', schedule='Empresa', 
+                entity=e).count()
+
+            if ingress_duration > 0 and count > 0:
+                items.append(
+                    314, date, 'E', '06', '2', c.interconexion, 'TB', 'CO', 
+                    'NOR', '0%s' % i, round(ingress_duration)
+
+
+def get_trafico_local(cdr):
+    items = []
+    date = cdr.get_date()
+
+    for c in models.Company.objects(invoicing=monthly):
+        for i, s in enumerate(map(lambda x: x[0], TIPO_CHOICES), start=4):
+            ingress_duration = models.Incoming.objects(
+                cdr=cdr, company=c, _type='local', schedule=s, 
+                entity='Empresa').sum('ingress_duration')
+            count = models.Incoming.objects(
+                cdr=cdr, company=c, _type='local', schedule=s, 
+                entity='Empresa').count()
+
+            if ingress_duration > 0 and count > 0:
+                items.append(
+                    314, date, 'E', '06', '2', c.interconexion, 'TB', 'CO', 
+                    'NOR', '0%s' % i, count, round(ingress_duration)
+
+            ingress_duration = models.Outgoing.objects(
+                cdr=cdr, company=c, _type='local', schedule=s, 
+                entity='Empresa').sum('ingress_duration')
+            count = models.Outgoing.objects(
+                cdr=cdr, company=c, _type='local', schedule=s, 
+                entity='Empresa').count()
+
+            if ingress_duration > 0 and count > 0:
+                items.append(
+                    314, date, 'S', '06', '2', c.interconexion, 'TB', 'CO', 
+                    'NOR', '0%s' % i, count, round(ingress_duration)
+
+    return items
