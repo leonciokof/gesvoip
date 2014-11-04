@@ -183,14 +183,12 @@ class Cdr(mongoengine.Document):
 
     def get_active_ctc(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
-        if re.search(patterns.movil, ani):
-            return True
+        pattern1 = re.search(patterns.movil, ani)
+        pattern2 = re.search(patterns.santiago, ani)
+        pattern3 = re.search(patterns.pattern_800, dialed_number)
+        pattern4 = re.search(patterns.pattern_4469v2, dialed_number)
 
-        elif (re.search(patterns.santiago, ani)
-                and not re.search(patterns.pattern_800, dialed_number)):
-            return True
-
-        elif re.search(patterns.pattern_4469v2, dialed_number):
+        if pattern1 or (pattern2 and not pattern3) or pattern4:
             return True
 
         else:
@@ -198,11 +196,11 @@ class Cdr(mongoengine.Document):
 
     def get_active_entel(self, ani, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
-        if re.search(patterns.pattern_0234469v2, dialed_number):
-            return True
+        pattern1 = re.search(patterns.pattern_0234469v2, dialed_number)
+        pattern2 = re.search(patterns.pattern_64469, dialed_number)
+        pattern3 = re.search(patterns.pattern_112, dialed_number)
 
-        elif (re.search(patterns.pattern_64469, dialed_number) and
-                not re.search(patterns.pattern_112, dialed_number)):
+        if pattern1 or (pattern2 and not pattern3):
             return True
 
         else:
