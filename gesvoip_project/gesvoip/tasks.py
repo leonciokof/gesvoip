@@ -4,6 +4,7 @@ import datetime as dt
 from django.conf import settings
 from django.core.mail import EmailMessage
 
+from django_rq import job
 from raven import Client
 import pysftp
 import queries
@@ -90,6 +91,7 @@ def send_email(to, subject, template_name, global_merge_vars):
     msg.send()
 
 
+@job
 def load_data():
     try:
         session_sti = queries.Session(settings.STI_URL)

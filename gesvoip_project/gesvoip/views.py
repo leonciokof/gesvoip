@@ -902,7 +902,7 @@ class LoadView(generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(LoadView, self).get_context_data(**kwargs)
-        django_rq.enqueue(tasks.load_data, timeout=60 * 60 * 60)
+        tasks.load_data.delay()
 
         return context
 
