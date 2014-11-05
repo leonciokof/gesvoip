@@ -34,6 +34,7 @@ pysftp==0.2.8
 python-dateutil==2.2
 pytz==2014.7
 queries==1.5.0
+queries==1.5.0
 raven==5.1.1
 redis==2.10.3
 requests==2.4.3

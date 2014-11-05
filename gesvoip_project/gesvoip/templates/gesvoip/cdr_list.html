@@ -2,13 +2,13 @@
 
 {% load pagination_tags %}
 
-{% block title %}Compañias{% endblock title %}
+{% block title %}CDR{% endblock title %}
 
 {% block content %}
 <div id="page-wrapper">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Compañias</h1>
+      <h1 class="page-header">CDR</h1>
     </div>
   </div>
   <div class="row">
@@ -17,7 +17,7 @@
         <div class="panel-body">
           <div class="row">
             <div class="col-lg-12">
-              <a href="{% url 'gesvoip:company_create' %}" class="btn btn-primary">Nuevo</a>
+              <a href="{% url 'gesvoip:new_cdr' %}" class="btn btn-primary">Nuevo</a>
             </div>
           </div>
           <div class="row">
@@ -29,10 +29,12 @@
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Nombre</th>
-                          <th>IDO / IDD</th>
-                          <th>Codigo</th>
-                          <th>Facturacion</th>
+                          <th>Fecha</th>
+                          <th>Trafico local</th>
+                          <th>Trafico voip local</th>
+                          <th>Trafico movil</th>
+                          <th>Trafico voip movil</th>
+                          <th>Trafico nacional</th>
                           <th></th>
                           <th></th>
                         </tr>
@@ -40,16 +42,12 @@
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.name }}</td>
-                          <td>{{ obj.idoidd|default:"---" }}</td>
-                          <td>{{ obj.code|default:"---" }}</td>
-                          <td>{{ obj.get_invoicing_display }}</td>
-                          <td>
-                            <a href="{% url 'gesvoip:company_update' obj.pk %}" class="btn btn-xs">
-                              <span class="glyphicon glyphicon-pencil"></span>
-                            </a>
-                          </td>
-                          <td><a href="{% url 'gesvoip:numeration_list' obj.pk %}" class="btn btn-xs btn-default">Numeración</a></td>
+                          <td>{{ obj }}</td>
+                          <td><a href="{% url 'gesvoip:local_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
+                          <td><a href="{% url 'gesvoip:voip_local_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
+                          <td><a href="{% url 'gesvoip:mobile_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
+                          <td><a href="{% url 'gesvoip:voip_mobile_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
+                          <td><a href="{% url 'gesvoip:national_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
                         </tr>
                         {% endfor %}
                       </tbody>

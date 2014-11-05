@@ -20,6 +20,7 @@ class Company(mongoengine.Document):
 
     name = mongoengine.StringField(
         unique=True, max_length=255, verbose_name=u'nombre')
+    idoidd = mongoengine.IntField(verbose_name=u'idoidd')
     code = mongoengine.IntField(verbose_name=u'codigo')
     schedules = mongoengine.DictField(verbose_name=u'horarios')
     invoicing = mongoengine.StringField(
@@ -56,7 +57,7 @@ class Line(mongoengine.Document):
 
     """Modelo de los clientes de convergia."""
 
-    number = mongoengine.IntField(unique=True, verbose_name=u'numero')
+    number = mongoengine.StringField(unique=True, verbose_name=u'numero')
     name = mongoengine.StringField(max_length=255, verbose_name=u'nombre')
     entity = mongoengine.StringField(
         choices=choices.ENTITIES, verbose_name=u'entidad')
@@ -179,7 +180,7 @@ class Cdr(mongoengine.Document):
 
     def get_date(self):
         """Retorna la fecha para traficos."""
-        return year + month
+        return self.year + self.month
 
     def valid_ani(self, ani):
         if len(ani) == 11:
@@ -695,6 +696,7 @@ class Cdr(mongoengine.Document):
             ingress_duration = int(row['INGRESS_DURATION'])
             line = Line.objects(number=row['ANI_NUMBER']).first()
             schedule = self.get_horario(connect_time)
+            entity = self.get_entity(row['FINAL_NUMBER'])
 
             if company and _type and ingress_duration > 0:
                 valid = True
@@ -714,10 +716,179 @@ class Cdr(mongoengine.Document):
                 company=company,
                 _type=_type,
                 line=line,
-                schedule=schedule
+                schedule=schedule,
+                entity=entity
             ).save()
 
         return True
+
+    def get_local_traffic(self):
+        items = []
+        date = self.get_date()
+
+        for c in Company.objects(invoicing='monthly'):
+            for i, s in enumerate(
+                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
+                ingress_duration = Incoming.objects(
+                    cdr=self, company=c, _type='local', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Incoming.objects(
+                    cdr=self, company=c, _type='local', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'E', '06', '2', c.code, 'TB', 'CO',
+                        'NOR', '0%s' % i, count, round(ingress_duration))
+
+                ingress_duration = Outgoing.objects(
+                    cdr=self, company=c, _type='local', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Outgoing.objects(
+                    cdr=self, company=c, _type='local', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'S', '06', '2', c.code, 'TB', 'CO',
+                        'NOR', '0%s' % i, count, round(ingress_duration))
+
+        return items
+
+    def get_voip_local_traffic(self):
+        items = []
+        date = self.get_date()
+
+        for c in Company.objects(invoicing='monthly'):
+            for i, s in enumerate(
+                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
+                ingress_duration = Incoming.objects(
+                    cdr=self, company=c, _type='voip-local', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Incoming.objects(
+                    cdr=self, company=c, _type='voip-local', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'E', c.code, 'CO', 'NOR',
+                        '0%s' % i, count, round(ingress_duration),
+                        round(ingress_duration) * 20)
+
+                ingress_duration = Outgoing.objects(
+                    cdr=self, company=c, _type='voip-local', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Outgoing.objects(
+                    cdr=self, company=c, _type='voip-local', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'S', c.code, 'CO', 'NOR',
+                        '0%s' % i, count, round(ingress_duration),
+                        round(ingress_duration) * 20)
+
+        return items
+
+    def get_mobile_traffic(self):
+        items = []
+        date = self.get_date()
+
+        for c in Company.objects(invoicing='monthly'):
+            for i, s in enumerate(
+                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
+                ingress_duration = Incoming.objects(
+                    cdr=self, company=c, _type='movil', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Incoming.objects(
+                    cdr=self, company=c, _type='movil', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'E', c.code, '06', '2', 'TB', 'CO',
+                        'NOR', '0%s' % i, count, round(ingress_duration))
+
+                ingress_duration = Outgoing.objects(
+                    cdr=self, company=c, _type='movil', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Outgoing.objects(
+                    cdr=self, company=c, _type='movil', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'S', c.code, '06', '2', 'TB', 'CO',
+                        'NOR', '0%s' % i, count, round(ingress_duration))
+
+        return items
+
+    def get_voip_mobile_traffic(self):
+        items = []
+        date = self.get_date()
+
+        for c in Company.objects(invoicing='monthly'):
+            for i, s in enumerate(
+                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
+                ingress_duration = Incoming.objects(
+                    cdr=self, company=c, _type='voip-movil', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Incoming.objects(
+                    cdr=self, company=c, _type='voip-movil', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'E', c.code, 'CO', 'NOR',
+                        '0%s' % i, count, round(ingress_duration),
+                        round(ingress_duration) * 20)
+
+                ingress_duration = Outgoing.objects(
+                    cdr=self, company=c, _type='voip-movil', schedule=s,
+                    entity='Empresa').sum('ingress_duration')
+                count = Outgoing.objects(
+                    cdr=self, company=c, _type='voip-movil', schedule=s,
+                    entity='Empresa').count()
+
+                if ingress_duration > 0 and count > 0:
+                    items.append(
+                        314, date, 'S', c.code, 'CO', 'NOR',
+                        '0%s' % i, count, round(ingress_duration),
+                        round(ingress_duration) * 20)
+
+        return items
+
+    def get_national_traffic(self):
+        items = []
+        date = self.get_date()
+
+        for i, s in enumerate(
+                map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
+            ingress_duration = Outgoing.objects(
+                cdr=self, _type='nacional', schedule=s,
+                entity='Empresa').sum('ingress_duration')
+            count = Outgoing.objects(
+                cdr=self, _type='nacional', schedule=s,
+                entity='Empresa').count()
+
+            if ingress_duration > 0 and count > 0:
+                items.append(
+                    314, date, 'LDN', 'S', 112, '06', 2, 'TB', 'CO', 'NOR',
+                    '0%s' % i, count, round(ingress_duration))
+
+            ingress_duration = Outgoing.objects(
+                cdr=self, _type='internacional', schedule=s,
+                entity='Empresa').sum('ingress_duration')
+            count = Outgoing.objects(
+                cdr=self, _type='internacional', schedule=s,
+                entity='Empresa').count()
+
+            if ingress_duration > 0 and count > 0:
+                items.append(
+                    314, date, 'LDI', 'S', 112, '06', 2, 'TB', 'CO', 'NOR',
+                    '0%s' % i, count, round(ingress_duration))
+
+        return items
 
 
 class Incoming(mongoengine.Document):
@@ -757,7 +928,9 @@ class Outgoing(mongoengine.Document):
     valid = mongoengine.BooleanField()
     company = mongoengine.ReferenceField(Company)
     line = mongoengine.ReferenceField(Line)
+    _type = mongoengine.StringField(choices=choices.TIPOS)
     schedule = mongoengine.StringField(choices=choices.TIPO_CHOICES)
+    entity = mongoengine.StringField(choices=choices.ENTITIES)
 
     def __unicode__(self):
         return unicode(self.connect_time)
@@ -779,7 +952,8 @@ class Portability(mongoengine.Document):
     def create(doc_cls, queryset, reader):
         for row in reader:
             date = dt.datetime.strptime(row['date'], '%Y%m%d')
-            company = Company.objects.filter(code=int(row['company'])).first()
+            company = Company.objects.filter(
+                idoidd=int(row['company'])).first()
             queryset.get_or_create(
                 date=date, number=row['number'], _type=row['type'],
                 company=company)
@@ -883,7 +1057,7 @@ class LocalCenter(mongoengine.Document):
 
     """Modelo que representa los centros locales"""
 
-    company = mongoengine.IntField(default=314, verbose_name=u'codigo empresa')
+    company = mongoengine.ReferenceField(Company)
     code = mongoengine.IntField(unique=True, verbose_name=u'codigo local')
     name = mongoengine.StringField(
         max_length=255, verbose_name=u'descripción local')

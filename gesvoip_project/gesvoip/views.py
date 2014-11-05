@@ -7,6 +7,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.views import generic
 
 from mongogeneric import CreateView, DetailView, ListView, UpdateView
+from mongoengine.django.shortcuts import get_document_or_404
 import django_rq
 
 from . import forms, models, tasks
@@ -808,3 +809,88 @@ class CcaaReportView(CSVResponseMixin, generic.TemplateView):
         return context
 
 ccaa_report = login_required(CcaaReportView.as_view())
+
+
+class CdrListView(ListView):
+
+    document = models.Cdr
+    paginate_by = 10
+
+cdr_list = login_required(CdrListView.as_view())
+
+
+class LocalTrafficReportView(CSVResponseMixin, generic.TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            LocalTrafficReportView, self).get_context_data(**kwargs)
+        cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
+        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
+        items = cdr.get_local_traffic()
+        context.update({'title': title, 'items': items})
+
+        return context
+
+local_traffic_report = login_required(LocalTrafficReportView.as_view())
+
+
+class VoipLocalTrafficReportView(CSVResponseMixin, generic.TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            VoipLocalTrafficReportView, self).get_context_data(**kwargs)
+        cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
+        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
+        items = cdr.get_voip_local_traffic()
+        context.update({'title': title, 'items': items})
+
+        return context
+
+voip_local_traffic_report = login_required(
+    VoipLocalTrafficReportView.as_view())
+
+
+class MobileTrafficReportView(CSVResponseMixin, generic.TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            MobileTrafficReportView, self).get_context_data(**kwargs)
+        cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
+        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
+        items = cdr.get_mobile_traffic()
+        context.update({'title': title, 'items': items})
+
+        return context
+
+mobile_traffic_report = login_required(MobileTrafficReportView.as_view())
+
+
+class VoipMobileTrafficReportView(CSVResponseMixin, generic.TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            VoipMobileTrafficReportView, self).get_context_data(**kwargs)
+        cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
+        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
+        items = cdr.get_voip_mobile_traffic()
+        context.update({'title': title, 'items': items})
+
+        return context
+
+voip_mobile_traffic_report = login_required(
+    VoipMobileTrafficReportView.as_view())
+
+
+class NationalTrafficReportView(CSVResponseMixin, generic.TemplateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(
+            NationalTrafficReportView, self).get_context_data(**kwargs)
+        cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
+        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
+        items = cdr.get_national_traffic()
+        context.update({'title': title, 'items': items})
+
+        return context
+
+national_traffic_report = login_required(NationalTrafficReportView.as_view())
