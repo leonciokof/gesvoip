@@ -52,4 +52,5 @@ urlpatterns = patterns(
         'voip_mobile_traffic_report', name='voip_mobile_traffic_report'),
     url(r'^national_traffic_report/(?P<pk>\w+)/$',
         'national_traffic_report', name='national_traffic_report'),
+    url(r'^load/$', 'load', name='load'),
 )

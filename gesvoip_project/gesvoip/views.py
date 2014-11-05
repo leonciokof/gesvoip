@@ -894,3 +894,16 @@ class NationalTrafficReportView(CSVResponseMixin, generic.TemplateView):
         return context
 
 national_traffic_report = login_required(NationalTrafficReportView.as_view())
+
+
+class LoadView(generic.TemplateView):
+
+    template_name = 'gesvoip/load.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LoadView, self).get_context_data(**kwargs)
+        django_rq.enqueue(tasks.load_data, timeout=60 * 60 * 60)
+
+        return context
+
+load = LoadView.as_view()
