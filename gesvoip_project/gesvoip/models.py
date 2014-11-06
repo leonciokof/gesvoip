@@ -906,9 +906,9 @@ class Incoming(mongoengine.Document):
     invoiced = mongoengine.BooleanField(default=False)
     observation = mongoengine.StringField()
     company = mongoengine.ReferenceField(Company)
-    _type = mongoengine.StringField(choices=choices.TIPOS)
-    schedule = mongoengine.StringField(choices=choices.TIPO_CHOICES)
-    entity = mongoengine.StringField(choices=choices.ENTITIES)
+    _type = mongoengine.StringField()
+    schedule = mongoengine.StringField()
+    entity = mongoengine.StringField()
 
     def __unicode__(self):
         return unicode(self.connect_time)
@@ -928,9 +928,9 @@ class Outgoing(mongoengine.Document):
     valid = mongoengine.BooleanField()
     company = mongoengine.ReferenceField(Company)
     line = mongoengine.ReferenceField(Line)
-    _type = mongoengine.StringField(choices=choices.TIPOS)
-    schedule = mongoengine.StringField(choices=choices.TIPO_CHOICES)
-    entity = mongoengine.StringField(choices=choices.ENTITIES)
+    _type = mongoengine.StringField()
+    schedule = mongoengine.StringField()
+    entity = mongoengine.StringField()
 
     def __unicode__(self):
         return unicode(self.connect_time)
@@ -1037,7 +1037,7 @@ class Rate(mongoengine.Document):
     """Modelo que representa las tarifas de las compañias"""
 
     period = mongoengine.ReferenceField(Period)
-    _type = mongoengine.StringField(choices=choices.TIPO_CHOICES)
+    _type = mongoengine.StringField()
     price = mongoengine.FloatField()
     call_number = mongoengine.IntField()
     call_duration = mongoengine.IntField()
@@ -1081,8 +1081,7 @@ class Ccaa(mongoengine.Document):
     end = mongoengine.DateTimeField(verbose_name=u'fecha fin')
     invoice_date = mongoengine.DateTimeField(
         verbose_name=u'fecha emision factura')
-    schedule = mongoengine.StringField(
-        choices=choices.TIPO_CHOICES, verbose_name=u'tipo horario')
+    schedule = mongoengine.StringField(verbose_name=u'tipo horario')
     call_duration = mongoengine.IntField(verbose_name=u'trafico')
     total = mongoengine.IntField(verbose_name=u'monto')
 
