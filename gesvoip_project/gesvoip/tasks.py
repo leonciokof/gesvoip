@@ -148,7 +148,7 @@ def load_data():
                     'SELECT connect_time, ani_number, ingress_duration, '
                     'dialed_number, estado, motivo, tipo, fecha '
                     'FROM log_llamadas WHERE estado != \'facturado\' '
-                    'compania_ani = \'%s\'' % id_compania)
+                    'and compania_ani = \'%s\'' % id_compania)
 
                 for l in session.query(q):
                     connect_time = l.get('connect_time')
