@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+
+from celery import task
+
 import csv
 import datetime as dt
 
@@ -91,7 +95,7 @@ def send_email(to, subject, template_name, global_merge_vars):
     msg.send()
 
 
-@job
+@task()
 def load_data():
     try:
         session_sti = queries.Session(settings.STI_URL)

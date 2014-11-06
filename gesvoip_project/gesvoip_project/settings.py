@@ -13,6 +13,9 @@ import sys
 
 from getenv import env
 from mongoengine import connect
+import djcelery
+
+djcelery.setup_loader()
 
 connect('gesvoip')
 
@@ -38,13 +41,12 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'crispy_forms',
     'pagination_bootstrap',
-    'django_rq',
-    'django_rq_dashboard',
     'django_extensions',
     'djrill',
     'activelink',
     'raven.contrib.django.raven_compat',
     'gesvoip',
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -125,13 +127,6 @@ DEFAULT_FROM_EMAIL = SERVER_EMAIL
 
 INTERNAL_IPS = ('127.0.0.1',)
 
-RQ_QUEUES = {
-    'default': {
-        'URL': env('REDIS_URL', 'redis://localhost:6379'),
-        'DB': 0,
-    }
-}
-
 AUTHENTICATION_BACKENDS = (
     'mongoengine.django.auth.MongoEngineBackend',
 )
@@ -146,6 +141,13 @@ TEP_PASSWORD = env('TEP_PASSWORD')
 
 GESVOIP_URL = env('GESVOIP_URL')
 STI_URL = env('STI_URL')
+
+BROKER_URL = env('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = BROKER_URL
+BROKER_TRANSPORT = 'redis'
+CELERYBEAT_SCHEDULER = 'celerybeatredis.schedulers.RedisScheduler'
+CELERY_REDIS_SCHEDULER_URL = BROKER_URL
+CELERY_REDIS_SCHEDULER_KEY_PREFIX = 'tasks:meta:'
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
