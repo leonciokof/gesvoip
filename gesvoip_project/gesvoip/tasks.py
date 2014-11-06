@@ -376,6 +376,8 @@ def load_data():
 
             for l in session_sti.query('SELECT * FROM lineas'):
                 number = l.get('numero')
+                if number is not None:
+                    number = str(number)
                 name = l.get('nombre')
                 entity = l.get('tipo_persona')
                 entity = entity.lower() if entity else None
