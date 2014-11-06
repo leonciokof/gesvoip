@@ -112,8 +112,7 @@ def load_data():
             models.Ccaa.objects.delete()
 
             for h in session.query('SELECT fecha FROM feriado'):
-                fecha = h.get('fecha')
-                date = dt.datetime.strptime(fecha, '%Y-%m-%d')
+                date = h.get('fecha')
                 holiday = models.Holiday(date=date)
                 holiday.save()
 
