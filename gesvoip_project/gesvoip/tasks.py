@@ -315,8 +315,7 @@ def load_data():
                 for l in session_sti.query(q):
                     fecha = l.get('fecha')
                     hora = l.get('hora')
-                    connect_time = dt.datetime.strptime(
-                        fecha + hora, '%Y-%m-%d%H:%M:%S')
+                    connect_time = dt.datetime.combine(fecha, hora)
                     ani_number = l.get('ani_number')
                     ingress_duration = l.get('ingress_duration')
                     final_number = l.get('final_number')
