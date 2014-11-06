@@ -8,7 +8,6 @@ from django.views import generic
 
 from mongogeneric import CreateView, DetailView, ListView, UpdateView
 from mongoengine.django.shortcuts import get_document_or_404
-import django_rq
 
 from . import forms, models, tasks
 
@@ -86,7 +85,7 @@ class NewCdrView(generic.FormView):
         cdr = models.Cdr(
             year=year, month=month, incoming_entel=incoming_entel,
             incoming_ctc=incoming_ctc, outgoing=outgoing).save()
-        django_rq.enqueue(tasks.insert_cdr, cdr, timeout=60 * 60 * 60)
+        tasks.insert_cdr.delay(cdr)
 
         return super(NewCdrView, self).form_valid(form)
 

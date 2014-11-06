@@ -8,7 +8,6 @@ import datetime as dt
 from django.conf import settings
 from django.core.mail import EmailMessage
 
-from django_rq import job
 from raven import Client
 import pysftp
 import queries
