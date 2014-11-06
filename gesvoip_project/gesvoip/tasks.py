@@ -317,6 +317,8 @@ def load_data():
                     hora = l.get('hora')
                     connect_time = dt.datetime.combine(fecha, hora)
                     ani_number = l.get('ani_number')
+                    if ani_number is not None:
+                        ani_number = str(ani_number)
                     ingress_duration = l.get('ingress_duration')
                     final_number = l.get('final_number')
                     estado = l.get('estado')
