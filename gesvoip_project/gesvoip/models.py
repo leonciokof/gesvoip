@@ -62,8 +62,8 @@ class Line(mongoengine.Document):
     entity = mongoengine.StringField(
         choices=choices.ENTITIES, verbose_name=u'entidad')
     comments = mongoengine.StringField(verbose_name=u'comentarios')
-    zone = mongoengine.IntField(choices=choices.ZONES, verbose_name=u'area')
-    city = mongoengine.IntField(choices=choices.CITIES, verbose_name=u'comuna')
+    zone = mongoengine.IntField(verbose_name=u'area')
+    city = mongoengine.IntField(verbose_name=u'comuna')
     company = mongoengine.IntField(default=333)
     rut = mongoengine.StringField(
         max_length=12, verbose_name=u'rut propietario')
