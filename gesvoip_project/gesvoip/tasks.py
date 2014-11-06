@@ -11,11 +11,13 @@ from django.core.mail import EmailMessage
 from raven import Client
 import pysftp
 import queries
+import psycopg2
 
 from . import choices, models
 
 dsn = settings.RAVEN_CONFIG['dsn'] if not settings.DEBUG else ''
 client = Client(dsn)
+conn = psycopg2.connect("dbname=gesvoip user=postgres password=serveradmin")
 
 
 def load_portability():
@@ -97,8 +99,6 @@ def send_email(to, subject, template_name, global_merge_vars):
 @task()
 def load_data():
     try:
-        session_sti = queries.Session(settings.STI_URL)
-        session = queries.Session(settings.GESVOIP_URL)
         models.Cdr.objects.delete()
         models.Company.objects.delete()
         models.Incoming.objects.delete()
@@ -110,56 +110,63 @@ def load_data():
         models.Line.objects.delete()
         models.Ccaa.objects.delete()
 
-        for h in session.query('SELECT fecha FROM feriado'):
-            date = h.get('fecha')
+        cur_holiday = conn.cursor()
+        cur_holiday.execute('SELECT fecha FROM feriado')
+        for h in cur_holiday.fetchall():
+            date = h[0]
             holiday = models.Holiday(date=date)
             holiday.save()
-
-        for c in session.query(
-                'SELECT DISTINCT(fecha) FROM log_llamadas ORDER BY fecha'):
-            date = c.get('fecha')
+        cur_holiday.close()
+        cur_log_llamadas = conn.cursor()
+        cur_log_llamadas.execute(
+                'SELECT DISTINCT(fecha) FROM log_llamadas ORDER BY fecha')
+        for c in cur_log_llamadas.fetchall():
+            date = c[0]
             year = date[:4]
             month = date[5:]
             cdr = models.Cdr(year=year, month=month, processed=True)
             cdr.save()
-
-        for c in session.query(
+        cur_log_llamadas.close()
+        cur_compania = conn.cursor()
+        cur_compania.execute(
                 'SELECT id_compania, nombre, id, codigo '
-                'FROM compania WHERE id IS NOT NULL'):
-            id_compania = c.get('id_compania')
-            name = c.get('nombre')
-            idoidd = c.get('id')
-            code = c.get('codigo')
+                'FROM compania WHERE id IS NOT NULL')
+        for c in cur_compania.fetchall():
+            id_compania = c[0]
+            name = c[1]
+            idoidd = c[2]
+            code = c[3]
             company = models.Company(name=name, idoidd=idoidd, code=code)
             company.save()
+            cur_numeracion = conn.cursor()
+            cur_numeracion.execute('SELECT zona, rango FROM numeracion WHERE compania=%s', (
+                id_compania,))
 
-            q = 'SELECT zona, rango FROM numeracion WHERE compania=%s' % (
-                id_compania,)
-
-            for n in session.query(q):
-                zone = n.get('zona')
-                _range = n.get('rango')
+            for n in cur_numeracion.fetchall():
+                zone = n[0]
+                _range = n[1]
                 numeration = models.Numeration(
                     zone=zone, _range=_range, company=company)
                 numeration.save()
-
-            q = (
+            cur_numeracion.close()
+            cur_log_llamadas2 = conn.cursor()
+            cur_log_llamadas2.execute(
                 'SELECT connect_time, ani_number, ingress_duration, '
                 'dialed_number, estado, motivo, tipo, fecha '
                 'FROM log_llamadas WHERE estado != \'facturado\' '
-                'and compania_ani = \'%s\'' % id_compania)
+                'and compania_ani = \'%s\'', (id_compania,))
 
-            for l in session.query(q):
-                connect_time = l.get('connect_time')
-                ani_number = l.get('ani_number')
-                ingress_duration = l.get('ingress_duration')
-                dialed_number = l.get('dialed_number')
-                estado = l.get('estado')
+            for l in cur_log_llamadas2.fetchall():
+                connect_time = l[0]
+                ani_number = l[1]
+                ingress_duration = l[2]
+                dialed_number = l[3]
+                estado = l[4]
                 valid = True if estado == 'activado' else False
-                motivo = l.get('motivo')
+                motivo = l[5]
                 observation = None if motivo == '' else motivo
-                tipo = l.get('tipo')
-                date = l.get('fecha')
+                tipo = l[6]
+                date = l[7]
                 year = date[:4]
                 month = date[5:]
                 cdr = models.Cdr.objects.get(year=year, month=month)
@@ -170,22 +177,23 @@ def load_data():
                     observation=observation, company=company, _type=tipo,
                     cdr=cdr, schedule=None)
                 numeration.save()
-
-            q = (
+            cur_log_llamadas2.close()
+            cur_det_factura = conn.cursor()
+            cur_det_factura.execute(
                 'SELECT origen, destino, fecha, hora, duracion, horario '
-                'FROM det_factura WHERE compania = \'%s\'' % id_compania)
+                'FROM det_factura WHERE compania = \'%s\'', (id_compania,))
 
-            for l in session.query(q):
-                fecha = l.get('fecha')
-                hora = l.get('hora')
+            for l in cur_det_factura.fetchall():
+                ani_number = l[0]
+                dialed_number = l[1]
+                fecha = l[2]
+                hora = l[3]
                 connect_time = dt.datetime.strptime(
                     fecha + hora, '%Y-%m-%d%H:%M:%S')
-                ani_number = l.get('origen')
-                ingress_duration = l.get('duracion')
-                dialed_number = l.get('destino')
+                ingress_duration = l[4]
                 year = fecha[:4]
                 month = fecha[5:][:2]
-                schedule = l.get('horario')
+                schedule = l[5]
                 cdr = models.Cdr.objects.get(year=year, month=month)
                 numeration = models.Incoming(
                     connect_time=connect_time, ani_number=ani_number,
@@ -194,7 +202,7 @@ def load_data():
                     company=company,
                     cdr=cdr, schedule=schedule, invoiced=True)
                 numeration.save()
-
+            cur_det_factura.close()
             q = (
                 'SELECT id_factura, fecha_inicio, fecha_fin, tarifa, '
                 'valor_normal, valor_reducido, valor_nocturno '
