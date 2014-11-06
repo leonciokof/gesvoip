@@ -126,7 +126,7 @@ def load_data():
 
             for c in session.query(
                     'SELECT id_compania, nombre, id, codigo '
-                    'FROM compania IS NOT NULL'):
+                    'FROM compania WHERE id IS NOT NULL'):
                 id_compania = c.get('id_compania')
                 name = c.get('nombre')
                 idoidd = c.get('id')
