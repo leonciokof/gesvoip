@@ -383,6 +383,10 @@ def load_data():
             comments = l.get('comentarios')
             zone = l.get('area')
             city = l.get('comuna')
+            if zone == '':
+                zone = None
+            if city == '':
+                city = None
             line = models.Line(
                 number=number, name=name, entity=entity, comments=comments,
                 zone=zone, city=city)
