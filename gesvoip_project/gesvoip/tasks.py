@@ -310,7 +310,7 @@ def load_data():
                 q = (
                     'SELECT fecha, hora, ani_number, ingress_duration, '
                     'final_number, estado, descripcion, fecha_cdr '
-                    'FROM log_llamadas WHERE idd = \'%s\'' % id_compania)
+                    'FROM cdr WHERE idd = \'%s\'' % id_compania)
 
                 for l in session_sti.query(q):
                     fecha = l.get('fecha')
