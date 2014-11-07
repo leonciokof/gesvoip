@@ -17,6 +17,7 @@ from . import choices, models
 dsn = settings.RAVEN_CONFIG['dsn'] if not settings.DEBUG else ''
 client = Client(dsn)
 conn = psycopg2.connect("dbname=gesvoip user=postgres password=serveradmin")
+conn_sti = psycopg2.connect("dbname=sti user=postgres password=serveradmin")
 
 
 def load_portability():
@@ -330,7 +331,7 @@ def load_data():
                 i.save()
 
             cur_factura.close()
-            cur_cdr = conn.cursor()
+            cur_cdr = conn_sti.cursor()
             cur_cdr.execute(
                 'SELECT fecha, hora, ani_number, ingress_duration, '
                 'final_number, estado, descripcion, fecha_cdr '
@@ -362,7 +363,7 @@ def load_data():
                 numeration.save()
 
             cur_cdr.close()
-            cur_ccaa = conn.cursor()
+            cur_ccaa = conn_sti.cursor()
             cur_ccaa.execute(
                 'SELECT periodo, n_factura, fecha_inicio, fecha_fin, '
                 'fecha_fact, horario, trafico, monto FROM ccaa WHERE '
@@ -404,7 +405,8 @@ def load_data():
 
             cur_ccaa.close()
 
-        cur_lineas = conn.cursor()
+        cur_compania.close()
+        cur_lineas = conn_sti.cursor()
         cur_lineas.execute(
             'SELECT numero, nombre, tipo_persona, comentarios, area, comuna '
             'FROM lineas')
@@ -429,6 +431,8 @@ def load_data():
             line.save()
 
         cur_lineas.close()
+        conn.close()
+        conn_sti.close()
 
         send_email(
             [{'name': 'Leonardo', 'email': 'lgaticastyle@gmail.com'}],
