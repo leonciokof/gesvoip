@@ -10,7 +10,6 @@ from django.core.mail import EmailMessage
 
 from raven import Client
 import pysftp
-import queries
 import psycopg2
 
 from . import choices, models
@@ -119,7 +118,7 @@ def load_data():
         cur_holiday.close()
         cur_log_llamadas = conn.cursor()
         cur_log_llamadas.execute(
-                'SELECT DISTINCT(fecha) FROM log_llamadas ORDER BY fecha')
+            'SELECT DISTINCT(fecha) FROM log_llamadas ORDER BY fecha')
         for c in cur_log_llamadas.fetchall():
             date = c[0]
             year = date[:4]
@@ -129,8 +128,8 @@ def load_data():
         cur_log_llamadas.close()
         cur_compania = conn.cursor()
         cur_compania.execute(
-                'SELECT id_compania, nombre, id, codigo '
-                'FROM compania WHERE id IS NOT NULL')
+            'SELECT id_compania, nombre, id, codigo '
+            'FROM compania WHERE id IS NOT NULL')
         for c in cur_compania.fetchall():
             id_compania = c[0]
             name = c[1]
@@ -139,8 +138,9 @@ def load_data():
             company = models.Company(name=name, idoidd=idoidd, code=code)
             company.save()
             cur_numeracion = conn.cursor()
-            cur_numeracion.execute('SELECT zona, rango FROM numeracion WHERE compania=%s', (
-                id_compania,))
+            cur_numeracion.execute(
+                'SELECT zona, rango FROM numeracion WHERE compania=%s', (
+                    id_compania,))
 
             for n in cur_numeracion.fetchall():
                 zone = n[0]
@@ -203,19 +203,20 @@ def load_data():
                     cdr=cdr, schedule=schedule, invoiced=True)
                 numeration.save()
             cur_det_factura.close()
-            q = (
+            cur_factura = conn.cursor()
+            cur_factura.execute(
                 'SELECT id_factura, fecha_inicio, fecha_fin, tarifa, '
                 'valor_normal, valor_reducido, valor_nocturno '
-                'FROM factura WHERE compania = %s' % id_compania)
+                'FROM factura WHERE compania = %s', (id_compania,))
 
-            for f in session.query(q):
-                id_factura = f.get('id_factura')
-                fecha_inicio = f.get('fecha_inicio')
-                fecha_fin = f.get('fecha_fin')
-                tarifa = f.get('tarifa')
-                valor_normal = f.get('valor_normal')
-                valor_reducido = f.get('valor_reducido')
-                valor_nocturno = f.get('valor_nocturno')
+            for f in cur_factura.fetchall():
+                id_factura = f[0]
+                fecha_inicio = f[1]
+                fecha_fin = f[2]
+                tarifa = f[3]
+                valor_normal = f[4]
+                valor_reducido = f[5]
+                valor_nocturno = f[6]
                 date = fecha_inicio[0]
                 year = date.strftime('%Y')
                 month = date.strftime('%m')
@@ -234,60 +235,74 @@ def load_data():
                     call_duration = 0
                     total = valor_normal[i] + valor_reducido[
                         i] + valor_nocturno[i]
-                    qq = (
+                    cur_tarifa = conn.cursor()
+                    cur_tarifa.execute(
                         'SELECT valor_normal, valor_reducido, '
                         'valor_nocturno FROM tarifa WHERE id_ingreso = %s '
-                        'and fecha = %s' % (tarifa[i], fi))
-                    t = session.query(qq).as_dict()
-                    qq = (
+                        'and fecha = %s', (tarifa[i], fi))
+                    t = cur_tarifa.fetchone()
+                    cur_tarifa.close()
+                    cur_set_factura_count_normal = conn.cursor()
+                    cur_set_factura_count_normal.execute(
                         'SELECT COUNT(*) FROM det_factura '
                         'WHERE factura=%s and horario=\'normal\' '
                         'and fecha between %s and '
-                        '%s' % (id_factura, fi, fecha_fin[i]))
-                    count = session.query(qq).as_dict().get('count')
+                        '%s', (id_factura, fi, fecha_fin[i]))
+                    count = cur_set_factura_count_normal.fetchone()[0]
+                    cur_set_factura_count_normal.close()
                     call_number += count
-                    qq = (
+                    cur_set_factura_sum_normal = conn.cursor()
+                    cur_set_factura_sum_normal.execute(
                         'SELECT SUM(duracion) FROM det_factura '
                         'WHERE factura=%s and horario = \'normal\' and '
                         'fecha between %s and '
-                        '%s' % (id_factura, fi, fecha_fin[i]))
-                    suma = session.query(qq).as_dict().get('sum')
+                        '%s', (id_factura, fi, fecha_fin[i]))
+                    suma = cur_set_factura_sum_normal.fetchone()[0]
+                    cur_set_factura_sum_normal.close()
                     call_duration += suma
                     r1 = models.Rate(
                         price=t.get('valor_normal'), _type='normal',
                         call_number=count, call_duration=suma,
                         total=valor_normal[i])
-                    qq = (
+                    cur_set_factura_count_reducido = conn.cursor()
+                    cur_set_factura_count_reducido.execute(
                         'SELECT COUNT(*) FROM det_factura '
                         'WHERE factura = %s and horario = \'reducido\' '
                         'and fecha between %s and '
-                        '%s' % (id_factura, fi, fecha_fin[i]))
-                    count = session.query(qq).as_dict().get('count')
+                        '%s', (id_factura, fi, fecha_fin[i]))
+                    count = cur_set_factura_count_reducido.fetchone()[0]
+                    cur_set_factura_count_reducido.close()
                     call_number += count
-                    qq = (
+                    cur_set_factura_sum_reducido = conn.cursor()
+                    cur_set_factura_sum_reducido.execute(
                         'SELECT SUM(duracion) FROM det_factura '
                         'WHERE factura= %s and horario = \'reducido\' '
                         'and fecha between %s and '
-                        '%s' % (id_factura, fi, fecha_fin[i]))
-                    suma = session.query(qq).as_dict().get('sum')
+                        '%s', (id_factura, fi, fecha_fin[i]))
+                    suma = cur_set_factura_sum_reducido.fetchone()[0]
+                    cur_set_factura_sum_reducido.close()
                     call_duration += suma
                     r2 = models.Rate(
                         price=t.get('valor_reducido'), _type='reducido',
                         call_number=count, call_duration=suma,
                         total=valor_reducido[i])
-                    qq = (
+                    cur_set_factura_count_nocturno = conn.cursor()
+                    cur_set_factura_count_nocturno.execute(
                         'SELECT COUNT(*) FROM det_factura '
                         'WHERE factura = %s and horario = \'nocturno\' '
                         'and fecha between %s and '
-                        '%s' % (id_factura, fi, fecha_fin[i]))
-                    count = session.query(qq).as_dict().get('count')
+                        '%s', (id_factura, fi, fecha_fin[i]))
+                    count = cur_set_factura_count_nocturno.fetchone()[0]
+                    cur_set_factura_count_nocturno.close()
                     call_number += count
-                    qq = (
+                    cur_set_factura_sum_nocturno = conn.cursor()
+                    cur_set_factura_sum_nocturno.execute(
                         'SELECT SUM(duracion) FROM det_factura '
                         'WHERE factura = %s and horario = \'nocturno\' '
                         'and fecha between %s and '
-                        '%s' % (id_factura, fi, fecha_fin[i]))
-                    suma = session.query(qq).as_dict().get('sum')
+                        '%s', (id_factura, fi, fecha_fin[i]))
+                    suma = cur_set_factura_sum_nocturno.fetchone()[0]
+                    cur_set_factura_sum_nocturno.close()
                     call_duration += suma
                     r3 = models.Rate(
                         price=t.get('valor_nocturno'), _type='nocturno',
@@ -314,25 +329,27 @@ def load_data():
                 i.total = i_total
                 i.save()
 
-            q = (
+            cur_factura.close()
+            cur_cdr = conn.cursor()
+            cur_cdr.execute(
                 'SELECT fecha, hora, ani_number, ingress_duration, '
                 'final_number, estado, descripcion, fecha_cdr '
-                'FROM cdr WHERE idd = \'%s\'' % id_compania)
+                'FROM cdr WHERE idd = \'%s\'', (id_compania,))
 
-            for l in session_sti.query(q):
-                fecha = l.get('fecha')
-                hora = l.get('hora')
+            for l in cur_cdr.fetchall():
+                fecha = l[0]
+                hora = l[1]
                 connect_time = dt.datetime.combine(fecha, hora)
-                ani_number = l.get('ani_number')
+                ani_number = l[2]
                 if ani_number is not None:
                     ani_number = str(ani_number)
-                ingress_duration = l.get('ingress_duration')
-                final_number = l.get('final_number')
-                estado = l.get('estado')
+                ingress_duration = l[3]
+                final_number = l[4]
+                estado = l[5]
                 valid = True if estado == 'activado' else False
                 observation = None if motivo == '' else motivo
-                tipo = l.get('descripcion')
-                date = l.get('fecha_cdr')
+                tipo = l[6]
+                date = l[7]
                 year = date[:4]
                 month = date[5:]
                 cdr = models.Cdr.objects.get(year=year, month=month)
@@ -344,19 +361,23 @@ def load_data():
                     cdr=cdr, schedule=None)
                 numeration.save()
 
-            q = 'SELECT * FROM ccaa WHERE concecionaria = \'%s\'' % (
-                company.code)
+            cur_cdr.close()
+            cur_ccaa = conn.cursor()
+            cur_ccaa.execute(
+                'SELECT periodo, n_factura, fecha_inicio, fecha_fin, '
+                'fecha_fact, horario, trafico, monto FROM ccaa WHERE '
+                'concecionaria = \'%s\'', (company.code,))
 
-            for l in session_sti.query(q):
-                periodo = l.get('periodo')
-                invoice = l.get('n_factura')
-                fecha_inicio = l.get('fecha_inicio')
-                fecha_fin = l.get('fecha_fin')
-                fecha_fact = l.get('fecha_fact')
+            for l in cur_ccaa.fetchall():
+                periodo = l[0]
+                invoice = l[1]
+                fecha_inicio = l[2]
+                fecha_fin = l[3]
+                fecha_fact = l[4]
                 start = dt.datetime.strptime(fecha_inicio, '%Y%m%d')
                 end = dt.datetime.strptime(fecha_fin, '%Y%m%d')
                 invoice_date = dt.datetime.strptime(fecha_fact, '%Y%m%d')
-                horario = l.get('horario')
+                horario = l[5]
 
                 if horario == 'N':
                     schedule = 'normal'
@@ -367,8 +388,8 @@ def load_data():
                 else:
                     schedule = 'reducido'
 
-                call_duration = l.get('trafico')
-                total = l.get('monto')
+                call_duration = l[6]
+                total = l[7]
 
                 year = periodo[:4]
                 month = periodo[5:]
@@ -381,16 +402,23 @@ def load_data():
                     total=total)
                 ccaa.save()
 
-        for l in session_sti.query('SELECT * FROM lineas'):
-            number = l.get('numero')
+            cur_ccaa.close()
+
+        cur_lineas = conn.cursor()
+        cur_lineas.execute(
+            'SELECT numero, nombre, tipo_persona, comentarios, area, comuna '
+            'FROM lineas')
+
+        for l in cur_lineas.fetchall():
+            number = l[0]
             if number is not None:
                 number = str(number)
-            name = l.get('nombre')
-            entity = l.get('tipo_persona')
+            name = l[1]
+            entity = l[2]
             entity = entity.lower() if entity else None
-            comments = l.get('comentarios')
-            zone = l.get('area')
-            city = l.get('comuna')
+            comments = l[3]
+            zone = l[4]
+            city = l[5]
             if zone == '':
                 zone = None
             if city == '':
@@ -399,6 +427,8 @@ def load_data():
                 number=number, name=name, entity=entity, comments=comments,
                 zone=zone, city=city)
             line.save()
+
+        cur_lineas.close()
 
         send_email(
             [{'name': 'Leonardo', 'email': 'lgaticastyle@gmail.com'}],
