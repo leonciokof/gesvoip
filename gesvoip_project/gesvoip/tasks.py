@@ -147,7 +147,8 @@ def load_data():
             zone = n[0]
             _range = n[1]
             id_compania = n[2]
-            company = models.Company.filter(id_compania=id_compania).first()
+            company = models.Company.objects.filter(
+                id_compania=id_compania).first()
             numeration = models.Numeration(
                 zone=zone, _range=_range, company=company)
             numeration.save()
@@ -172,7 +173,8 @@ def load_data():
             id_compania = l[8]
             year = date[:4]
             month = date[5:]
-            company = models.Company.filter(id_compania=id_compania).first()
+            company = models.Company.objects.filter(
+                id_compania=id_compania).first()
             cdr = models.Cdr.objects.get(year=year, month=month)
             numeration = models.Incoming(
                 connect_time=connect_time, ani_number=ani_number,
@@ -199,7 +201,8 @@ def load_data():
             month = fecha[5:][:2]
             schedule = l[5]
             id_compania = l[6]
-            company = models.Company.filter(id_compania=id_compania).first()
+            company = models.Company.objects.filter(
+                id_compania=id_compania).first()
             cdr = models.Cdr.objects.get(year=year, month=month)
             numeration = models.Incoming(
                 connect_time=connect_time, ani_number=ani_number,
@@ -227,7 +230,8 @@ def load_data():
             date = fecha_inicio[0]
             year = date.strftime('%Y')
             month = date.strftime('%m')
-            company = models.Company.filter(id_compania=id_compania).first()
+            company = models.Company.objects.filter(
+                id_compania=id_compania).first()
             i = models.Invoice(
                 year=year, month=motivo, code=id_factura,
                 company=company, invoiced=True)
@@ -360,7 +364,8 @@ def load_data():
             id_compania = l[8]
             year = date[:4]
             month = date[5:]
-            company = models.Company.filter(id_compania=id_compania).first()
+            company = models.Company.objects.filter(
+                id_compania=id_compania).first()
             cdr = models.Cdr.objects.get(year=year, month=month)
             outgoing = models.Outgoing(
                 connect_time=connect_time, ani_number=ani_number,
@@ -401,7 +406,7 @@ def load_data():
             code = l[8]
             year = periodo[:4]
             month = periodo[5:]
-            company = models.Company.filter(code=code).first()
+            company = models.Company.objects.filter(code=code).first()
             ccaa = models.Ccaa(
                 year=year, month=month,
                 invoice=invoice,
