@@ -171,7 +171,7 @@ def load_data():
             tipo = l[6]
             date = l[7]
             id_compania = l[8]
-            id_compania = None if id_compania = '' else id_compania
+            id_compania = None if id_compania == '' else id_compania
             year = date[:4]
             month = date[5:]
             company = models.Company.objects.filter(
