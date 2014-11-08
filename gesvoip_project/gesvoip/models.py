@@ -25,6 +25,7 @@ class Company(mongoengine.Document):
     schedules = mongoengine.DictField(verbose_name=u'horarios')
     invoicing = mongoengine.StringField(
         choices=choices.INVOICING, verbose_name=u'facturación')
+    id_compania = mongoengine.IntField()
 
     meta = {
         'ordering': ['name']
