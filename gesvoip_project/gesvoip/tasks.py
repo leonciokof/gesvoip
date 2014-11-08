@@ -196,11 +196,10 @@ def load_data():
             dialed_number = l[1]
             fecha = l[2]
             hora = l[3]
-            connect_time = dt.datetime.strptime(
-                fecha + hora, '%Y-%m-%d%H:%M:%S')
+            connect_time = dt.datetime.combine(fecha, hora)
             ingress_duration = l[4]
-            year = fecha[:4]
-            month = fecha[5:][:2]
+            year = fecha.strftime('%Y')
+            month = fecha.strftime('%m')
             schedule = l[5]
             id_compania = l[6]
             company = models.Company.objects.filter(
