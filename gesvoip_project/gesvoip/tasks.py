@@ -196,7 +196,9 @@ def load_data():
             dialed_number = l[1]
             fecha = l[2]
             hora = l[3]
-            connect_time = dt.datetime.combine(fecha, hora)
+            connect_time = dt.datetime.strptime(
+                '%s %s' % (fecha.strftime('%Y-%m-%d'), hora),
+                '%Y-%m-%d %H:%M:%S')
             ingress_duration = l[4]
             year = fecha.strftime('%Y')
             month = fecha.strftime('%m')
