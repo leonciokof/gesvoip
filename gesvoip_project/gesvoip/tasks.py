@@ -99,92 +99,93 @@ def send_email(to, subject, template_name, global_merge_vars):
 @task()
 def load_data():
     try:
-        models.Cdr.objects.delete()
-        models.Company.objects.delete()
-        models.Incoming.objects.delete()
-        models.Outgoing.objects.delete()
-        models.Invoice.objects.delete()
-        models.Period.objects.delete()
-        models.Rate.objects.delete()
-        models.Holiday.objects.delete()
-        models.Line.objects.delete()
-        models.Ccaa.objects.delete()
+        # models.Cdr.objects.delete()
+        # models.Company.objects.delete()
+        # models.Incoming.objects.delete()
+        # models.Outgoing.objects.delete()
+        # models.Invoice.objects.delete()
+        # models.Period.objects.delete()
+        # models.Rate.objects.delete()
+        # models.Holiday.objects.delete()
+        # models.Line.objects.delete()
+        # models.Ccaa.objects.delete()
 
-        cur_holiday = conn.cursor()
-        cur_holiday.execute('SELECT fecha FROM feriado')
-        for h in cur_holiday.fetchall():
-            date = h[0]
-            holiday = models.Holiday(date=date)
-            holiday.save()
-        cur_holiday.close()
-        cur_log_llamadas = conn.cursor()
-        cur_log_llamadas.execute(
-            'SELECT DISTINCT(fecha) FROM log_llamadas ORDER BY fecha')
-        for c in cur_log_llamadas.fetchall():
-            date = c[0]
-            year = date[:4]
-            month = date[5:]
-            cdr = models.Cdr(year=year, month=month, processed=True)
-            cdr.save()
-        cur_log_llamadas.close()
-        cur_compania = conn.cursor()
-        cur_compania.execute(
-            'SELECT id_compania, nombre, id, codigo '
-            'FROM compania')
-        for c in cur_compania.fetchall():
-            id_compania = c[0]
-            name = c[1]
-            idoidd = c[2]
-            code = c[3]
-            company = models.Company(
-                name=name, idoidd=idoidd, code=code, id_compania=id_compania)
-            company.save()
-        cur_compania.close()
-        cur_numeracion = conn.cursor()
-        cur_numeracion.execute('SELECT zona, rango, compania FROM numeracion')
+        # cur_holiday = conn.cursor()
+        # cur_holiday.execute('SELECT fecha FROM feriado')
+        # for h in cur_holiday.fetchall():
+        #     date = h[0]
+        #     holiday = models.Holiday(date=date)
+        #     holiday.save()
+        # cur_holiday.close()
+        # cur_log_llamadas = conn.cursor()
+        # cur_log_llamadas.execute(
+        #     'SELECT DISTINCT(fecha) FROM log_llamadas ORDER BY fecha')
+        # for c in cur_log_llamadas.fetchall():
+        #     date = c[0]
+        #     year = date[:4]
+        #     month = date[5:]
+        #     cdr = models.Cdr(year=year, month=month, processed=True)
+        #     cdr.save()
+        # cur_log_llamadas.close()
+        # cur_compania = conn.cursor()
+        # cur_compania.execute(
+        #     'SELECT id_compania, nombre, id, codigo '
+        #     'FROM compania')
+        # for c in cur_compania.fetchall():
+        #     id_compania = c[0]
+        #     name = c[1]
+        #     idoidd = c[2]
+        #     code = c[3]
+        #     company = models.Company(
+        #         name=name, idoidd=idoidd, code=code, id_compania=id_compania)
+        #     company.save()
+        # cur_compania.close()
+        # cur_numeracion = conn.cursor()
+        # cur_numeracion.execute('SELECT zona, rango, compania FROM
+        # numeracion')
 
-        for n in cur_numeracion.fetchall():
-            zone = n[0]
-            _range = n[1]
-            id_compania = n[2]
-            company = models.Company.objects.filter(
-                id_compania=id_compania).first()
-            numeration = models.Numeration(
-                zone=zone, _range=_range, company=company)
-            numeration.save()
-        cur_numeracion.close()
-        cur_log_llamadas2 = conn.cursor()
-        cur_log_llamadas2.execute(
-            'SELECT connect_time, ani_number, ingress_duration, '
-            'dialed_number, estado, motivo, tipo, fecha, compania_ani '
-            'FROM log_llamadas WHERE estado != \'facturado\'')
+        # for n in cur_numeracion.fetchall():
+        #     zone = n[0]
+        #     _range = n[1]
+        #     id_compania = n[2]
+        #     company = models.Company.objects.filter(
+        #         id_compania=id_compania).first()
+        #     numeration = models.Numeration(
+        #         zone=zone, _range=_range, company=company)
+        #     numeration.save()
+        # cur_numeracion.close()
+        # cur_log_llamadas2 = conn.cursor()
+        # cur_log_llamadas2.execute(
+        #     'SELECT connect_time, ani_number, ingress_duration, '
+        #     'dialed_number, estado, motivo, tipo, fecha, compania_ani '
+        #     'FROM log_llamadas WHERE estado != \'facturado\'')
 
-        for l in cur_log_llamadas2.fetchall():
-            connect_time = l[0]
-            ani_number = l[1]
-            ingress_duration = l[2]
-            dialed_number = l[3]
-            estado = l[4]
-            valid = True if estado == 'activado' else False
-            motivo = l[5]
-            observation = None if motivo == '' else motivo
-            tipo = l[6]
-            date = l[7]
-            id_compania = l[8]
-            id_compania = None if id_compania == '' else id_compania
-            year = date[:4]
-            month = date[5:]
-            company = models.Company.objects.filter(
-                id_compania=id_compania).first()
-            cdr = models.Cdr.objects.get(year=year, month=month)
-            numeration = models.Incoming(
-                connect_time=connect_time, ani_number=ani_number,
-                ingress_duration=ingress_duration,
-                dialed_number=dialed_number, valid=valid,
-                observation=observation, company=company, _type=tipo,
-                cdr=cdr, schedule=None)
-            numeration.save()
-        cur_log_llamadas2.close()
+        # for l in cur_log_llamadas2.fetchall():
+        #     connect_time = l[0]
+        #     ani_number = l[1]
+        #     ingress_duration = l[2]
+        #     dialed_number = l[3]
+        #     estado = l[4]
+        #     valid = True if estado == 'activado' else False
+        #     motivo = l[5]
+        #     observation = None if motivo == '' else motivo
+        #     tipo = l[6]
+        #     date = l[7]
+        #     id_compania = l[8]
+        #     id_compania = None if id_compania == '' else id_compania
+        #     year = date[:4]
+        #     month = date[5:]
+        #     company = models.Company.objects.filter(
+        #         id_compania=id_compania).first()
+        #     cdr = models.Cdr.objects.get(year=year, month=month)
+        #     numeration = models.Incoming(
+        #         connect_time=connect_time, ani_number=ani_number,
+        #         ingress_duration=ingress_duration,
+        #         dialed_number=dialed_number, valid=valid,
+        #         observation=observation, company=company, _type=tipo,
+        #         cdr=cdr, schedule=None)
+        #     numeration.save()
+        # cur_log_llamadas2.close()
         cur_det_factura = conn.cursor()
         cur_det_factura.execute(
             'SELECT origen, destino, fecha, hora, duracion, horario, compania '
@@ -234,7 +235,7 @@ def load_data():
             company = models.Company.objects.filter(
                 id_compania=id_compania).first()
             i = models.Invoice(
-                year=year, month=motivo, code=id_factura,
+                year=year, month=month, code=id_factura,
                 company=company, invoiced=True)
             i.save()
 
@@ -359,7 +360,6 @@ def load_data():
             final_number = l[4]
             estado = l[5]
             valid = True if estado == 'activado' else False
-            observation = None if motivo == '' else motivo
             tipo = l[6]
             date = l[7]
             id_compania = l[8]
