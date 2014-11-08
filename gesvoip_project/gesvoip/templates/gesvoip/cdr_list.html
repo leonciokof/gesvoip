@@ -30,6 +30,8 @@
                       <thead>
                         <tr>
                           <th>Fecha</th>
+                          <th>Llamadas entrantes</th>
+                          <th>Llamadas salientes</th>
                           <th>Trafico local</th>
                           <th>Trafico voip local</th>
                           <th>Trafico movil</th>
@@ -43,6 +45,8 @@
                         {% for obj in object_list %}
                         <tr>
                           <td>{{ obj }}</td>
+                          <td><a href="{% url 'gesvoip:incoming_by_cdr' obj.pk %}" class="btn btn-xs btn-primary">Ver</a></td>
+                          <td><a href="{% url 'gesvoip:outgoing_by_cdr' obj.pk %}" class="btn btn-xs btn-primary">Ver</a></td>
                           <td><a href="{% url 'gesvoip:local_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
                           <td><a href="{% url 'gesvoip:voip_local_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
                           <td><a href="{% url 'gesvoip:mobile_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>

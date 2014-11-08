@@ -100,6 +100,32 @@ class IncomingListView(ListView):
 incoming_list = login_required(IncomingListView.as_view())
 
 
+class IncomingByCdrView(ListView):
+
+    document = models.Incoming
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super(IncomingByCdrView, self).get_queryset()
+        cdr = models.Cdr.objects.get(pk=self.kwargs.get('cdr'))
+        return queryset.filter(cdr=cdr)
+
+incoming_by_cdr = login_required(IncomingByCdrView.as_view())
+
+
+class OutgoingByCdrView(ListView):
+
+    document = models.Outgoing
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super(OutgoingByCdrView, self).get_queryset()
+        cdr = models.Cdr.objects.get(pk=self.kwargs.get('cdr'))
+        return queryset.filter(cdr=cdr)
+
+outgoing_by_cdr = login_required(OutgoingByCdrView.as_view())
+
+
 class InvoiceListView(ListView):
 
     document = models.Invoice

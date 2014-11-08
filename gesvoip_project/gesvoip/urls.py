@@ -53,4 +53,8 @@ urlpatterns = patterns(
     url(r'^national_traffic_report/(?P<pk>\w+)/$',
         'national_traffic_report', name='national_traffic_report'),
     url(r'^load/$', 'load', name='load'),
+    url(r'incoming_by_cdr/(?P<cdr>\w+)/$',
+        'incoming_by_cdr', name='incoming_by_cdr'),
+    url(r'outgoing_by_cdr/(?P<cdr>\w+)/$',
+        'outgoing_by_cdr', name='outgoing_by_cdr'),
 )
