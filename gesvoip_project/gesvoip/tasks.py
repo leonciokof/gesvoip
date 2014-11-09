@@ -275,6 +275,7 @@ def load_data():
                     'fecha between %s and '
                     '%s', (id_factura, fi, fecha_fin[i]))
                 suma = cur_set_factura_sum_normal.fetchone()[0]
+                suma = 0 if suma is None else suma
                 cur_set_factura_sum_normal.close()
                 call_duration += suma
                 r1 = models.Rate(
@@ -297,6 +298,7 @@ def load_data():
                     'and fecha between %s and '
                     '%s', (id_factura, fi, fecha_fin[i]))
                 suma = cur_set_factura_sum_reducido.fetchone()[0]
+                suma = 0 if suma is None else suma
                 cur_set_factura_sum_reducido.close()
                 call_duration += suma
                 r2 = models.Rate(
@@ -319,6 +321,7 @@ def load_data():
                     'and fecha between %s and '
                     '%s', (id_factura, fi, fecha_fin[i]))
                 suma = cur_set_factura_sum_nocturno.fetchone()[0]
+                suma = 0 if suma is None else suma
                 cur_set_factura_sum_nocturno.close()
                 call_duration += suma
                 r3 = models.Rate(
