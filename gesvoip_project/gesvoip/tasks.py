@@ -186,35 +186,35 @@ def load_data():
         #         cdr=cdr, schedule=None)
         #     numeration.save()
         # cur_log_llamadas2.close()
-        # cur_det_factura = conn.cursor()
-        # cur_det_factura.execute(
-        #     'SELECT origen, destino, fecha, hora, duracion, horario, compania '
-        #     'FROM det_factura')
+        cur_det_factura = conn.cursor()
+        cur_det_factura.execute(
+            'SELECT origen, destino, fecha, hora, duracion, horario, compania '
+            'FROM det_factura')
 
-        # for l in cur_det_factura.fetchall():
-        #     ani_number = l[0]
-        #     dialed_number = l[1]
-        #     fecha = l[2]
-        #     hora = l[3]
-        #     connect_time = dt.datetime.strptime(
-        #         '%s %s' % (fecha.strftime('%Y-%m-%d'), hora),
-        #         '%Y-%m-%d %H:%M:%S')
-        #     ingress_duration = l[4]
-        #     year = fecha.strftime('%Y')
-        #     month = fecha.strftime('%m')
-        #     schedule = l[5]
-        #     id_compania = l[6]
-        #     company = models.Company.objects.filter(
-        #         id_compania=id_compania).first()
-        #     cdr = models.Cdr.objects.get(year=year, month=month)
-        #     numeration = models.Incoming(
-        #         connect_time=connect_time, ani_number=ani_number,
-        #         ingress_duration=ingress_duration,
-        #         dialed_number=dialed_number, valid=True,
-        #         company=company,
-        #         cdr=cdr, schedule=schedule, invoiced=True)
-        #     numeration.save()
-        # cur_det_factura.close()
+        for l in cur_det_factura.fetchall():
+            ani_number = l[0]
+            dialed_number = l[1]
+            fecha = l[2]
+            hora = l[3]
+            connect_time = dt.datetime.strptime(
+                '%s %s' % (fecha.strftime('%Y-%m-%d'), hora),
+                '%Y-%m-%d %H:%M:%S')
+            ingress_duration = l[4]
+            year = fecha.strftime('%Y')
+            month = fecha.strftime('%m')
+            schedule = l[5]
+            id_compania = l[6]
+            company = models.Company.objects.filter(
+                id_compania=id_compania).first()
+            cdr = models.Cdr.objects.get(year=year, month=month)
+            numeration = models.Incoming(
+                connect_time=connect_time, ani_number=ani_number,
+                ingress_duration=ingress_duration,
+                dialed_number=dialed_number, valid=True,
+                company=company,
+                cdr=cdr, schedule=schedule, invoiced=True)
+            numeration.save()
+        cur_det_factura.close()
         # cur_factura = conn.cursor()
         # cur_factura.execute(
         #     'SELECT id_factura, fecha_inicio, fecha_fin, tarifa, '
@@ -384,72 +384,72 @@ def load_data():
         #     outgoing.save()
 
         # cur_cdr.close()
-        cur_ccaa = conn_sti.cursor()
-        cur_ccaa.execute(
-            'SELECT periodo, n_factura, fecha_inicio, fecha_fin, '
-            'fecha_fact, horario, trafico, monto, concecionaria FROM ccaa')
+        # cur_ccaa = conn_sti.cursor()
+        # cur_ccaa.execute(
+        #     'SELECT periodo, n_factura, fecha_inicio, fecha_fin, '
+        #     'fecha_fact, horario, trafico, monto, concecionaria FROM ccaa')
 
-        for l in cur_ccaa.fetchall():
-            periodo = l[0]
-            invoice = l[1]
-            fecha_inicio = l[2]
-            fecha_fin = l[3]
-            fecha_fact = l[4]
-            start = dt.datetime.strptime(fecha_inicio, '%Y%m%d')
-            end = dt.datetime.strptime(fecha_fin, '%Y%m%d')
-            invoice_date = dt.datetime.strptime(fecha_fact, '%Y%m%d')
-            horario = l[5]
+        # for l in cur_ccaa.fetchall():
+        #     periodo = l[0]
+        #     invoice = l[1]
+        #     fecha_inicio = l[2]
+        #     fecha_fin = l[3]
+        #     fecha_fact = l[4]
+        #     start = dt.datetime.strptime(fecha_inicio, '%Y%m%d')
+        #     end = dt.datetime.strptime(fecha_fin, '%Y%m%d')
+        #     invoice_date = dt.datetime.strptime(fecha_fact, '%Y%m%d')
+        #     horario = l[5]
 
-            if horario == 'N':
-                schedule = 'normal'
+        #     if horario == 'N':
+        #         schedule = 'normal'
 
-            elif horario == 'O':
-                schedule = 'nocturno'
+        #     elif horario == 'O':
+        #         schedule = 'nocturno'
 
-            else:
-                schedule = 'reducido'
+        #     else:
+        #         schedule = 'reducido'
 
-            call_duration = l[6]
-            total = l[7]
-            code = l[8]
-            year = periodo[:4]
-            month = periodo[4:]
-            company = models.Company.objects.filter(code=code).first()
-            ccaa = models.Ccaa(
-                year=year, month=month,
-                invoice=invoice,
-                start=start, end=end,
-                company=company, invoice_date=invoice_date,
-                schedule=schedule, call_duration=call_duration,
-                total=total)
-            ccaa.save()
+        #     call_duration = l[6]
+        #     total = l[7]
+        #     code = l[8]
+        #     year = periodo[:4]
+        #     month = periodo[4:]
+        #     company = models.Company.objects.filter(code=code).first()
+        #     ccaa = models.Ccaa(
+        #         year=year, month=month,
+        #         invoice=invoice,
+        #         start=start, end=end,
+        #         company=company, invoice_date=invoice_date,
+        #         schedule=schedule, call_duration=call_duration,
+        #         total=total)
+        #     ccaa.save()
 
-        cur_ccaa.close()
-        cur_lineas = conn_sti.cursor()
-        cur_lineas.execute(
-            'SELECT numero, nombre, tipo_persona, comentarios, area, comuna '
-            'FROM lineas')
+        # cur_ccaa.close()
+        # cur_lineas = conn_sti.cursor()
+        # cur_lineas.execute(
+        #     'SELECT numero, nombre, tipo_persona, comentarios, area, comuna '
+        #     'FROM lineas')
 
-        for l in cur_lineas.fetchall():
-            number = l[0]
-            if number is not None:
-                number = str(number)
-            name = l[1]
-            entity = l[2]
-            entity = entity.lower() if entity else None
-            comments = l[3]
-            zone = l[4]
-            city = l[5]
-            if zone == '':
-                zone = None
-            if city == '':
-                city = None
-            line = models.Line(
-                number=number, name=name, entity=entity, comments=comments,
-                zone=zone, city=city)
-            line.save()
+        # for l in cur_lineas.fetchall():
+        #     number = l[0]
+        #     if number is not None:
+        #         number = str(number)
+        #     name = l[1]
+        #     entity = l[2]
+        #     entity = entity.lower() if entity else None
+        #     comments = l[3]
+        #     zone = l[4]
+        #     city = l[5]
+        #     if zone == '':
+        #         zone = None
+        #     if city == '':
+        #         city = None
+        #     line = models.Line(
+        #         number=number, name=name, entity=entity, comments=comments,
+        #         zone=zone, city=city)
+        #     line.save()
 
-        cur_lineas.close()
+        # cur_lineas.close()
         conn.close()
         conn_sti.close()
 
