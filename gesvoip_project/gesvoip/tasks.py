@@ -413,7 +413,7 @@ def load_data():
             total = l[7]
             code = l[8]
             year = periodo[:4]
-            month = periodo[5:]
+            month = periodo[4:]
             company = models.Company.objects.filter(code=code).first()
             ccaa = models.Ccaa(
                 year=year, month=month,
