@@ -193,8 +193,8 @@ def load_data():
                 'FROM det_factura WHERE factura=%s', (invoice.code,))
 
             for l in cur_det_factura.fetchall():
-                ani_number = l[0]
-                dialed_number = l[1]
+                ani_number = str(l[0])
+                dialed_number = str(l[1])
                 fecha = l[2]
                 hora = l[3]
                 connect_time = dt.datetime.strptime(
