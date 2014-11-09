@@ -186,35 +186,35 @@ def load_data():
         #         cdr=cdr, schedule=None)
         #     numeration.save()
         # cur_log_llamadas2.close()
-        cur_det_factura = conn.cursor()
-        cur_det_factura.execute(
-            'SELECT origen, destino, fecha, hora, duracion, horario, compania '
-            'FROM det_factura')
+        # cur_det_factura = conn.cursor()
+        # cur_det_factura.execute(
+        #     'SELECT origen, destino, fecha, hora, duracion, horario, compania '
+        #     'FROM det_factura')
 
-        for l in cur_det_factura.fetchall():
-            ani_number = l[0]
-            dialed_number = l[1]
-            fecha = l[2]
-            hora = l[3]
-            connect_time = dt.datetime.strptime(
-                '%s %s' % (fecha.strftime('%Y-%m-%d'), hora),
-                '%Y-%m-%d %H:%M:%S')
-            ingress_duration = l[4]
-            year = fecha.strftime('%Y')
-            month = fecha.strftime('%m')
-            schedule = l[5]
-            id_compania = l[6]
-            company = models.Company.objects.filter(
-                id_compania=id_compania).first()
-            cdr = models.Cdr.objects.get(year=year, month=month)
-            numeration = models.Incoming(
-                connect_time=connect_time, ani_number=ani_number,
-                ingress_duration=ingress_duration,
-                dialed_number=dialed_number, valid=True,
-                company=company,
-                cdr=cdr, schedule=schedule, invoiced=True)
-            numeration.save()
-        cur_det_factura.close()
+        # for l in cur_det_factura.fetchall():
+        #     ani_number = l[0]
+        #     dialed_number = l[1]
+        #     fecha = l[2]
+        #     hora = l[3]
+        #     connect_time = dt.datetime.strptime(
+        #         '%s %s' % (fecha.strftime('%Y-%m-%d'), hora),
+        #         '%Y-%m-%d %H:%M:%S')
+        #     ingress_duration = l[4]
+        #     year = fecha.strftime('%Y')
+        #     month = fecha.strftime('%m')
+        #     schedule = l[5]
+        #     id_compania = l[6]
+        #     company = models.Company.objects.filter(
+        #         id_compania=id_compania).first()
+        #     cdr = models.Cdr.objects.get(year=year, month=month)
+        #     numeration = models.Incoming(
+        #         connect_time=connect_time, ani_number=ani_number,
+        #         ingress_duration=ingress_duration,
+        #         dialed_number=dialed_number, valid=True,
+        #         company=company,
+        #         cdr=cdr, schedule=schedule, invoiced=True)
+        #     numeration.save()
+        # cur_det_factura.close()
         cur_factura = conn.cursor()
         cur_factura.execute(
             'SELECT id_factura, fecha_inicio, fecha_fin, tarifa, '
