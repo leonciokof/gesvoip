@@ -215,175 +215,175 @@ def load_data():
         #         cdr=cdr, schedule=schedule, invoiced=True)
         #     numeration.save()
         # cur_det_factura.close()
-        cur_factura = conn.cursor()
-        cur_factura.execute(
-            'SELECT id_factura, fecha_inicio, fecha_fin, tarifa, '
-            'valor_normal, valor_reducido, valor_nocturno, compania '
-            'FROM factura')
+        # cur_factura = conn.cursor()
+        # cur_factura.execute(
+        #     'SELECT id_factura, fecha_inicio, fecha_fin, tarifa, '
+        #     'valor_normal, valor_reducido, valor_nocturno, compania '
+        #     'FROM factura')
 
-        for f in cur_factura.fetchall():
-            id_factura = f[0]
-            fecha_inicio = f[1]
-            fecha_fin = f[2]
-            tarifa = f[3]
-            valor_normal = f[4]
-            valor_reducido = f[5]
-            valor_nocturno = f[6]
-            id_compania = f[7]
-            date = fecha_inicio[0]
-            year = date.strftime('%Y')
-            month = date.strftime('%m')
-            company = models.Company.objects.filter(
-                id_compania=id_compania).first()
-            invoice = models.Invoice(
-                year=year, month=month, code=id_factura,
-                company=company, invoiced=True)
-            invoice.save()
+        # for f in cur_factura.fetchall():
+        #     id_factura = f[0]
+        #     fecha_inicio = f[1]
+        #     fecha_fin = f[2]
+        #     tarifa = f[3]
+        #     valor_normal = f[4]
+        #     valor_reducido = f[5]
+        #     valor_nocturno = f[6]
+        #     id_compania = f[7]
+        #     date = fecha_inicio[0]
+        #     year = date.strftime('%Y')
+        #     month = date.strftime('%m')
+        #     company = models.Company.objects.filter(
+        #         id_compania=id_compania).first()
+        #     invoice = models.Invoice(
+        #         year=year, month=month, code=id_factura,
+        #         company=company, invoiced=True)
+        #     invoice.save()
 
-            i_call_number = 0
-            i_call_duration = 0
-            i_total = 0.0
+        #     i_call_number = 0
+        #     i_call_duration = 0
+        #     i_total = 0.0
 
-            for i, fi in enumerate(fecha_inicio):
-                call_number = 0
-                call_duration = 0
-                total = valor_normal[i] + valor_reducido[
-                    i] + valor_nocturno[i]
-                cur_tarifa = conn.cursor()
-                cur_tarifa.execute(
-                    'SELECT valor_normal, valor_reducido, '
-                    'valor_nocturno FROM tarifa WHERE id_tarifa = %s '
-                    'and fecha = %s', (tarifa[i], fi))
-                t = cur_tarifa.fetchone()
-                tarifa_valor_normal = t[0]
-                tarifa_valor_reducido = t[1]
-                tarifa_valor_nocturno = t[2]
-                cur_tarifa.close()
-                cur_set_factura_count_normal = conn.cursor()
-                cur_set_factura_count_normal.execute(
-                    'SELECT COUNT(*) FROM det_factura '
-                    'WHERE factura=%s and horario=\'normal\' '
-                    'and fecha between %s and '
-                    '%s', (id_factura, fi, fecha_fin[i]))
-                count = cur_set_factura_count_normal.fetchone()[0]
-                cur_set_factura_count_normal.close()
-                call_number += count
-                cur_set_factura_sum_normal = conn.cursor()
-                cur_set_factura_sum_normal.execute(
-                    'SELECT SUM(duracion) FROM det_factura '
-                    'WHERE factura=%s and horario = \'normal\' and '
-                    'fecha between %s and '
-                    '%s', (id_factura, fi, fecha_fin[i]))
-                suma = cur_set_factura_sum_normal.fetchone()[0]
-                suma = 0 if suma is None else suma
-                cur_set_factura_sum_normal.close()
-                call_duration += suma
-                r1 = models.Rate(
-                    price=tarifa_valor_normal, _type='normal',
-                    call_number=count, call_duration=suma,
-                    total=valor_normal[i])
-                cur_set_factura_count_reducido = conn.cursor()
-                cur_set_factura_count_reducido.execute(
-                    'SELECT COUNT(*) FROM det_factura '
-                    'WHERE factura = %s and horario = \'reducido\' '
-                    'and fecha between %s and '
-                    '%s', (id_factura, fi, fecha_fin[i]))
-                count = cur_set_factura_count_reducido.fetchone()[0]
-                cur_set_factura_count_reducido.close()
-                call_number += count
-                cur_set_factura_sum_reducido = conn.cursor()
-                cur_set_factura_sum_reducido.execute(
-                    'SELECT SUM(duracion) FROM det_factura '
-                    'WHERE factura= %s and horario = \'reducido\' '
-                    'and fecha between %s and '
-                    '%s', (id_factura, fi, fecha_fin[i]))
-                suma = cur_set_factura_sum_reducido.fetchone()[0]
-                suma = 0 if suma is None else suma
-                cur_set_factura_sum_reducido.close()
-                call_duration += suma
-                r2 = models.Rate(
-                    price=tarifa_valor_reducido, _type='reducido',
-                    call_number=count, call_duration=suma,
-                    total=valor_reducido[i])
-                cur_set_factura_count_nocturno = conn.cursor()
-                cur_set_factura_count_nocturno.execute(
-                    'SELECT COUNT(*) FROM det_factura '
-                    'WHERE factura = %s and horario = \'nocturno\' '
-                    'and fecha between %s and '
-                    '%s', (id_factura, fi, fecha_fin[i]))
-                count = cur_set_factura_count_nocturno.fetchone()[0]
-                cur_set_factura_count_nocturno.close()
-                call_number += count
-                cur_set_factura_sum_nocturno = conn.cursor()
-                cur_set_factura_sum_nocturno.execute(
-                    'SELECT SUM(duracion) FROM det_factura '
-                    'WHERE factura = %s and horario = \'nocturno\' '
-                    'and fecha between %s and '
-                    '%s', (id_factura, fi, fecha_fin[i]))
-                suma = cur_set_factura_sum_nocturno.fetchone()[0]
-                suma = 0 if suma is None else suma
-                cur_set_factura_sum_nocturno.close()
-                call_duration += suma
-                r3 = models.Rate(
-                    price=tarifa_valor_nocturno, _type='nocturno',
-                    call_number=count, call_duration=suma,
-                    total=valor_nocturno[i])
-                p = models.Period(
-                    invoice=invoice, start=fi, end=fecha_fin[i],
-                    call_number=call_number,
-                    call_duration=call_duration,
-                    total=total)
-                i_total += float(total)
-                i_call_duration += call_duration
-                i_call_number += call_number
-                p.save()
-                r1.period = p
-                r2.period = p
-                r3.period = p
-                r1.save()
-                r2.save()
-                r3.save()
+        #     for i, fi in enumerate(fecha_inicio):
+        #         call_number = 0
+        #         call_duration = 0
+        #         total = valor_normal[i] + valor_reducido[
+        #             i] + valor_nocturno[i]
+        #         cur_tarifa = conn.cursor()
+        #         cur_tarifa.execute(
+        #             'SELECT valor_normal, valor_reducido, '
+        #             'valor_nocturno FROM tarifa WHERE id_tarifa = %s '
+        #             'and fecha = %s', (tarifa[i], fi))
+        #         t = cur_tarifa.fetchone()
+        #         tarifa_valor_normal = t[0]
+        #         tarifa_valor_reducido = t[1]
+        #         tarifa_valor_nocturno = t[2]
+        #         cur_tarifa.close()
+        #         cur_set_factura_count_normal = conn.cursor()
+        #         cur_set_factura_count_normal.execute(
+        #             'SELECT COUNT(*) FROM det_factura '
+        #             'WHERE factura=%s and horario=\'normal\' '
+        #             'and fecha between %s and '
+        #             '%s', (id_factura, fi, fecha_fin[i]))
+        #         count = cur_set_factura_count_normal.fetchone()[0]
+        #         cur_set_factura_count_normal.close()
+        #         call_number += count
+        #         cur_set_factura_sum_normal = conn.cursor()
+        #         cur_set_factura_sum_normal.execute(
+        #             'SELECT SUM(duracion) FROM det_factura '
+        #             'WHERE factura=%s and horario = \'normal\' and '
+        #             'fecha between %s and '
+        #             '%s', (id_factura, fi, fecha_fin[i]))
+        #         suma = cur_set_factura_sum_normal.fetchone()[0]
+        #         suma = 0 if suma is None else suma
+        #         cur_set_factura_sum_normal.close()
+        #         call_duration += suma
+        #         r1 = models.Rate(
+        #             price=tarifa_valor_normal, _type='normal',
+        #             call_number=count, call_duration=suma,
+        #             total=valor_normal[i])
+        #         cur_set_factura_count_reducido = conn.cursor()
+        #         cur_set_factura_count_reducido.execute(
+        #             'SELECT COUNT(*) FROM det_factura '
+        #             'WHERE factura = %s and horario = \'reducido\' '
+        #             'and fecha between %s and '
+        #             '%s', (id_factura, fi, fecha_fin[i]))
+        #         count = cur_set_factura_count_reducido.fetchone()[0]
+        #         cur_set_factura_count_reducido.close()
+        #         call_number += count
+        #         cur_set_factura_sum_reducido = conn.cursor()
+        #         cur_set_factura_sum_reducido.execute(
+        #             'SELECT SUM(duracion) FROM det_factura '
+        #             'WHERE factura= %s and horario = \'reducido\' '
+        #             'and fecha between %s and '
+        #             '%s', (id_factura, fi, fecha_fin[i]))
+        #         suma = cur_set_factura_sum_reducido.fetchone()[0]
+        #         suma = 0 if suma is None else suma
+        #         cur_set_factura_sum_reducido.close()
+        #         call_duration += suma
+        #         r2 = models.Rate(
+        #             price=tarifa_valor_reducido, _type='reducido',
+        #             call_number=count, call_duration=suma,
+        #             total=valor_reducido[i])
+        #         cur_set_factura_count_nocturno = conn.cursor()
+        #         cur_set_factura_count_nocturno.execute(
+        #             'SELECT COUNT(*) FROM det_factura '
+        #             'WHERE factura = %s and horario = \'nocturno\' '
+        #             'and fecha between %s and '
+        #             '%s', (id_factura, fi, fecha_fin[i]))
+        #         count = cur_set_factura_count_nocturno.fetchone()[0]
+        #         cur_set_factura_count_nocturno.close()
+        #         call_number += count
+        #         cur_set_factura_sum_nocturno = conn.cursor()
+        #         cur_set_factura_sum_nocturno.execute(
+        #             'SELECT SUM(duracion) FROM det_factura '
+        #             'WHERE factura = %s and horario = \'nocturno\' '
+        #             'and fecha between %s and '
+        #             '%s', (id_factura, fi, fecha_fin[i]))
+        #         suma = cur_set_factura_sum_nocturno.fetchone()[0]
+        #         suma = 0 if suma is None else suma
+        #         cur_set_factura_sum_nocturno.close()
+        #         call_duration += suma
+        #         r3 = models.Rate(
+        #             price=tarifa_valor_nocturno, _type='nocturno',
+        #             call_number=count, call_duration=suma,
+        #             total=valor_nocturno[i])
+        #         p = models.Period(
+        #             invoice=invoice, start=fi, end=fecha_fin[i],
+        #             call_number=call_number,
+        #             call_duration=call_duration,
+        #             total=total)
+        #         i_total += float(total)
+        #         i_call_duration += call_duration
+        #         i_call_number += call_number
+        #         p.save()
+        #         r1.period = p
+        #         r2.period = p
+        #         r3.period = p
+        #         r1.save()
+        #         r2.save()
+        #         r3.save()
 
-            invoice.call_duration = i_call_duration
-            invoice.call_number = i_call_number
-            invoice.total = i_total
-            invoice.save()
+        #     invoice.call_duration = i_call_duration
+        #     invoice.call_number = i_call_number
+        #     invoice.total = i_total
+        #     invoice.save()
 
-        cur_factura.close()
-        cur_cdr = conn_sti.cursor()
-        cur_cdr.execute(
-            'SELECT fecha, hora, ani_number, ingress_duration, '
-            'final_number, estado, descripcion, fecha_cdr, idd '
-            'FROM cdr')
+        # cur_factura.close()
+        # cur_cdr = conn_sti.cursor()
+        # cur_cdr.execute(
+        #     'SELECT fecha, hora, ani_number, ingress_duration, '
+        #     'final_number, estado, descripcion, fecha_cdr, idd '
+        #     'FROM cdr')
 
-        for l in cur_cdr.fetchall():
-            fecha = l[0]
-            hora = l[1]
-            connect_time = dt.datetime.combine(fecha, hora)
-            ani_number = l[2]
-            if ani_number is not None:
-                ani_number = str(ani_number)
-            ingress_duration = l[3]
-            final_number = l[4]
-            estado = l[5]
-            valid = True if estado == 'activado' else False
-            tipo = l[6]
-            date = l[7]
-            id_compania = l[8]
-            year = date[:4]
-            month = date[5:]
-            company = models.Company.objects.filter(
-                id_compania=id_compania).first()
-            cdr = models.Cdr.objects.get(year=year, month=month)
-            outgoing = models.Outgoing(
-                connect_time=connect_time, ani_number=ani_number,
-                ingress_duration=ingress_duration,
-                final_number=final_number, valid=valid,
-                company=company, _type=tipo,
-                cdr=cdr, schedule=None)
-            outgoing.save()
+        # for l in cur_cdr.fetchall():
+        #     fecha = l[0]
+        #     hora = l[1]
+        #     connect_time = dt.datetime.combine(fecha, hora)
+        #     ani_number = l[2]
+        #     if ani_number is not None:
+        #         ani_number = str(ani_number)
+        #     ingress_duration = l[3]
+        #     final_number = l[4]
+        #     estado = l[5]
+        #     valid = True if estado == 'activado' else False
+        #     tipo = l[6]
+        #     date = l[7]
+        #     id_compania = l[8]
+        #     year = date[:4]
+        #     month = date[5:]
+        #     company = models.Company.objects.filter(
+        #         id_compania=id_compania).first()
+        #     cdr = models.Cdr.objects.get(year=year, month=month)
+        #     outgoing = models.Outgoing(
+        #         connect_time=connect_time, ani_number=ani_number,
+        #         ingress_duration=ingress_duration,
+        #         final_number=final_number, valid=valid,
+        #         company=company, _type=tipo,
+        #         cdr=cdr, schedule=None)
+        #     outgoing.save()
 
-        cur_cdr.close()
+        # cur_cdr.close()
         cur_ccaa = conn_sti.cursor()
         cur_ccaa.execute(
             'SELECT periodo, n_factura, fecha_inicio, fecha_fin, '
