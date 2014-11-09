@@ -252,9 +252,12 @@ def load_data():
                 cur_tarifa = conn.cursor()
                 cur_tarifa.execute(
                     'SELECT valor_normal, valor_reducido, '
-                    'valor_nocturno FROM tarifa WHERE id_ingreso = %s '
+                    'valor_nocturno FROM tarifa WHERE id_tarifa = %s '
                     'and fecha = %s', (tarifa[i], fi))
                 t = cur_tarifa.fetchone()
+                tarifa_valor_normal = t[0]
+                tarifa_valor_reducido = t[1]
+                tarifa_valor_nocturno = t[2]
                 cur_tarifa.close()
                 cur_set_factura_count_normal = conn.cursor()
                 cur_set_factura_count_normal.execute(
@@ -275,7 +278,7 @@ def load_data():
                 cur_set_factura_sum_normal.close()
                 call_duration += suma
                 r1 = models.Rate(
-                    price=t.get('valor_normal'), _type='normal',
+                    price=tarifa_valor_normal, _type='normal',
                     call_number=count, call_duration=suma,
                     total=valor_normal[i])
                 cur_set_factura_count_reducido = conn.cursor()
@@ -297,7 +300,7 @@ def load_data():
                 cur_set_factura_sum_reducido.close()
                 call_duration += suma
                 r2 = models.Rate(
-                    price=t.get('valor_reducido'), _type='reducido',
+                    price=tarifa_valor_reducido, _type='reducido',
                     call_number=count, call_duration=suma,
                     total=valor_reducido[i])
                 cur_set_factura_count_nocturno = conn.cursor()
@@ -319,7 +322,7 @@ def load_data():
                 cur_set_factura_sum_nocturno.close()
                 call_duration += suma
                 r3 = models.Rate(
-                    price=t.get('valor_nocturno'), _type='nocturno',
+                    price=tarifa_valor_nocturno, _type='nocturno',
                     call_number=count, call_duration=suma,
                     total=valor_nocturno[i])
                 p = models.Period(
