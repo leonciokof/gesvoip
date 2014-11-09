@@ -330,7 +330,7 @@ def load_data():
                     call_number=call_number,
                     call_duration=call_duration,
                     total=total)
-                i_total += total
+                i_total += float(total)
                 i_call_duration += call_duration
                 i_call_number += call_number
                 p.save()
