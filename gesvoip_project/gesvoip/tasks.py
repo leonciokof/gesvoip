@@ -235,10 +235,10 @@ def load_data():
             month = date.strftime('%m')
             company = models.Company.objects.filter(
                 id_compania=id_compania).first()
-            i = models.Invoice(
+            invoice = models.Invoice(
                 year=year, month=month, code=id_factura,
                 company=company, invoiced=True)
-            i.save()
+            invoice.save()
 
             i_call_number = 0
             i_call_duration = 0
@@ -326,7 +326,7 @@ def load_data():
                     call_number=count, call_duration=suma,
                     total=valor_nocturno[i])
                 p = models.Period(
-                    invoice=i, start=fi, end=fecha_fin[i],
+                    invoice=invoice, start=fi, end=fecha_fin[i],
                     call_number=call_number,
                     call_duration=call_duration,
                     total=total)
@@ -341,10 +341,10 @@ def load_data():
                 r2.save()
                 r3.save()
 
-            i.call_duration = i_call_duration
-            i.call_number = i_call_number
-            i.total = i_total
-            i.save()
+            invoice.call_duration = i_call_duration
+            invoice.call_number = i_call_number
+            invoice.total = i_total
+            invoice.save()
 
         cur_factura.close()
         cur_cdr = conn_sti.cursor()
