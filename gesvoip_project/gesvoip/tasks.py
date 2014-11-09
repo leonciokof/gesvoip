@@ -242,7 +242,7 @@ def load_data():
 
             i_call_number = 0
             i_call_duration = 0
-            i_total = 0
+            i_total = 0.0
 
             for i, fi in enumerate(fecha_inicio):
                 call_number = 0
