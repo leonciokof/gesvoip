@@ -126,7 +126,7 @@ class Line(mongoengine.Document):
             c = Commune.objects.get(pk=obj.key.get('commune'))
             return [
                 314, date, c.primary, c.area, c.code, 1,
-                'TB', 'RE', 'H', 'PP', 'D', '0', obj.value.get('count')]
+                'TB', 'RE', 'H', 'PP', 'D', '0', int(obj.value.get('count'))]
 
         r_filter = filter(lambda x: x.key.get('commune') is not None, results)
 
