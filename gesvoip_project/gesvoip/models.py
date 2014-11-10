@@ -107,7 +107,7 @@ class Line(mongoengine.Document):
     def get_services(cls, date):
         map_f = """
         function() {
-            emit({city: this.city}, {count: 1, entity: this.entity});
+            emit({commune: this.commune}, {count: 1, entity: this.entity});
         }"""
         reduce_f = """
         function(key, values) {
@@ -121,12 +121,16 @@ class Line(mongoengine.Document):
         }"""
         results = cls.objects.map_reduce(
             map_f, reduce_f, output='inline')
-        def services_cb(obj):
-            return [
-                314, date, obj.key, obj.key, obj.key, 1,
-                'TB', 'RE', 'H', 'PP', 'D', '0', obj.value]
 
-        return map(services_cb, results)
+        def services_cb(obj):
+            c = Commune.objects.get(pk=obj.key.get('commune'))
+            return [
+                314, date, c.primary, c.area, c.code, 1,
+                'TB', 'RE', 'H', 'PP', 'D', '0', obj.value.get('count')]
+
+        r_filter = filter(lambda x: x.key.get('commune') is not None, results)
+
+        return map(services_cb, r_filter)
 
     @classmethod
     def get_subscriptors(cls, date):
@@ -1080,19 +1084,20 @@ class Ccaa(mongoengine.Document):
     @classmethod
     def get_report(cls, year, month):
         date = year + month
+
         def report_cb(obj):
             return [
-                314, 
-                date, 
-                obj.company.code, 
+                314,
+                date,
+                obj.company.code,
                 obj.invoice,
-                obj.start.strftime('%Y%m%d'), 
-                obj.end.strftime('%Y%m%d'), 
+                obj.start.strftime('%Y%m%d'),
+                obj.end.strftime('%Y%m%d'),
                 'PCA',
-                obj.invoice_date.strftime('%Y%m%d'), 
-                obj.get_schedule(), 
+                obj.invoice_date.strftime('%Y%m%d'),
+                obj.get_schedule(),
                 '',
-                obj.call_duration, 
+                obj.call_duration,
                 obj.total]
 
         return map(report_cb, cls.objects(year=year, month=month))
