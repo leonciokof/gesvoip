@@ -77,6 +77,7 @@ class Line(mongoengine.Document):
     document = mongoengine.IntField(verbose_name=u'documento')
     special_service = mongoengine.StringField(
         choices=choices.SPECIAL_SERVICES, verbose_name=u'servicio especial')
+    commune = mongoengine.ReferenceField(Commune)
 
     meta = {
         'ordering': ['number'],
