@@ -54,6 +54,22 @@ class Numeration(mongoengine.Document):
         return self._range
 
 
+class Commune(mongoengine.Document):
+
+    """Modelo que representa las comunas"""
+
+    name = mongoengine.StringField(verbose_name='nombre')
+    code = mongoengine.StringField(verbose_name='codigo')
+    region = mongoengine.StringField(verbose_name='region')
+    province = mongoengine.StringField(verbose_name='provincia')
+    area = mongoengine.StringField(verbose_name='area')
+    zone = mongoengine.StringField(verbose_name='zona')
+    primary = mongoengine.StringField(verbose_name='primaria')
+
+    def __unicode__(self):
+        return self.name
+
+
 class Line(mongoengine.Document):
 
     """Modelo de los clientes de convergia."""
@@ -1080,19 +1096,3 @@ class Ccaa(mongoengine.Document):
                 obj.total]
 
         return map(report_cb, cls.objects(year=year, month=month))
-
-
-class Commune(mongoengine.Document):
-
-    """Modelo que representa las comunas"""
-
-    name = mongoengine.StringField(verbose_name='nombre')
-    code = mongoengine.StringField(verbose_name='codigo')
-    region = mongoengine.StringField(verbose_name='region')
-    province = mongoengine.StringField(verbose_name='provincia')
-    area = mongoengine.StringField(verbose_name='area')
-    zone = mongoengine.StringField(verbose_name='zona')
-    primary = mongoengine.StringField(verbose_name='primaria')
-
-    def __unicode__(self):
-        return self.name
