@@ -43,9 +43,9 @@ module.exports = (grunt) ->
           "<%= public.js %>/combined.min.js": [
             "<%= bower %>/jquery/dist/jquery.js"
             "<%= bower %>/bootstrap/dist/js/bootstrap.js"
-            "<%= bower %>/metisMenu/dist/jquery.metisMenu.js"
+            "<%= bower %>/metisMenu/dist/metisMenu.js"
             "<%= bower %>/bootstrap-3-timepicker/js/bootstrap-timepicker.js"
-            "<%= bower %>/moment/moment.js"
+            "<%= bower %>/moment/min/moment-with-locales.js"
             "<%= bower %>/eonasdan-bootstrap-datetimepicker/" +
             "build/js/bootstrap-datetimepicker.min.js"
             "<%= bower %>/select2/select2.js"
