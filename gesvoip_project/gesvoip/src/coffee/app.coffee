@@ -13,8 +13,8 @@ $(document).ready ->
 
   $("#line_subscriber_report_form form").submit (e) ->
     $("#line_subscriber_report_form").modal("hide")
-    e.preventDefault()
+    return
 
   $("#line_service_report_form form").submit (e) ->
     $("#line_service_report_form").modal("hide")
-    e.preventDefault()
+    return
