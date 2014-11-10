@@ -10,3 +10,11 @@ $(document).ready ->
     pickTime: false
 
   $(".select2").select2()
+
+  $("#line_subscriber_report_form form").submit (e) ->
+    $("#line_subscriber_report_form").modal("hide")
+    e.preventDefault()
+
+  $("#line_service_report_form form").submit (e) ->
+    $("#line_service_report_form").modal("hide")
+    e.preventDefault()
