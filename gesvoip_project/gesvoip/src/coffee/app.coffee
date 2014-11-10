@@ -18,3 +18,7 @@ $(document).ready ->
   $("#line_service_report_form form").submit (e) ->
     $("#line_service_report_form").modal("hide")
     return
+
+  $("#ccaa_report_form form").submit (e) ->
+    $("#ccaa_report_form").modal("hide")
+    return
