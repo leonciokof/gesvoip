@@ -1,0 +1,372 @@
+code;province;region;area;zone;name
+1101;11;1;57;02;Iquique
+1102;11;1;57;02;Camiña
+1103;11;1;57;02;Colchane
+1104;11;1;57;02;Huara
+1105;11;1;57;02;Pica
+1106;11;1;57;02;Pozo Almonte
+1107;11;1;57;02;Alto Hospicio
+1201;12;1;58;02;Arica
+1202;12;1;58;02;Camarones
+1301;13;1;58;02;Putre
+1302;13;1;58;02;General Lagos
+1401;14;1;57;02;Pozo Almonte
+1402;14;1;57;02;Camiña
+1403;14;1;57;02;Colchane
+1404;14;1;57;02;Huara
+1405;14;1;57;02;Pica
+2101;21;2;55;03;Antofagasta
+2102;21;2;55;03;Mejillones
+2103;21;2;55;03;Sierra Gorda
+2104;21;2;55;03;Taltal
+2201;22;2;55;03;Calama
+2202;22;2;55;03;Ollagüe
+2203;22;2;55;03;San Pedro de Atacama
+2301;23;2;55;03;Tocopilla
+2302;23;2;55;03;María Elena
+3101;31;3;52;04;Copiapó
+3102;31;3;52;04;Caldera
+3103;31;3;52;04;Tierra Amarilla
+3201;32;3;52;04;Chañaral
+3202;32;3;52;04;Diego de Almagro
+3301;33;3;51;04;Vallenar
+3302;33;3;51;04;Alto Del Carmen
+3303;33;3;51;04;Freirina
+3304;33;3;51;04;Huasco
+4101;41;4;51;04;La Serena
+4102;41;4;51;04;Coquimbo
+4103;41;4;51;04;Andacollo
+4104;41;4;51;04;La Higuera
+4105;41;4;51;04;Paihuano
+4106;41;4;51;04;Vicuña
+4201;42;4;53;04;Illapel
+4202;42;4;53;04;Canela
+4203;42;4;53;04;Los Vilos
+4204;42;4;53;04;Salamanca
+4301;43;4;53;04;Ovalle
+4302;43;4;53;04;Combarbalá
+4303;43;4;53;04;Monte Patria
+4304;43;4;53;04;Punitaqui
+4305;43;4;53;04;Río Hurtado
+5101;51;5;32;05;Valparaíso
+5102;51;5;32;05;Casablanca
+5103;51;5;32;05;Concón
+5104;51;5;32;05;Juan Fernández
+5105;51;5;32;05;Puchuncaví
+5106;51;5;32;05;Quilpué
+5107;51;5;32;05;Quintero
+5108;51;5;32;05;Villa Alemana
+5109;51;5;32;05;Viña del Mar
+5201;52;5;32;05;Isla de Pascua
+5301;53;5;34;05;Los Andes
+5302;53;5;34;05;Calle Larga
+5303;53;5;34;05;Rinconada
+5304;53;5;34;05;San Esteban
+5401;54;5;33;05;La Ligua
+5402;54;5;33;05;Cabildo
+5403;54;5;33;05;Papudo
+5404;54;5;33;05;Petorca
+5405;54;5;33;05;Zapallar
+5501;55;5;33;05;Quillota
+5502;55;5;33;05;Calera
+5503;55;5;33;05;Hijuelas
+5504;55;5;33;05;La Cruz
+5505;55;5;33;05;Limache
+5506;55;5;33;05;Nogales
+5507;55;5;33;05;Olmué
+5601;56;5;35;05;San Antonio
+5602;56;5;35;05;Algarrobo
+5603;56;5;35;05;Cartagena
+5604;56;5;35;05;El Quisco
+5605;56;5;35;05;El Tabo
+5606;56;5;35;05;Santo Domingo
+5701;57;5;34;05;San Felipe
+5702;57;5;34;05;Catemu
+5703;57;5;34;05;Llaillay
+5704;57;5;34;05;Panquehue
+5705;57;5;34;05;Putaendo
+5706;57;5;34;05;Santa María
+5801;58;5;32;05;Quilpué
+5802;58;5;33;05;Limache
+5803;58;5;33;05;Olmué
+5804;58;5;32;05;Villa Alemana
+6101;61;6;72;07;Rancagua
+6102;61;6;72;07;Codegua
+6103;61;6;72;07;Coinco
+6104;61;6;72;07;Coltauco
+6105;61;6;72;07;Doñihue
+6106;61;6;72;07;Graneros
+6107;61;6;72;07;Las Cabras
+6108;61;6;72;07;Machalí
+6109;61;6;72;07;Malloa
+6110;61;6;72;07;Mostazal
+6111;61;6;72;07;Olivar
+6112;61;6;72;07;Peumo
+6113;61;6;72;07;Pichidegua
+6114;61;6;72;07;Quinta de Tilcoco
+6115;61;6;72;07;Rengo
+6116;61;6;72;07;Requinoa
+6117;61;6;72;07;San Vicente
+6201;62;6;72;07;Pichilemu
+6202;62;6;72;07;La Estrella
+6203;62;6;72;07;Litueche
+6204;62;6;72;07;Marchihue
+6205;62;6;72;07;Navidad
+6206;62;6;72;07;Paredones
+6301;63;6;72;07;San Fernando
+6302;63;6;72;07;Chépica
+6303;63;6;72;07;Chimbarongo
+6304;63;6;72;07;Lolol
+6305;63;6;72;07;Nancagua
+6306;63;6;72;07;Palmilla
+6307;63;6;72;07;Peralillo
+6308;63;6;72;07;Placilla
+6309;63;6;72;07;Pumanque
+6310;63;6;72;07;Santa Cruz
+7101;71;7;71;08;Talca
+7102;71;7;71;08;Constitución
+7103;71;7;75;08;Curepto
+7104;71;7;71;08;Empedrado
+7105;71;7;71;08;Maule
+7106;71;7;71;08;Pelarco
+7107;71;7;71;08;Pencahue
+7108;71;7;71;08;Río Claro
+7109;71;7;71;08;San Clemente
+7110;71;7;71;08;San Rafael
+7201;72;7;73;08;Cauquenes
+7202;72;7;73;08;Chanco
+7203;72;7;73;08;Pelluhue
+7301;73;7;75;08;Curicó
+7302;73;7;75;08;Hualañé
+7303;73;7;75;08;Licantén
+7304;73;7;75;08;Molina
+7305;73;7;75;08;Rauco
+7306;73;7;75;08;Romeral
+7307;73;7;75;08;Sagrada Familia
+7308;73;7;75;08;Teno
+7309;73;7;75;08;Vichuquén
+7401;74;7;73;08;Linares
+7402;74;7;73;08;Colbún
+7403;74;7;73;08;Longaví
+7404;74;7;73;08;Parral
+7405;74;7;73;08;Retiro
+7406;74;7;73;08;San Javier
+7407;74;7;73;08;Villa Alegre
+7408;74;7;73;08;Yerbas Buenas
+8101;81;8;41;09;Concepción
+8102;81;8;41;09;Coronel
+8103;81;8;41;09;Chiguayante
+8104;81;8;41;09;Florida
+8105;81;8;41;09;Hualqui
+8106;81;8;41;09;Lota
+8107;81;8;41;09;Penco
+8108;81;8;41;09;San Pedro de la Paz
+8109;81;8;41;09;Santa Juana
+8110;81;8;41;09;Talcahuano
+8111;81;8;41;09;Tomé
+8112;81;8;41;09;Hualpén
+8201;82;8;41;09;Lebu
+8202;82;8;41;09;Arauco
+8203;82;8;41;09;Cañete
+8204;82;8;41;09;Contulmo
+8205;82;8;41;09;Curanilahue
+8206;82;8;41;09;Los Alamos
+8207;82;8;41;09;Tirúa
+8301;83;8;43;09;Los Angeles
+8302;83;8;43;09;Antuco
+8303;83;8;43;09;Cabrero
+8304;83;8;43;09;Laja
+8305;83;8;43;09;Mulchén
+8306;83;8;43;09;Nacimiento
+8307;83;8;43;09;Negrete
+8308;83;8;43;09;Quilaco
+8309;83;8;43;09;Quilleco
+8310;83;8;43;09;San Rosendo
+8311;83;8;43;09;Santa Bárbara
+8312;83;8;43;09;Tucapel
+8313;83;8;43;09;Yumbel
+8314;83;8;43;09;Alto Biobío
+8401;84;8;42;09;Chillán
+8402;84;8;42;09;Bulnes
+8403;84;8;42;09;Cobquecura
+8404;84;8;42;09;Coelemu
+8405;84;8;42;09;Coihueco
+8406;84;8;42;09;Chillán Viejo
+8407;84;8;42;09;El Carmen
+8408;84;8;42;09;Ninhue
+8409;84;8;42;09;Ñiquén
+8410;84;8;42;09;Pemuco
+8411;84;8;42;09;Pinto
+8412;84;8;42;09;Portezuelo
+8413;84;8;42;09;Quillón
+8414;84;8;42;09;Quirihue
+8415;84;8;42;09;Ranquil
+8416;84;8;42;09;San Carlos
+8417;84;8;42;09;San Fabián
+8418;84;8;42;09;San Ignacio
+8419;84;8;42;09;San Nicolás
+8420;84;8;42;09;Treguaco
+8421;84;8;42;09;Yungay
+9101;91;9;45;10;Temuco
+9102;91;9;45;10;Carahue
+9103;91;9;45;10;Cunco
+9104;91;9;45;10;Curarrehue
+9105;91;9;45;10;Freire
+9106;91;9;45;10;Galvarino
+9107;91;9;45;10;Gorbea
+9108;91;9;45;10;Lautaro
+9109;91;9;45;10;Loncoche
+9110;91;9;45;10;Melipeuco
+9111;91;9;45;10;Nueva Imperial
+9112;91;9;45;10;Padre Las Casas
+9113;91;9;45;10;Perquenco
+9114;91;9;45;10;Pitrufquén
+9115;91;9;45;10;Pucón
+9116;91;9;45;10;Saavedra
+9117;91;9;45;10;Teodoro Schmidt
+9118;91;9;45;10;Toltén
+9119;91;9;45;10;Vilcún
+9120;91;9;45;10;Villarrica
+9121;91;9;45;10;Cholchol
+9201;92;9;45;10;Angol
+9202;92;9;45;10;Collipulli
+9203;92;9;45;10;Curacautín
+9204;92;9;45;10;Ercilla
+9205;92;9;45;10;Lonquimay
+9206;92;9;45;10;Los Sauces
+9207;92;9;45;10;Lumaco
+9208;92;9;45;10;Purén
+9209;92;9;45;10;Renaico
+9210;92;9;45;10;Traiguén
+9211;92;9;45;10;Victoria
+10101;101;10;65;11;Puerto Montt
+10102;101;10;65;11;Calbuco
+10103;101;10;65;11;Cochamó
+10104;101;10;65;11;Fresia
+10105;101;10;65;11;Frutillar
+10106;101;10;65;11;Los Muermos
+10107;101;10;65;11;Llanquihue
+10108;101;10;65;11;Maullín
+10109;101;10;65;11;Puerto Varas
+10201;102;10;65;11;Castro
+10202;102;10;65;11;Ancud
+10203;102;10;65;11;Chonchi
+10204;102;10;65;11;Curaco de Vélez
+10205;102;10;65;11;Dalcahue
+10206;102;10;65;11;Puqueldón
+10207;102;10;65;11;Queilén
+10208;102;10;65;11;Quellón
+10209;102;10;65;11;Quemchi
+10210;102;10;65;11;Quinchao
+10301;103;10;64;11;Osorno
+10302;103;10;64;11;Puerto Octay
+10303;103;10;64;11;Purranque
+10304;103;10;64;11;Puyehue
+10305;103;10;64;11;Río Negro
+10306;103;10;64;11;San Juan de la Costa
+10307;103;10;64;11;San Pablo
+10401;104;10;65;11;Chaitén
+10402;104;10;65;11;Futaleufú
+10403;104;10;65;11;Hualaihue
+10404;104;10;65;11;Palena
+10501;105;10;63;11;Valdivia
+10502;105;10;63;11;Corral
+10503;105;10;63;11;Futrono
+10504;105;10;64;11;La Unión
+10505;105;10;63;11;Lago Ranco
+10506;105;10;63;11;Lanco
+10507;105;10;63;11;Los Lagos
+10508;105;10;63;11;Mafil
+10509;105;10;63;11;San José de la Mariquina
+10510;105;10;63;11;Paillaco
+10511;105;10;63;11;Panguipulli
+10512;105;10;64;11;Río Bueno
+11101;111;11;67;12;Coyhaique
+11102;111;11;67;12;Lago Verde
+11201;112;11;67;12;Aisén
+11202;112;11;67;12;Puerto Cisnes
+11203;112;11;67;12;Guaitecas
+11301;113;11;67;12;Cochrane
+11302;113;11;67;12;O’Higgins
+11303;113;11;67;12;Tortel
+11401;114;11;67;12;Chile Chico
+11402;114;11;67;12;Río Ibáñez
+12101;121;12;61;13;Punta Arenas
+12102;121;12;61;13;Laguna Blanca
+12103;121;12;61;13;Río Verde
+12104;121;12;61;13;San Gregorio
+12201;122;12;61;13;Cabo de Hornos
+12202;122;12;61;13;Antártica
+12301;123;12;61;13;Porvenir
+12302;123;12;61;13;Primavera
+12303;123;12;61;13;Timaukel
+12401;124;12;61;13;Natales
+12402;124;12;61;13;Torres del Paine
+13101;131;13;2;06;Santiago
+13102;131;13;2;06;Cerrillos
+13103;131;13;2;06;Cerro Navia
+13104;131;13;2;06;Conchalí
+13105;131;13;2;06;El Bosque
+13106;131;13;2;06;Estación Central
+13107;131;13;2;06;Huechuraba
+13108;131;13;2;06;Independencia
+13109;131;13;2;06;La Cisterna
+13110;131;13;2;06;La Florida
+13111;131;13;2;06;La Granja
+13112;131;13;2;06;La Pintana
+13113;131;13;2;06;La Reina
+13114;131;13;2;06;Las Condes
+13115;131;13;2;06;Lo Barnechea
+13116;131;13;2;06;Lo Espejo
+13117;131;13;2;06;Lo Prado
+13118;131;13;2;06;Macul
+13119;131;13;2;06;Maipú
+13120;131;13;2;06;Ñuñoa
+13121;131;13;2;06;Pedro Aguirre Cerda
+13122;131;13;2;06;Peñalolén
+13123;131;13;2;06;Providencia
+13124;131;13;2;06;Pudahuel
+13125;131;13;2;06;Quilicura
+13126;131;13;2;06;Quinta Normal
+13127;131;13;2;06;Recoleta
+13128;131;13;2;06;Renca
+13129;131;13;2;06;San Joaquín
+13130;131;13;2;06;San Miguel
+13131;131;13;2;06;San Ramón
+13132;131;13;2;06;Vitacura
+13201;132;13;2;06;Puente Alto
+13202;132;13;2;06;Pirque
+13203;132;13;2;06;San José de Maipo
+13301;133;13;2;06;Colina
+13302;133;13;2;06;Lampa
+13303;133;13;2;06;Til Til
+13401;134;13;2;06;San Bernardo
+13402;134;13;2;06;Buin
+13403;134;13;2;06;Calera de Tango
+13404;134;13;2;06;Paine
+13501;135;13;2;06;Melipilla
+13502;135;13;2;06;Alhué
+13503;135;13;2;06;Curacaví
+13504;135;13;2;06;María Pinto
+13505;135;13;2;06;San Pedro
+13601;136;13;2;06;Talagante
+13602;136;13;2;06;El Monte
+13603;136;13;2;06;Isla de Maipo
+13604;136;13;2;06;Padre Hurtado
+13605;136;13;2;06;Peñaflor
+14101;141;14;63;11;Valdivia
+14102;141;14;63;11;Corral
+14103;141;14;63;11;Lanco
+14104;141;14;63;11;Los Lagos
+14105;141;14;63;11;Mafil
+14106;141;14;63;11;San José de la Mariquina
+14107;141;14;63;11;Paillaco
+14108;141;14;63;11;Panguipulli
+14201;142;14;64;11;La Unión
+14202;142;14;63;11;Futrono
+14203;142;14;63;11;Lago Ranco
+14204;142;14;64;11;Río Bueno
+15101;151;15;58;01;Arica
+15102;151;15;58;01;Camarones
+15201;152;15;58;01;Putre
+15202;152;15;58;01;General Lagos

@@ -88,79 +88,37 @@ class Line(mongoengine.Document):
 
     @classmethod
     def get_services(cls, date):
-        items = []
-        primary = ''
+        map_f = """
+        function() {
+            emit({city: this.city}, {count: 1, entity: this.entity});
+        }"""
+        reduce_f = """
+        function(key, values) {
+            var count = 0;
+            values.forEach(function(v) {
+                if (v.entity == 'empresa') {
+                    count += v.count;
+                }
+            });
+            return {count: count};
+        }"""
+        results = cls.objects.map_reduce(
+            map_f, reduce_f, output='inline')
+        def services_cb(obj):
+            return [
+                314, date, obj.key, obj.key, obj.key, 1,
+                'TB', 'RE', 'H', 'PP', 'D', '0', obj.value]
 
-        for zone, name1 in choices.ZONES:
-            for city, name2 in choices.CITIES:
-                if zone == 58:
-                    primary = '01'
-                elif zone == 57:
-                    primary = '02'
-                elif zone == 55:
-                    primary = '03'
-                elif zone in (51, 52, 53):
-                    primary = '04'
-                elif zone in (32, 33, 34, 35):
-                    primary = '05'
-                elif zone == 2:
-                    primary = '06'
-                elif zone == 72:
-                    primary = '07'
-                elif zone in (75, 73, 71):
-                    primary = '08'
-                elif zone in (41, 42, 43):
-                    primary = '09'
-                elif zone == 45:
-                    primary = 10
-                elif zone in (63, 65, 64):
-                    primary = 11
-                elif zone == 67:
-                    primary = 12
-                elif zone == 61:
-                    primary = 13
-
-                post_natural = cls.objects(
-                    zone=zone, city=city, entity='natural',
-                    mode='postpago').count()
-                pre_natural = cls.objects(
-                    zone=zone, city=city, entity='natural',
-                    mode='prepago').count()
-                post_empresa = cls.objects(
-                    zone=zone, city=city, entity='empresa',
-                    mode='postpago').count()
-
-                if post_natural > 0:
-                    items.append([
-                        314, date, primary, zone, city, 1,
-                        'TB', 'RE', 'H', 'PA', 'D', '0', post_natural])
-                if pre_natural > 0:
-                    items.append([
-                        314, date, primary, zone, city, 1,
-                        'TB', 'CO', 'H', 'PA', 'D', '0', pre_natural])
-                if post_empresa > 0:
-                    items.append([
-                        314, date, primary, zone, city, 1,
-                        'TB', 'RE', 'H', 'PP', 'D', '0', post_empresa])
-
-        return items
+        return map(services_cb, results)
 
     @classmethod
     def get_subscriptors(cls, date):
-        items = []
-        natural = cls.objects(
-            entity='natural', number__gte=56446900000,
-            number__lte=56446999999).count()
-        empresa = cls.objects(
-            entity='empresa', number__gte=56446900000,
-            number__lte=56446999999).count()
-
-        if natural > 0:
-            items.append([314, date, 'RE', natural])
-        if empresa > 0:
-            items.append([314, date, 'CO', empresa])
-
-        return items
+        count = cls.objects(
+            entity='empresa', number__startswith='564469').count()
+        if count > 0:
+            return [314, date, 'CO', count]
+        else:
+            return []
 
 
 class Cdr(mongoengine.Document):
@@ -1105,13 +1063,34 @@ class Ccaa(mongoengine.Document):
     @classmethod
     def get_report(cls, year, month):
         date = year + month
-        items = []
+        def report_cb(obj):
+            return [
+                314, 
+                date, 
+                obj.company.code, 
+                obj.invoice,
+                obj.start.strftime('%Y%m%d'), 
+                obj.end.strftime('%Y%m%d'), 
+                'PCA',
+                obj.invoice_date.strftime('%Y%m%d'), 
+                obj.get_schedule(), 
+                '',
+                obj.call_duration, 
+                obj.total]
 
-        for c in cls.objects(year=year, month=month):
-            items.append([
-                314, date, c.company.code, c.invoice,
-                c.start.strftime('%Y%m%d'), c.end.strftime('%Y%m%d'), 'PCA',
-                c.invoice_date.strftime('%Y%m%d'), c.get_schedule(), '',
-                c.call_duration, c.total])
+        return map(report_cb, cls.objects(year=year, month=month))
 
-        return items
+
+class Commune(mongoengine.Document):
+
+    """Modelo que representa las comunas"""
+
+    name = mongoengine.StringField(verbose_name='nombre')
+    code = mongoengine.StringField(verbose_name='codigo')
+    region = mongoengine.StringField(verbose_name='region')
+    province = mongoengine.StringField(verbose_name='provincia')
+    area = mongoengine.StringField(verbose_name='area')
+    zone = mongoengine.StringField(verbose_name='zona')
+
+    def __unicode__(self):
+        return self.name

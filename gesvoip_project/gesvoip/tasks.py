@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import os
 
 from celery import task
 
@@ -462,3 +463,11 @@ def load_data():
 
     except Exception:
         client.captureException()
+
+
+def load_communes():
+    filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'comunas.csv')
+    with open(filename, 'r') as f:
+        reader = csv.DictReader(f, delimiter=';')
+        communes = map(lambda x: models.Commune(**x), reader)
+        models.Commune.objects.insert(communes)
