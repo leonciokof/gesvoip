@@ -736,10 +736,10 @@ class LocalCenterReportView(CSVResponseMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(LocalCenterReportView, self).get_context_data(**kwargs)
-        date = dt.date.today().strftime('%Y-%m')
+        date = dt.date.today().strftime('%Y%m')
         title = 'TL_314_{0}_CL.txt'.format(date)
         items = [
-            [i.company, date, i.code, i.name]
+            [i.company.code, date, i.code, i.name]
             for i in models.LocalCenter.objects.all()
         ]
         context.update({'title': title, 'items': items})
