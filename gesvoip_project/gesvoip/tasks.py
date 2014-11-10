@@ -187,12 +187,11 @@ def load_data():
         #         cdr=cdr, schedule=None)
         #     numeration.save()
         # cur_log_llamadas2.close()
-        for invoice in models.Invoice.objects(
-                year='2012', month__in=['09', '10', '11', '12']):
+        for invoice in models.Invoice.objects(year='2013'):
             cur_det_factura = conn.cursor()
             cur_det_factura.execute(
-                'SELECT origen, destino, fecha, hora, duracion, horario, compania '
-                'FROM det_factura WHERE factura=%s', (invoice.code,))
+                'SELECT origen, destino, fecha, hora, duracion, horario, '
+                'compania FROM det_factura WHERE factura=%s', (invoice.code,))
 
             for l in cur_det_factura.fetchall():
                 ani_number = str(l[0])
@@ -467,7 +466,8 @@ def load_data():
 
 
 def load_communes():
-    filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'comunas.csv')
+    filename = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'comunas.csv')
     with open(filename, 'r') as f:
         reader = csv.DictReader(f, delimiter=';')
         communes = map(lambda x: models.Commune(**x), reader)
