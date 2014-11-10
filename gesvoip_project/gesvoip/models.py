@@ -1091,6 +1091,7 @@ class Commune(mongoengine.Document):
     province = mongoengine.StringField(verbose_name='provincia')
     area = mongoengine.StringField(verbose_name='area')
     zone = mongoengine.StringField(verbose_name='zona')
+    primary = mongoengine.StringField(verbose_name='primaria')
 
     def __unicode__(self):
         return self.name
