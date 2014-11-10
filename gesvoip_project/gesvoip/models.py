@@ -136,10 +136,8 @@ class Line(mongoengine.Document):
     def get_subscriptors(cls, date):
         count = cls.objects(
             entity='empresa', number__startswith='564469').count()
-        if count > 0:
-            return [314, date, 'CO', count]
-        else:
-            return []
+
+        return [[314, date, 'CO', count]] if count > 0 else [[]]
 
 
 class Cdr(mongoengine.Document):
