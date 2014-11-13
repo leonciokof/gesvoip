@@ -80,7 +80,7 @@ def insert_cdr(cdr):
 
     cdr.insert_outgoing()
     send_email(
-        [{'name': 'Leonardo Gatica', 'email': 'lgaticastyle@gmail.com'}],
+        ['Leonardo Gatica <lgaticastyle@gmail.com>'],
         'Proceso finalizado',
         'gesvoip_success',
         {})
@@ -456,7 +456,7 @@ def load_data():
         conn_sti.close()
 
         send_email(
-            [{'name': 'Leonardo', 'email': 'lgaticastyle@gmail.com'}],
+            ['Leonardo Gatica <lgaticastyle@gmail.com>'],
             'Proceso finalizado',
             'gesvoip_success',
             {})
