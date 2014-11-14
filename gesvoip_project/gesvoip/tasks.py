@@ -188,7 +188,7 @@ def load_data():
         #     numeration.save()
         # cur_log_llamadas2.close()
         for invoice in models.Invoice.objects(
-                year='2013', month__in=['11', '12']):
+                year='2014', month__in=['03', '04', '10']):
             cur_det_factura = conn.cursor()
             cur_det_factura.execute(
                 'SELECT origen, destino, fecha, hora, duracion, horario, '
