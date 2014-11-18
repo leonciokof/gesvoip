@@ -20,7 +20,8 @@ class Company(mongoengine.Document):
 
     name = mongoengine.StringField(
         unique=True, max_length=255, verbose_name=u'nombre')
-    idoidd = mongoengine.IntField(verbose_name=u'idoidd')
+    idoidd = mongoengine.ListField(
+        mongoengine.IntField(), verbose_name=u'idoidd')
     code = mongoengine.IntField(verbose_name=u'codigo')
     schedules = mongoengine.DictField(verbose_name=u'horarios')
     invoicing = mongoengine.StringField(
