@@ -923,7 +923,7 @@ class Portability(mongoengine.Document):
 
     """Modelo de los numeros portados."""
 
-    number = mongoengine.StringField(unique=True)
+    number = mongoengine.StringField()
     company = mongoengine.ReferenceField(Company)
     _type = mongoengine.IntField()
     date = mongoengine.DateTimeField()
