@@ -42,7 +42,8 @@ class Numeration(mongoengine.Document):
 
     zone = mongoengine.IntField()
     _range = mongoengine.IntField()
-    company = mongoengine.ReferenceField(Company)
+    company = mongoengine.ReferenceField(
+        Company, reverse_delete_rule=mongoengine.CASCADE)
 
     meta = {
         'indexes': [('zone', '_range')]
@@ -145,13 +146,14 @@ class Cdr(mongoengine.Document):
 
     """Modelo de los cdr."""
 
-    month = mongoengine.StringField(
-        max_length=2, choices=choices.MONTHS)
     year = mongoengine.StringField(
-        max_length=4, choices=choices.YEARS)
-    incoming_ctc = mongoengine.FileField()
-    incoming_entel = mongoengine.FileField()
-    outgoing = mongoengine.FileField()
+        max_length=4, choices=choices.YEARS, verbose_name='año', required=True)
+    month = mongoengine.StringField(
+        max_length=2, choices=choices.MONTHS, verbose_name='mes',
+        required=True)
+    incoming_ctc = mongoengine.FileField(verbose_name='CTC', required=True)
+    incoming_entel = mongoengine.FileField(verbose_name='ENTEL', required=True)
+    outgoing = mongoengine.FileField(verbose_name='STI', required=True)
     processed = mongoengine.BooleanField(default=False)
 
     def __unicode__(self):
@@ -880,7 +882,8 @@ class Incoming(mongoengine.Document):
     ani_number = mongoengine.StringField()
     ingress_duration = mongoengine.IntField()
     dialed_number = mongoengine.StringField()
-    cdr = mongoengine.ReferenceField(Cdr)
+    cdr = mongoengine.ReferenceField(
+        Cdr, reverse_delete_rule=mongoengine.CASCADE)
     valid = mongoengine.BooleanField()
     invoiced = mongoengine.BooleanField(default=False)
     observation = mongoengine.StringField()
@@ -903,7 +906,8 @@ class Outgoing(mongoengine.Document):
     ani_number = mongoengine.StringField()
     ingress_duration = mongoengine.IntField()
     dialed_number = mongoengine.StringField()
-    cdr = mongoengine.ReferenceField(Cdr)
+    cdr = mongoengine.ReferenceField(
+        Cdr, reverse_delete_rule=mongoengine.CASCADE)
     valid = mongoengine.BooleanField()
     company = mongoengine.ReferenceField(Company)
     line = mongoengine.ReferenceField(Line)
@@ -958,10 +962,8 @@ class Invoice(mongoengine.Document):
     """Modelo de facturas."""
 
     company = mongoengine.ReferenceField(Company)
-    month = mongoengine.StringField(
-        max_length=2, choices=choices.MONTHS)
-    year = mongoengine.StringField(
-        max_length=4, choices=choices.YEARS)
+    cdr = mongoengine.ReferenceField(
+        Cdr, reverse_delete_rule=mongoengine.CASCADE)
     call_number = mongoengine.IntField()
     call_duration = mongoengine.IntField()
     total = mongoengine.FloatField()
@@ -972,7 +974,7 @@ class Invoice(mongoengine.Document):
         return self.get_date()
 
     def get_date(self):
-        return u'{0}-{1}'.format(self.year, self.month)
+        return u'{0}-{1}'.format(self.cdr.year, self.cdr.month)
 
     def get_total(self):
         return int(round(self.total)) if self.total else 0

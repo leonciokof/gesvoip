@@ -2,13 +2,15 @@
 
 {% load crispy_forms_tags %}
 
-{% block title %}Cargar CDR{% endblock title %}
+{% block title %}CDR{% endblock title %}
 
 {% block content %}
 <div id="page-wrapper">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Cargar CDR</h1>
+      <h1 class="page-header">
+        Eliminar CDR
+      </h1>
     </div>
   </div>
   <div class="row">
@@ -17,9 +19,10 @@
         <div class="panel-body">
           <div class="row">
             <div class="col-lg-12">
-              <form role="form" method="post" enctype="multipart/form-data">
-                {% crispy form %}
-                <button class="btn btn-primary" type="submit">Cargar</button>
+              <form role="form" method="post">
+                {% csrf_token %}
+                <p>¿Esta seguro de eiminar el CDR "{{ object }}"?</p>
+                <button class="btn btn-danger" type="submit">Eliminar</button>
               </form>
             </div>
           </div>

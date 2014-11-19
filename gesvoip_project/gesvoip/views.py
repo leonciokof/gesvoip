@@ -6,7 +6,8 @@ from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views import generic
 
-from mongogeneric import CreateView, DetailView, ListView, UpdateView
+from mongogeneric import (
+    CreateView, DetailView, ListView, UpdateView, DeleteView)
 from mongoengine.django.shortcuts import get_document_or_404
 
 from . import forms, models, tasks
@@ -51,11 +52,12 @@ class NewRateView(generic.FormView):
         nightly_price = form.cleaned_data.get('nightly_price')
         start = form.cleaned_data.get('start')
         end = form.cleaned_data.get('end')
+        cdr = models.Cdr.objects(month=month, year=year).first()
         i = models.Invoice.objects(
-            company=company, month=month, year=year).first()
+            company=company, cdr=cdr).first()
 
         if i is None:
-            i = models.Invoice(company=company, month=month, year=year).save()
+            i = models.Invoice(company=company, cdr=cdr).save()
 
         p = models.Period(invoice=i, start=start, end=end).save()
         models.Rate(period=p, _type='normal', price=normal_price).save()
@@ -67,25 +69,17 @@ class NewRateView(generic.FormView):
 new_rate = login_required(NewRateView.as_view())
 
 
-class NewCdrView(generic.FormView):
+class NewCdrView(CreateView):
 
     """ Vista de new_cdr """
 
     form_class = forms.CdrForm
     success_url = reverse_lazy('gesvoip:new_cdr')
     template_name = 'gesvoip/new_cdr.html'
+    document = models.Cdr
 
     def form_valid(self, form):
-        year = form.cleaned_data.get('year')
-        month = form.cleaned_data.get('month')
-        incoming_entel = form.cleaned_data.get('incoming_entel')
-        incoming_ctc = form.cleaned_data.get('incoming_ctc')
-        outgoing = form.cleaned_data.get('outgoing')
-
-        cdr = models.Cdr(
-            year=year, month=month, incoming_entel=incoming_entel,
-            incoming_ctc=incoming_ctc, outgoing=outgoing).save()
-        tasks.insert_cdr.delay(cdr)
+        tasks.insert_cdr.delay(form.instance)
 
         return super(NewCdrView, self).form_valid(form)
 
@@ -130,6 +124,7 @@ class InvoiceListView(ListView):
 
     document = models.Invoice
     paginate_by = 10
+    queryset = models.Invoice.objects.all().order_by('-year', '-month')
 
 invoice_list = login_required(InvoiceListView.as_view())
 
@@ -840,6 +835,7 @@ class CdrListView(ListView):
 
     document = models.Cdr
     paginate_by = 10
+    queryset = models.Cdr.objects.all().order_by('-year', '-month')
 
 cdr_list = login_required(CdrListView.as_view())
 
@@ -932,3 +928,11 @@ class LoadView(generic.TemplateView):
         return context
 
 load = LoadView.as_view()
+
+
+class DeleteCdrView(DeleteView):
+
+    document = models.Cdr
+    success_url = reverse_lazy('gesvoip:cdr_list')
+
+cdr_delete = login_required(DeleteCdrView.as_view())

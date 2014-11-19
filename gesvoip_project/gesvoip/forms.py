@@ -2,6 +2,7 @@
 
 from django import forms
 
+from crispy_forms.helper import FormHelper
 from mongodbforms import DocumentForm
 
 from . import choices, models
@@ -17,25 +18,18 @@ class NumberTextInput(forms.widgets.TextInput):
     input_type = 'number'
 
 
-class CdrForm(forms.Form):
+class CdrForm(DocumentForm):
 
-    year = forms.ChoiceField(
-        label='Seleccionar año',
-        choices=choices.YEARS,
-        widget=forms.Select(attrs={'required': 'required'}))
-    month = forms.ChoiceField(
-        label='Seleccionar mes',
-        choices=choices.MONTHS,
-        widget=forms.Select(attrs={'required': 'required'}))
-    incoming_entel = forms.FileField(
-        label='ENTEL',
-        widget=forms.FileInput(attrs={'required': 'required'}))
-    incoming_ctc = forms.FileField(
-        label='CTC',
-        widget=forms.FileInput(attrs={'required': 'required'}))
-    outgoing = forms.FileField(
-        label='STI',
-        widget=forms.FileInput(attrs={'required': 'required'}))
+    class Meta:
+        document = models.Cdr
+        fields = (
+            'year', 'month', 'incoming_ctc', 'incoming_entel', 'outgoing')
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.html5_required = True
+        super(CdrForm, self).__init__(*args, **kwargs)
 
 
 class RateForm(forms.Form):

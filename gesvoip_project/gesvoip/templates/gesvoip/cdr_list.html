@@ -39,6 +39,7 @@
                           <th>Trafico nacional</th>
                           <th></th>
                           <th></th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -52,6 +53,7 @@
                           <td><a href="{% url 'gesvoip:mobile_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
                           <td><a href="{% url 'gesvoip:voip_mobile_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
                           <td><a href="{% url 'gesvoip:national_traffic_report' obj.pk %}" class="btn btn-xs btn-primary">Descargar</a></td>
+                          <td><a href="{% url 'gesvoip:cdr_delete' obj.pk %}" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a></td>
                         </tr>
                         {% endfor %}
                       </tbody>

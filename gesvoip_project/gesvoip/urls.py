@@ -52,9 +52,10 @@ urlpatterns = patterns(
         'voip_mobile_traffic_report', name='voip_mobile_traffic_report'),
     url(r'^national_traffic_report/(?P<pk>\w+)/$',
         'national_traffic_report', name='national_traffic_report'),
-    url(r'^load/$', 'load', name='load'),
+    # url(r'^load/$', 'load', name='load'),
     url(r'incoming_by_cdr/(?P<cdr>\w+)/$',
         'incoming_by_cdr', name='incoming_by_cdr'),
     url(r'outgoing_by_cdr/(?P<cdr>\w+)/$',
         'outgoing_by_cdr', name='outgoing_by_cdr'),
+    url(r'^cdr_delete/(?P<pk>\w+)/$', 'cdr_delete', name='cdr_delete'),
 )
