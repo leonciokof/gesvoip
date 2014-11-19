@@ -8,10 +8,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.7/ref/settings/
 """
 
+import logging
 import os
 import sys
 
 from getenv import env
+from logentries import LogentriesHandler
 from mongoengine import connect
 import djcelery
 
@@ -173,6 +175,10 @@ else:
             },
         },
         'handlers': {
+            'logentries_handler': {
+                'token': env('LOGENTRIES_TOKEN'),
+                'class': 'logentries.LogentriesHandler'
+            },
             'sentry': {
                 'level': 'ERROR',
                 'class': (
@@ -182,7 +188,7 @@ else:
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
                 'formatter': 'verbose'
-            }
+            },
         },
         'loggers': {
             'django.db.backends': {
@@ -199,6 +205,10 @@ else:
                 'level': 'DEBUG',
                 'handlers': ['console'],
                 'propagate': False,
+            },
+            'logentries': {
+                'handlers': ['logentries_handler'],
+                'level': 'INFO',
             },
         },
     }
