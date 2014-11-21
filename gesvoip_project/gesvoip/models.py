@@ -103,7 +103,7 @@ class Line(mongoengine.Document):
     }
 
     def __unicode__(self):
-        return unicode(self.number)
+        return str(self.number)
 
     @classmethod
     def get_services(cls, date):
@@ -170,30 +170,14 @@ class Cdr(mongoengine.Document):
         else:
             return False
 
-    def get_active_ctc(self, ani, dialed_number):
+    def get_active(self, ani, final_number, dialed_number):
         """Funcion que determina si un registro debe o no ser facturado"""
-        pattern1 = re.search(patterns.movil, ani)
-        pattern2 = re.search(patterns.santiago, ani)
-        pattern3 = re.search(patterns.pattern_800, dialed_number)
-        pattern4 = re.search(patterns.pattern_4469v2, dialed_number)
+        p1 = re.search(patterns.national, ani)
+        p2 = re.search(patterns.national, final_number)
+        p3 = re.search(patterns.special2, final_number)
+        p4 = re.search(patterns.pattern_112, dialed_number)
 
-        if pattern1 or (pattern2 and not pattern3) or pattern4:
-            return True
-
-        else:
-            return False
-
-    def get_active_entel(self, ani, dialed_number):
-        """Funcion que determina si un registro debe o no ser facturado"""
-        pattern1 = re.search(patterns.pattern_0234469v2, dialed_number)
-        pattern2 = re.search(patterns.pattern_64469, dialed_number)
-        pattern3 = re.search(patterns.pattern_112, dialed_number)
-
-        if pattern1 or (pattern2 and not pattern3):
-            return True
-
-        else:
-            return False
+        return True if p1 and p2 and not p3 and p4 else False
 
     def get_type_incoming(self, ani, final_number):
         """Funcion que determina el tipo de llamada"""
@@ -463,11 +447,9 @@ class Cdr(mongoengine.Document):
 
     def insert_incoming(self, name):
         if name == 'ENTEL':
-            get_active = self.get_active_entel
             incoming = self.incoming_entel.read()
 
         else:
-            get_active = self.get_active_ctc
             incoming = self.incoming_ctc.read()
 
         incoming_file = StringIO.StringIO(incoming)
@@ -481,8 +463,8 @@ class Cdr(mongoengine.Document):
             company = None
 
             if self.valid_ani(row['ANI']):
-                valid = get_active(
-                    row['ANI'], row['DIALED_NUMBER'])
+                valid = self.get_active(
+                    row['ANI'], row['FINAL_NUMBER'], row['DIALED_NUMBER'])
 
             else:
                 observation = 'ani invalido'
@@ -590,42 +572,27 @@ class Cdr(mongoengine.Document):
                 return None
 
     def get_type_outgoing(self, ani, final_number):
-        if re.search(patterns.voip_sti, ani):
-            if re.search(patterns.national, final_number):
-                return 'voip-local'
+        type_call = None
 
-            elif re.search(patterns.movil, final_number):
-                return 'voip-movil'
+        if re.search(patterns.pattern_56446, ani):
+            if re.search(patterns.movil, final_number):
+                type_call = 'voip-movil'
+
+            elif re.search(patterns.national, final_number):
+                type_call = 'voip-local'
+
+        elif re.search(patterns.national, ani):
+            if re.search(patterns.movil, final_number):
+                type_call = 'movil'
+
+            elif (re.search(patterns.national, final_number)
+                    and not re.search(patterns.pattern_56446, final_number)):
+                type_call = 'local'
 
             elif not re.search(patterns.national, final_number):
-                return 'voip-ldi'
+                type_call = 'internacional'
 
-            else:
-                return None
-
-        elif (re.search(patterns.santiago, final_number)
-                and not re.search(patterns.pattern_564469v2, ani)):
-            return 'local'
-
-        elif (re.search(patterns.movil, final_number)
-                and not re.search(patterns.pattern_564469v2, ani)):
-            return 'movil'
-
-        elif (re.search(patterns.national, final_number)
-                and not re.search(patterns.santiago, final_number)
-                and not re.search(patterns.pattern_564469v2, ani)):
-            if re.search(patterns.special, final_number):
-                return 'especial'
-
-            else:
-                return 'nacional'
-
-        elif (not re.search(patterns.national, final_number)
-                and not re.search(patterns.pattern_564469v2, ani)):
-            return 'internacional'
-
-        else:
-            return None
+        return type_call
 
     def get_horario(self, connect_time):
         """
@@ -703,171 +670,90 @@ class Cdr(mongoengine.Document):
 
         return True
 
-    def get_local_traffic(self):
+    def get_ingress_duration_by_type(cdr, company, _type, schedule):
+        return Incoming.objects(
+            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').sum('ingress_duration')
+
+    def get_count_by_type(cdr, company, _type, schedule):
+        return Incoming.objects(
+            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').count()
+
+    def get_outgoing_ingress_duration(cdr, company, _type, schedule):
+        return Outgoing.objects(
+            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').sum('ingress_duration')
+
+    def get_outgoing_count(cdr, company, _type, schedule):
+        return Outgoing.objects(
+            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').count()
+
+    def get_traffic(self, _type):
         items = []
         date = self.get_date()
 
         for c in Company.objects(invoicing='monthly'):
-            for i, s in enumerate(
-                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
-                ingress_duration = Incoming.objects(
-                    cdr=self, company=c, _type='local', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Incoming.objects(
-                    cdr=self, company=c, _type='local', schedule=s,
-                    entity='Empresa').count()
+            for s in map(lambda x: x[0], choices.TIPO_CHOICES):
+                ingress_duration = self.get_ingress_duration_by_type(
+                    self, c, _type, s)
+                count = self.get_count_by_type(self, c, _type, s)
 
                 if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'E', '06', '2', c.code, 'TB', 'CO',
-                        'NOR', '0%s' % i, count, round(ingress_duration))
+                    if _type == 'local':
+                        items.append(
+                            314, date, 'E', '06', '2', c.code, 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
-                ingress_duration = Outgoing.objects(
-                    cdr=self, company=c, _type='local', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Outgoing.objects(
-                    cdr=self, company=c, _type='local', schedule=s,
-                    entity='Empresa').count()
+                    elif _type == 'voip-local':
+                        items.append(
+                            314, date, 'E', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
 
-                if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'S', '06', '2', c.code, 'TB', 'CO',
-                        'NOR', '0%s' % i, count, round(ingress_duration))
+                    elif _type == 'movil':
+                        items.append(
+                            314, date, 'E', c.code, '06', '2', 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
-        return items
+                    elif _type == 'voip-movil':
+                        items.append(
+                            314, date, 'E', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
 
-    def get_voip_local_traffic(self):
-        items = []
-        date = self.get_date()
-
-        for c in Company.objects(invoicing='monthly'):
-            for i, s in enumerate(
-                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
-                ingress_duration = Incoming.objects(
-                    cdr=self, company=c, _type='voip-local', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Incoming.objects(
-                    cdr=self, company=c, _type='voip-local', schedule=s,
-                    entity='Empresa').count()
+                ingress_duration = self.get_outgoing_ingress_duration(
+                    self, c, _type, s)
+                count = self.get_outgoing_count(self, c, _type, s)
 
                 if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'E', c.code, 'CO', 'NOR',
-                        '0%s' % i, count, round(ingress_duration),
-                        round(ingress_duration) * 20)
+                    if _type == 'local':
+                        items.append(
+                            314, date, 'S', '06', '2', c.code, 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
-                ingress_duration = Outgoing.objects(
-                    cdr=self, company=c, _type='voip-local', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Outgoing.objects(
-                    cdr=self, company=c, _type='voip-local', schedule=s,
-                    entity='Empresa').count()
+                    elif _type == 'voip-local':
+                        items.append(
+                            314, date, 'S', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
 
-                if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'S', c.code, 'CO', 'NOR',
-                        '0%s' % i, count, round(ingress_duration),
-                        round(ingress_duration) * 20)
+                    elif _type == 'movil':
+                        items.append(
+                            314, date, 'S', c.code, '06', '2', 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
-        return items
+                    elif _type == 'voip-movil':
+                        items.append(
+                            314, date, 'S', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
 
-    def get_mobile_traffic(self):
-        items = []
-        date = self.get_date()
-
-        for c in Company.objects(invoicing='monthly'):
-            for i, s in enumerate(
-                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
-                ingress_duration = Incoming.objects(
-                    cdr=self, company=c, _type='movil', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Incoming.objects(
-                    cdr=self, company=c, _type='movil', schedule=s,
-                    entity='Empresa').count()
-
-                if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'E', c.code, '06', '2', 'TB', 'CO',
-                        'NOR', '0%s' % i, count, round(ingress_duration))
-
-                ingress_duration = Outgoing.objects(
-                    cdr=self, company=c, _type='movil', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Outgoing.objects(
-                    cdr=self, company=c, _type='movil', schedule=s,
-                    entity='Empresa').count()
-
-                if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'S', c.code, '06', '2', 'TB', 'CO',
-                        'NOR', '0%s' % i, count, round(ingress_duration))
-
-        return items
-
-    def get_voip_mobile_traffic(self):
-        items = []
-        date = self.get_date()
-
-        for c in Company.objects(invoicing='monthly'):
-            for i, s in enumerate(
-                    map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
-                ingress_duration = Incoming.objects(
-                    cdr=self, company=c, _type='voip-movil', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Incoming.objects(
-                    cdr=self, company=c, _type='voip-movil', schedule=s,
-                    entity='Empresa').count()
-
-                if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'E', c.code, 'CO', 'NOR',
-                        '0%s' % i, count, round(ingress_duration),
-                        round(ingress_duration) * 20)
-
-                ingress_duration = Outgoing.objects(
-                    cdr=self, company=c, _type='voip-movil', schedule=s,
-                    entity='Empresa').sum('ingress_duration')
-                count = Outgoing.objects(
-                    cdr=self, company=c, _type='voip-movil', schedule=s,
-                    entity='Empresa').count()
-
-                if ingress_duration > 0 and count > 0:
-                    items.append(
-                        314, date, 'S', c.code, 'CO', 'NOR',
-                        '0%s' % i, count, round(ingress_duration),
-                        round(ingress_duration) * 20)
-
-        return items
-
-    def get_national_traffic(self):
-        items = []
-        date = self.get_date()
-
-        for i, s in enumerate(
-                map(lambda x: x[0], choices.TIPO_CHOICES), start=4):
-            ingress_duration = Outgoing.objects(
-                cdr=self, _type='nacional', schedule=s,
-                entity='Empresa').sum('ingress_duration')
-            count = Outgoing.objects(
-                cdr=self, _type='nacional', schedule=s,
-                entity='Empresa').count()
-
-            if ingress_duration > 0 and count > 0:
-                items.append(
-                    314, date, 'LDN', 'S', 112, '06', 2, 'TB', 'CO', 'NOR',
-                    '0%s' % i, count, round(ingress_duration))
-
-            ingress_duration = Outgoing.objects(
-                cdr=self, _type='internacional', schedule=s,
-                entity='Empresa').sum('ingress_duration')
-            count = Outgoing.objects(
-                cdr=self, _type='internacional', schedule=s,
-                entity='Empresa').count()
-
-            if ingress_duration > 0 and count > 0:
-                items.append(
-                    314, date, 'LDI', 'S', 112, '06', 2, 'TB', 'CO', 'NOR',
-                    '0%s' % i, count, round(ingress_duration))
+                    elif _type == 'internacional':
+                        items.append(
+                            314, date, 'LDI', 'S', 112, '06', 2, 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
         return items
 
@@ -893,7 +779,7 @@ class Incoming(mongoengine.Document):
     entity = mongoengine.StringField()
 
     def __unicode__(self):
-        return unicode(self.connect_time)
+        return str(self.connect_time)
 
 
 class Outgoing(mongoengine.Document):
@@ -916,7 +802,7 @@ class Outgoing(mongoengine.Document):
     entity = mongoengine.StringField()
 
     def __unicode__(self):
-        return unicode(self.connect_time)
+        return str(self.connect_time)
 
 
 class Portability(mongoengine.Document):
@@ -929,7 +815,7 @@ class Portability(mongoengine.Document):
     date = mongoengine.DateTimeField()
 
     def __unicode__(self):
-        return unicode(self.number)
+        return str(self.number)
 
     @mongoengine.queryset_manager
     def create(doc_cls, queryset, reader):
@@ -954,7 +840,7 @@ class Holiday(mongoengine.Document):
     }
 
     def __unicode__(self):
-        return unicode(self.date)
+        return str(self.date)
 
 
 class Invoice(mongoengine.Document):

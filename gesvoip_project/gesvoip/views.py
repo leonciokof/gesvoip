@@ -847,7 +847,7 @@ class LocalTrafficReportView(CSVResponseMixin, generic.TemplateView):
             LocalTrafficReportView, self).get_context_data(**kwargs)
         cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
         title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
-        items = cdr.get_local_traffic()
+        items = cdr.get_traffic('local')
         context.update({'title': title, 'items': items})
 
         return context
@@ -861,8 +861,8 @@ class VoipLocalTrafficReportView(CSVResponseMixin, generic.TemplateView):
         context = super(
             VoipLocalTrafficReportView, self).get_context_data(**kwargs)
         cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
-        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
-        items = cdr.get_voip_local_traffic()
+        title = 'VI_314_%s_TRF_TL.txt' % cdr.get_date()
+        items = cdr.get_traffic('voip-local')
         context.update({'title': title, 'items': items})
 
         return context
@@ -877,8 +877,8 @@ class MobileTrafficReportView(CSVResponseMixin, generic.TemplateView):
         context = super(
             MobileTrafficReportView, self).get_context_data(**kwargs)
         cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
-        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
-        items = cdr.get_mobile_traffic()
+        title = 'TL_314_%s_TRF_TM.txt' % cdr.get_date()
+        items = cdr.get_traffic('movil')
         context.update({'title': title, 'items': items})
 
         return context
@@ -892,8 +892,8 @@ class VoipMobileTrafficReportView(CSVResponseMixin, generic.TemplateView):
         context = super(
             VoipMobileTrafficReportView, self).get_context_data(**kwargs)
         cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
-        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
-        items = cdr.get_voip_mobile_traffic()
+        title = 'VI_314_%s_TRF_TM.txt' % cdr.get_date()
+        items = cdr.get_traffic('voip-movil')
         context.update({'title': title, 'items': items})
 
         return context
@@ -908,8 +908,8 @@ class NationalTrafficReportView(CSVResponseMixin, generic.TemplateView):
         context = super(
             NationalTrafficReportView, self).get_context_data(**kwargs)
         cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
-        title = 'TL_314_%s_TRF_TL.txt' % cdr.get_date()
-        items = cdr.get_national_traffic()
+        title = 'TL_314_%s_TRF_LD.txt' % cdr.get_date()
+        items = cdr.get_traffic('internacional')
         context.update({'title': title, 'items': items})
 
         return context
