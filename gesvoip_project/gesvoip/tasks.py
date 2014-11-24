@@ -36,52 +36,56 @@ def load_portability():
 
 @task()
 def insert_cdr(cdr):
-    # Carga previa de portados
-    load_portability()
+    try:
+        # Carga previa de portados
+        # load_portability()
 
-    for c in choices.COMPANIAS:
-        cdr.insert_incoming(c[0])
+        for c in choices.COMPANIAS:
+            cdr.insert_incoming(c[0])
 
-    for c in models.Company.objects(invoicing='monthly'):
-        i = models.Invoice.objects.get(
-            company=c, cdr=cdr)
+        for c in models.Company.objects(invoicing='monthly'):
+            i = models.Invoice.objects.get(
+                company=c, cdr=cdr)
 
-        for p in models.Period.objects(invoice=i):
-            for r in models.Rate.objects(period=p):
-                r.call_number = models.Incoming.objects(
-                    company=c,
-                    connect_time__gte=p.start.date(),
-                    connect_time__lte=p.end.date(),
-                    schedule=r._type).count()
-                r.call_duration = models.Incoming.objects(
-                    company=c,
-                    connect_time__gte=p.start.date(),
-                    connect_time__lte=p.end.date(),
-                    schedule=r._type).sum('ingress_duration')
-                r.total = r.call_duration * r.price
-                r.save()
+            for p in models.Period.objects(invoice=i):
+                for r in models.Rate.objects(period=p):
+                    r.call_number = models.Incoming.objects(
+                        company=c,
+                        connect_time__gte=p.start.date(),
+                        connect_time__lte=p.end.date(),
+                        schedule=r._type).count()
+                    r.call_duration = models.Incoming.objects(
+                        company=c,
+                        connect_time__gte=p.start.date(),
+                        connect_time__lte=p.end.date(),
+                        schedule=r._type).sum('ingress_duration')
+                    r.total = r.call_duration * r.price
+                    r.save()
 
-            p.call_number = models.Rate.objects(
-                period=p).sum('call_number')
-            p.call_duration = models.Rate.objects(
-                period=p).sum('call_duration')
-            p.total = models.Rate.objects(period=p).sum('total')
-            p.save()
+                p.call_number = models.Rate.objects(
+                    period=p).sum('call_number')
+                p.call_duration = models.Rate.objects(
+                    period=p).sum('call_duration')
+                p.total = models.Rate.objects(period=p).sum('total')
+                p.save()
 
-        i.call_number = models.Period.objects(
-            invoice=i).sum('call_number')
-        i.call_duration = models.Period.objects(
-            invoice=i).sum('call_duration')
-        i.total = models.Period.objects(invoice=i).sum('total')
-        i.invoiced = True
-        i.save()
+            i.call_number = models.Period.objects(
+                invoice=i).sum('call_number')
+            i.call_duration = models.Period.objects(
+                invoice=i).sum('call_duration')
+            i.total = models.Period.objects(invoice=i).sum('total')
+            i.invoiced = True
+            i.save()
 
-    cdr.insert_outgoing()
-    send_email(
-        ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-        'Proceso finalizado',
-        'gesvoip_success',
-        {})
+        cdr.insert_outgoing()
+        send_email(
+            ['Leonardo Gatica <lgaticastyle@gmail.com>'],
+            'Proceso finalizado',
+            'gesvoip_success',
+            {})
+
+    except Exception:
+        client.captureException()
 
 
 def send_email(to, subject, template_name, global_merge_vars):
