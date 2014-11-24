@@ -563,7 +563,7 @@ class Cdr(mongoengine.Document):
 
         else:
             kwargs = self.get_zone_range(ani)
-            n = Numeration.objects(kwargs).first()
+            n = Numeration.objects(**kwargs).first()
 
             if n is not None:
                 return n.company
