@@ -832,6 +832,7 @@ class Portability(mongoengine.Document):
                     'company': Company.objects.filter(
                         idoidd=int(obj['company'])).first()})
 
+            queryset.delete()
             queryset.insert(map(cb, reader))
 
 
