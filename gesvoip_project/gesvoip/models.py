@@ -824,13 +824,18 @@ class Portability(mongoengine.Document):
             reader = csv.DictReader(f, delimiter=';')
             reader.fieldnames = 'date', 'number', 'type', 'company'
 
+            companias = {}
+
+            for c in Company.objects.all():
+                for i in c.idoidd:
+                    companias.update({i: c})
+
             def cb(obj):
                 return doc_cls(**{
                     'number': obj['number'],
                     '_type': obj['type'],
                     'date': dt.datetime.strptime(obj['date'], '%Y%m%d'),
-                    'company': Company.objects.filter(
-                        idoidd=int(obj['company'])).first()})
+                    'company': companias.get(int(obj['company']))})
 
             queryset.delete()
             queryset.insert(map(cb, reader))
