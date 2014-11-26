@@ -818,14 +818,21 @@ class Portability(mongoengine.Document):
         return str(self.number)
 
     @mongoengine.queryset_manager
-    def create(doc_cls, queryset, reader):
-        for row in reader:
-            date = dt.datetime.strptime(row['date'], '%Y%m%d')
-            company = Company.objects.filter(
-                idoidd=int(row['company'])).first()
-            queryset.get_or_create(
-                date=date, number=row['number'], _type=row['type'],
-                company=company)
+    def create(doc_cls, queryset, filename):
+        with open(filename, 'r') as f:
+            f.next()
+            reader = csv.DictReader(f, delimiter=';')
+            reader.fieldnames = 'date', 'number', 'type', 'company'
+
+            def cb(obj):
+                return doc_cls(**{
+                    'number': obj['number'],
+                    '_type': obj['type'],
+                    'date': dt.datetime.strptime(obj['date'], '%Y%m%d'),
+                    'company': Company.objects.filter(
+                        idoidd=int(obj['company'])).first()})
+
+            queryset.insert(map(cb, reader))
 
 
 class Holiday(mongoengine.Document):
@@ -914,7 +921,7 @@ class Rate(mongoengine.Document):
         return self._type
 
     def get_type(self):
-        return self.get__type_display()
+        return self._type
 
     def get_total(self):
         return int(round(self.total)) if self.total else 0

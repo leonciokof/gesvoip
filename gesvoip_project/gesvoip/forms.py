@@ -39,14 +39,14 @@ class RateForm(forms.Form):
         queryset=models.Company.objects.all(),
         widget=forms.Select(
             attrs={'required': 'required', 'class': 'select2'}))
-    year = forms.ChoiceField(
-        label='Seleccionar año',
-        choices=choices.YEARS,
-        widget=forms.Select(attrs={'required': 'required'}))
-    month = forms.ChoiceField(
-        label='Seleccionar mes',
-        choices=choices.MONTHS,
-        widget=forms.Select(attrs={'required': 'required'}))
+    start = forms.CharField(
+        label='Fecha inicio',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+    end = forms.CharField(
+        label='Fecha fin',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
     normal_price = forms.FloatField(
         label='Valor horario normal ($/seg)',
         widget=NumberTextInput(attrs={

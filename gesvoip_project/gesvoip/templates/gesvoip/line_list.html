@@ -63,7 +63,7 @@
                           <td>{{ obj.get_city_display|default:"" }}</td>
                           <td>{{ obj.comments|default:"" }}</td>
                           <td>{{ obj.company }}</td>
-                          <td>{{ obj.rut }}</td>
+                          <td>{{ obj.rut|default:"---" }}</td>
                           <td>{{ obj.get_service_display }}</td>
                           <td>{{ obj.get_mode_display }}</td>
                           <td>{{ obj.due }}</td>

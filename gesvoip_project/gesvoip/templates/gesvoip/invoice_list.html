@@ -40,7 +40,7 @@
                           <td>{{ obj.company }}</td>
                           <td>{{ obj.call_number|intcomma }}</td>
                           <td>{{ obj.call_duration|intcomma }}</td>
-                          <td>{{ obj.get_total|intcomma }}</td>
+                          <td>$ {{ obj.get_total|intcomma }}</td>
                           <td><a href="{% url 'gesvoip:invoice_datail' obj.pk %}" class="btn btn-xs btn-default">Resumen</a></td>
                           <td><a href="{% url 'gesvoip:incoming_valid_list' obj.pk %}" class="btn btn-xs btn-default">Llamadas</a></td>
                         </tr>

@@ -43,7 +43,7 @@
                           <td>{{ obj.name }}</td>
                           <td>{{ obj.idoidd|default:"---" }}</td>
                           <td>{{ obj.code|default:"---" }}</td>
-                          <td>{{ obj.get_invoicing_display }}</td>
+                          <td>{{ obj.get_invoicing_display|default:"---" }}</td>
                           <td>
                             <a href="{% url 'gesvoip:company_update' obj.pk %}" class="btn btn-xs">
                               <span class="glyphicon glyphicon-pencil"></span>

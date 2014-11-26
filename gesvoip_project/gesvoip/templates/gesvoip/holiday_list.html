@@ -38,7 +38,7 @@
                         {% for obj in object_list %}
                         <tr>
                           <td>{{ obj }}</td>
-                          <td>{{ obj.reason }}</td>
+                          <td>{{ obj.reason|default:"---" }}</td>
                           <td>
                             <a href="{% url 'gesvoip:holiday_update' obj.pk %}" class="btn btn-xs">
                               <span class="glyphicon glyphicon-pencil"></span>

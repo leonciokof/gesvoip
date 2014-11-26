@@ -34,7 +34,7 @@
                       <tbody>
                         {% for rate in period.get_rates %}
                         <tr>
-                          <th>{{ rate.get__type_display }}</th>
+                          <th>{{ rate.get_type }}</th>
                           <td>{{ rate.call_number|intcomma }}</td>
                           <td>{{ rate.call_duration|intcomma }}</td>
                           <td>{{ rate.get_total|intcomma }}</td>

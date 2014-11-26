@@ -45,20 +45,16 @@ class NewRateView(generic.FormView):
 
     def form_valid(self, form):
         company = form.cleaned_data.get('company')
-        year = form.cleaned_data.get('year')
-        month = form.cleaned_data.get('month')
         normal_price = form.cleaned_data.get('normal_price')
         reduced_price = form.cleaned_data.get('reduced_price')
         nightly_price = form.cleaned_data.get('nightly_price')
         start = form.cleaned_data.get('start')
         end = form.cleaned_data.get('end')
+        year = start[:4]
+        month = start[5:][:2]
         cdr = models.Cdr.objects(month=month, year=year).first()
-        i = models.Invoice.objects(
-            company=company, cdr=cdr).first()
-
-        if i is None:
-            i = models.Invoice(company=company, cdr=cdr).save()
-
+        i, created = models.Invoice.objects.get_or_create(
+            company=company, cdr=cdr)
         p = models.Period(invoice=i, start=start, end=end).save()
         models.Rate(period=p, _type='normal', price=normal_price).save()
         models.Rate(period=p, _type='reducido', price=reduced_price).save()
@@ -89,7 +85,7 @@ new_cdr = login_required(NewCdrView.as_view())
 class IncomingListView(ListView):
 
     document = models.Incoming
-    paginate_by = 10
+    paginate_by = 25
 
 incoming_list = login_required(IncomingListView.as_view())
 
@@ -97,7 +93,7 @@ incoming_list = login_required(IncomingListView.as_view())
 class IncomingByCdrView(ListView):
 
     document = models.Incoming
-    paginate_by = 10
+    paginate_by = 25
 
     def get_queryset(self):
         queryset = super(IncomingByCdrView, self).get_queryset()
@@ -110,7 +106,7 @@ incoming_by_cdr = login_required(IncomingByCdrView.as_view())
 class OutgoingByCdrView(ListView):
 
     document = models.Outgoing
-    paginate_by = 10
+    paginate_by = 25
 
     def get_queryset(self):
         queryset = super(OutgoingByCdrView, self).get_queryset()
@@ -123,7 +119,7 @@ outgoing_by_cdr = login_required(OutgoingByCdrView.as_view())
 class InvoiceListView(ListView):
 
     document = models.Invoice
-    paginate_by = 10
+    paginate_by = 25
     queryset = models.Invoice.objects.all().order_by('-year', '-month')
 
 invoice_list = login_required(InvoiceListView.as_view())
@@ -132,7 +128,7 @@ invoice_list = login_required(InvoiceListView.as_view())
 class CompanyListView(ListView):
 
     document = models.Company
-    paginate_by = 10
+    paginate_by = 25
 
 company_list = login_required(CompanyListView.as_view())
 
@@ -545,7 +541,7 @@ company_create = login_required(CompanyCreateView.as_view())
 class HolidayListView(ListView):
 
     document = models.Holiday
-    paginate_by = 10
+    paginate_by = 25
 
 holiday_list = login_required(HolidayListView.as_view())
 
@@ -597,7 +593,7 @@ holiday_update = login_required(HolidayUpdateView.as_view())
 class NumerationListView(ListView):
 
     document = models.Numeration
-    paginate_by = 10
+    paginate_by = 25
 
     def get_queryset(self):
         queryset = super(NumerationListView, self).get_queryset()
@@ -610,13 +606,13 @@ numeration_list = login_required(NumerationListView.as_view())
 class IncomingValidListView(ListView):
 
     document = models.Incoming
-    paginate_by = 10
+    paginate_by = 25
 
     def get_queryset(self):
         queryset = super(IncomingValidListView, self).get_queryset()
         invoice = models.Invoice.objects.get(pk=self.kwargs.get('pk'))
-        cdr = models.Cdr.objects.get(year=invoice.year, month=invoice.month)
-        return queryset.filter(cdr=cdr, company=invoice.company, invoiced=True)
+        return queryset.filter(
+            cdr=invoice.cdr, company=invoice.company, invoiced=True)
 
 incoming_valid_list = login_required(IncomingValidListView.as_view())
 
@@ -624,7 +620,7 @@ incoming_valid_list = login_required(IncomingValidListView.as_view())
 class LineListView(ListView):
 
     document = models.Line
-    paginate_by = 10
+    paginate_by = 25
 
     def get_context_data(self, **kwargs):
         context = super(LineListView, self).get_context_data(**kwargs)
@@ -706,7 +702,7 @@ line_range = login_required(LineRangeView.as_view())
 class LocalCenterListView(ListView):
 
     document = models.LocalCenter
-    paginate_by = 10
+    paginate_by = 25
 
 localcenter_list = login_required(LocalCenterListView.as_view())
 
@@ -780,7 +776,7 @@ line_subscriber_report = login_required(LineSubscriberReportView.as_view())
 class CcaaListView(ListView):
 
     document = models.Ccaa
-    paginate_by = 10
+    paginate_by = 25
 
     def get_context_data(self, **kwargs):
         context = super(CcaaListView, self).get_context_data(**kwargs)
@@ -834,7 +830,7 @@ ccaa_report = login_required(CcaaReportView.as_view())
 class CdrListView(ListView):
 
     document = models.Cdr
-    paginate_by = 10
+    paginate_by = 25
     queryset = models.Cdr.objects.all().order_by('-year', '-month')
 
 cdr_list = login_required(CdrListView.as_view())

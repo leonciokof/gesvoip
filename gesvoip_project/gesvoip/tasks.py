@@ -18,20 +18,25 @@ dsn = settings.RAVEN_CONFIG['dsn'] if not settings.DEBUG else ''
 client = Client(dsn)
 
 
+@task()
 def load_portability():
-    with pysftp.Connection(
-            settings.TEP_HOST, username=settings.TEP_USERNAME,
-            password=settings.TEP_PASSWORD) as sftp:
-        today = dt.date.today().strftime('%Y%m%d')
-        tep_file = 'Dailyfiles/TEP_%s.txt' % today
-        destination = '/tmp/TEP_%s.txt' % today
-        sftp.get(tep_file, destination)
+    try:
+        with pysftp.Connection(
+                settings.TEP_HOST, username=settings.TEP_USERNAME,
+                password=settings.TEP_PASSWORD) as sftp:
+            today = dt.date.today().strftime('%Y%m%d')
+            tep_file = 'Dailyfiles/TEP_%s.txt' % today
+            destination = '/tmp/TEP_%s.txt' % today
+            sftp.get(tep_file, destination)
+            models.Portability.create(destination)
+            send_email(
+                ['Leonardo Gatica <lgaticastyle@gmail.com>'],
+                'Proceso finalizado',
+                'gesvoip_success',
+                {})
 
-        with open(destination, 'rb') as f:
-            f.next()
-            reader = csv.DictReader(f, delimiter=';')
-            reader.fieldnames = 'date', 'number', 'type', 'company'
-            models.Portability.create(reader)
+    except Exception:
+        client.captureException()
 
 
 @task()
