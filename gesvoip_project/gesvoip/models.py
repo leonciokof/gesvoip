@@ -8,7 +8,10 @@ except:
 import datetime as dt
 import re
 
+from django.conf import settings
+
 from nptime import nptime
+from pymongo import MongoClient
 import mongoengine
 
 from . import choices, patterns
@@ -454,6 +457,32 @@ class Cdr(mongoengine.Document):
 
         incoming_file = StringIO.StringIO(incoming)
         incoming_dict = csv.DictReader(incoming_file, delimiter=',')
+
+        def reader_to_incomming(reader):
+            for r in reader:
+                yield {
+                    'connect_time': dt.datetime.strptime(
+                        r['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S'),
+                    'ani': r['ANI'],
+                    'ani_number': r['ANI_NUMBER'],
+                    'ingress_duration': int(r['INGRESS_DURATION']),
+                    'dialed_number': r['DIALED_NUMBER'],
+                    'final_number': r['FINAL_NUMBER'],
+                    'cdr': self.pk}
+
+        db = MongoClient(settings.MONGODB_URI).gesvoip
+        db.incoming.insert(reader_to_incomming(incoming_dict))
+
+    def process_incomming(self):
+        # Incoming.objects(cdr=self).where('this.ani.length == 11').update(
+        #     set__valid=True)
+
+        Incoming.objects(
+            cdr=self,
+            ani__startswith='56',
+            final_number__startswith='56',
+            final_number__not__startswith=patterns.special2,
+            dialed_number__startswith='112').update(set__valid=True)
 
         for row in incoming_dict:
             observation = None
