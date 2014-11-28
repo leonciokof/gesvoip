@@ -813,6 +813,7 @@ class Portability(mongoengine.Document):
     company = mongoengine.ReferenceField(Company)
     _type = mongoengine.IntField()
     date = mongoengine.DateTimeField()
+    ido = mongoengine.IntField()
 
     def __unicode__(self):
         return str(self.number)
