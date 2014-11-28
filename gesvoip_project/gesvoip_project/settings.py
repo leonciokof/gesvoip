@@ -19,7 +19,8 @@ import djcelery
 
 djcelery.setup_loader()
 
-connect('gesvoip', host=env('MONGODB_URI', 'mongodb://127.0.0.1/gesvoip'))
+MONGODB_URI = env('MONGODB_URI', 'mongodb://127.0.0.1/gesvoip')
+connect('gesvoip', host=MONGODB_URI)
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 

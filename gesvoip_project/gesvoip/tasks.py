@@ -9,6 +9,7 @@ import datetime as dt
 from django.conf import settings
 from django.core.mail import EmailMessage
 
+from pymongo import MongoClient
 from raven import Client
 import pysftp
 
@@ -28,12 +29,28 @@ def load_portability():
             tep_file = 'Dailyfiles/TEP_%s.txt' % today
             destination = '/tmp/TEP_%s.txt' % today
             sftp.get(tep_file, destination)
-            models.Portability.create(destination)
-            send_email(
-                ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-                'Proceso finalizado',
-                'gesvoip_success',
-                {})
+            
+            with open(destination, 'r') as f:
+                f.next()
+                reader = csv.DictReader(f, delimiter=';')
+                reader.fieldnames = 'date', 'number', '_type', 'ido'
+
+                def reader_to_portability(reader):
+                    for r in reader:
+                        yield {
+                            'date': dt.datetime.strptime(r['date'], '%Y%m%d'),
+                            'number': r['number'],
+                            '_type': r['type'],
+                            'ido': int(r['ido'])}
+
+                db = MongoClient(settings.MONGODB_URI).gesvoip
+                db.portability.drop()
+                db.portability.insert(reader_to_portability(reader))
+                send_email(
+                    ['Leonardo Gatica <lgaticastyle@gmail.com>'],
+                    'Proceso finalizado',
+                    'gesvoip_success',
+                    {})
 
     except Exception:
         client.captureException()

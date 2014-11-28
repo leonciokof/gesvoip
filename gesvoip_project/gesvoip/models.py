@@ -817,29 +817,6 @@ class Portability(mongoengine.Document):
     def __unicode__(self):
         return str(self.number)
 
-    @mongoengine.queryset_manager
-    def create(doc_cls, queryset, filename):
-        with open(filename, 'r') as f:
-            f.next()
-            reader = csv.DictReader(f, delimiter=';')
-            reader.fieldnames = 'date', 'number', 'type', 'company'
-
-            companias = {}
-
-            for c in Company.objects.all():
-                for i in c.idoidd:
-                    companias.update({i: c})
-
-            def cb(obj):
-                return doc_cls(**{
-                    'number': obj['number'],
-                    '_type': obj['type'],
-                    'date': dt.datetime.strptime(obj['date'], '%Y%m%d'),
-                    'company': companias.get(int(obj['company']))})
-
-            queryset.delete()
-            queryset.insert(map(cb, reader))
-
 
 class Holiday(mongoengine.Document):
 
