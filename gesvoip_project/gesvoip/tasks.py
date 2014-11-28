@@ -46,6 +46,10 @@ def load_portability():
                 db = MongoClient(settings.MONGODB_URI).gesvoip
                 db.portability.drop()
                 db.portability.insert(reader_to_portability(reader))
+
+                for c in models.Company.objects.all():
+                    models.Portability(ido__in=c.idoidd).update(set__company=c)
+
                 send_email(
                     ['Leonardo Gatica <lgaticastyle@gmail.com>'],
                     'Proceso finalizado',
