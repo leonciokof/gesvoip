@@ -40,7 +40,7 @@ def load_portability():
                         yield {
                             'date': dt.datetime.strptime(r['date'], '%Y%m%d'),
                             'number': r['number'],
-                            '_type': r['type'],
+                            '_type': r['_type'],
                             'ido': int(r['ido'])}
 
                 db = MongoClient(settings.MONGODB_URI).gesvoip
