@@ -865,6 +865,7 @@ class Portability(mongoengine.Document):
                     '_type': int(r['tipo'])}
 
         db = MongoClient(settings.MONGODB_URI).gesvoip
+        db.portability.remove()
         db.portability.insert(reader_to_portability(numbers))
 
         for c in Company.objects.all():
