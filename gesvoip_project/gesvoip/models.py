@@ -859,7 +859,7 @@ class Portability(mongoengine.Document):
             for r in reader:
                 yield {
                     'date': dt.datetime.strptime(
-                        r['fecha'], '%Y-%m-%d'),
+                        r['fecha'], '%Y%m%d'),
                     'number': r['numero'],
                     'ido': int(r['ido']),
                     '_type': int(r['tipo'])}
