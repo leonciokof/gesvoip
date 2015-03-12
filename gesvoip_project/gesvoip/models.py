@@ -167,7 +167,7 @@ class Cdr(mongoengine.Document):
         return self.year + self.month
 
     def valid_ani(self, ani):
-        if len(ani) == 11:
+        if len(ani) == 11 and re.search(patterns.valid_ani, ani):
             return True
 
         else:
@@ -180,7 +180,7 @@ class Cdr(mongoengine.Document):
         p3 = re.search(patterns.special2, final_number)
         p4 = re.search(patterns.pattern_112, dialed_number)
 
-        return True if p1 and p2 and not p3 and p4 else False
+        return True if p1 and p2 and not p3 and not p4 else False
 
     def get_type_incoming(self, ani, final_number):
         """Funcion que determina el tipo de llamada"""
@@ -570,9 +570,13 @@ class Cdr(mongoengine.Document):
             zone = ani[2:][:1]
             _range = ani[3:][:4]
 
-        elif re.search(patterns.province, ani):
+        elif re.search(patterns.pattern_92, ani):
             zone = ani[2:][:2]
             _range = ani[4:][:4]
+
+        elif re.search(patterns.province, ani):
+            zone = ani[2:][:2]
+            _range = ani[4:][:3]
 
         elif re.search(patterns.santiago, ani):
             zone = ani[2:][:1]
