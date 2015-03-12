@@ -236,3 +236,8 @@ class CcaaForm(DocumentForm):
         widgets = {
             'company': forms.Select(attrs={'class': 'select2'}),
         }
+
+
+class PortabilityForm(forms.Form):
+
+    file_portability = forms.FileField(label='Archivo (CSV)')

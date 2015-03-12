@@ -932,3 +932,20 @@ class DeleteCdrView(DeleteView):
     success_url = reverse_lazy('gesvoip:cdr_list')
 
 cdr_delete = login_required(DeleteCdrView.as_view())
+
+
+class PortabilityView(generic.FormView):
+
+    """ Vista de portability """
+
+    form_class = forms.PortabilityForm
+    success_url = reverse_lazy('gesvoip:portability')
+    template_name = 'gesvoip/portability.html'
+
+    def form_valid(self, form):
+        file_portability = form.cleaned_data.get('file_portability')
+        models.Portability.upload(file_portability)
+
+        return super(PortabilityView, self).form_valid(form)
+
+portability = login_required(PortabilityView.as_view())

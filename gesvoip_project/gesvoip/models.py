@@ -851,6 +851,25 @@ class Portability(mongoengine.Document):
     def __unicode__(self):
         return str(self.number)
 
+    @classmethod
+    def upload(cls, filename):
+        numbers = csv.DictReader(filename, delimiter=',')
+
+        def reader_to_portability(reader):
+            for r in reader:
+                yield {
+                    'date': dt.datetime.strptime(
+                        r['fecha'], '%Y-%m-%d'),
+                    'number': r['numero'],
+                    'ido': int(r['ido']),
+                    '_type': int(r['tipo'])}
+
+        db = MongoClient(settings.MONGODB_URI).gesvoip
+        db.portability.insert(reader_to_portability(numbers))
+
+        for c in Company.objects.all():
+            cls.objects.filter(ido__in=c.idoidd).update(set__company=c)
+
 
 class Holiday(mongoengine.Document):
 
