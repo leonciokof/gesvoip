@@ -58,6 +58,20 @@ class Numeration(mongoengine.Document):
     def get_range(self):
         return self._range
 
+    @classmethod
+    def upload(cls, filename):
+        numbers = csv.DictReader(filename, delimiter=',')
+
+        def reader_to_portability(reader):
+            for r in reader:
+                c = Company.objects.filter(
+                    idoidd__in=[int(r['ido'])]).first()
+                yield cls(
+                    zone=int(r['zona']), _range=int(r['rango']), company=c)
+
+        cls.objects.delete()
+        cls.insert(reader_to_portability(numbers), load_bulk=False)
+
 
 class Commune(mongoengine.Document):
 

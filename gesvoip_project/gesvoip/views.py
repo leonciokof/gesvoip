@@ -934,18 +934,35 @@ class DeleteCdrView(DeleteView):
 cdr_delete = login_required(DeleteCdrView.as_view())
 
 
-class PortabilityView(generic.FormView):
+class PortabilityUploadView(generic.FormView):
 
     """ Vista de portability """
 
-    form_class = forms.PortabilityForm
-    success_url = reverse_lazy('gesvoip:portability')
-    template_name = 'gesvoip/portability.html'
+    form_class = forms.PortabilityUploadForm
+    success_url = reverse_lazy('gesvoip:portability_upload')
+    template_name = 'gesvoip/portability_upload.html'
 
     def form_valid(self, form):
         file_portability = form.cleaned_data.get('file_portability')
         models.Portability.upload(file_portability)
 
-        return super(PortabilityView, self).form_valid(form)
+        return super(PortabilityUploadView, self).form_valid(form)
 
-portability = login_required(PortabilityView.as_view())
+portability_upload = login_required(PortabilityUploadView.as_view())
+
+
+class NumerationUploadView(generic.FormView):
+
+    """ Vista de carga de numeracion """
+
+    form_class = forms.NumerationUploadForm
+    success_url = reverse_lazy('gesvoip:numeration_upload')
+    template_name = 'gesvoip/numeration_upload.html'
+
+    def form_valid(self, form):
+        file_numeration = form.cleaned_data.get('file_numeration')
+        models.Numeration.upload(file_numeration)
+
+        return super(NumerationUploadView, self).form_valid(form)
+
+numeration_upload = login_required(NumerationUploadView.as_view())

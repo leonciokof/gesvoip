@@ -58,5 +58,6 @@ urlpatterns = patterns(
     url(r'outgoing_by_cdr/(?P<cdr>\w+)/$',
         'outgoing_by_cdr', name='outgoing_by_cdr'),
     url(r'^cdr_delete/(?P<pk>\w+)/$', 'cdr_delete', name='cdr_delete'),
-    url(r'^portability/$', 'portability', name='portability'),
+    url(r'^portability_upload/$', 'portability_upload', name='portability_upload'),
+    url(r'^numeration_upload/$', 'numeration_upload', name='numeration_upload'),
 )

@@ -238,6 +238,11 @@ class CcaaForm(DocumentForm):
         }
 
 
-class PortabilityForm(forms.Form):
+class PortabilityUploadForm(forms.Form):
 
     file_portability = forms.FileField(label='Archivo (CSV)')
+
+
+class NumerationUploadForm(forms.Form):
+
+    file_numeration = forms.FileField(label='Archivo (CSV)')
