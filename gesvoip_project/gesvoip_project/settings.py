@@ -16,6 +16,7 @@ from getenv import env
 from logentries import LogentriesHandler
 from mongoengine import connect
 import djcelery
+import logging
 
 djcelery.setup_loader()
 
@@ -151,6 +152,7 @@ BROKER_TRANSPORT = 'redis'
 CELERYBEAT_SCHEDULER = 'celerybeatredis.schedulers.RedisScheduler'
 CELERY_REDIS_SCHEDULER_URL = BROKER_URL
 CELERY_REDIS_SCHEDULER_KEY_PREFIX = 'tasks:meta:'
+CELERY_TASK_SERIALIZER = 'json'
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
