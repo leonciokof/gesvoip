@@ -65,6 +65,11 @@ def insert_cdr(cdr, incomings, outgoing):
     try:
         for incoming in incomings:
             cdr.insert_incoming(incoming)
+            send_email(
+                ['Leonardo Gatica <lgaticastyle@gmail.com>'],
+                'Incoming finalizado',
+                'gesvoip_success',
+                {})
 
         for c in models.Company.objects(invoicing='monthly'):
             i = models.Invoice.objects.get(
@@ -99,11 +104,16 @@ def insert_cdr(cdr, incomings, outgoing):
             i.total = models.Period.objects(invoice=i).sum('total')
             i.invoiced = True
             i.save()
+            send_email(
+                ['Leonardo Gatica <lgaticastyle@gmail.com>'],
+                'Invoice %s finalizada' % c.name,
+                'gesvoip_success',
+                {})
 
         cdr.insert_outgoing(outgoing)
         send_email(
             ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-            'Proceso finalizado',
+            'Outgoing finalizado',
             'gesvoip_success',
             {})
 
