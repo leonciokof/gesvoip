@@ -52,7 +52,7 @@ class NewRateView(generic.FormView):
         end = form.cleaned_data.get('end')
         year = start[:4]
         month = start[5:][:2]
-        cdr = models.Cdr.objects(month=month, year=year).first()
+        cdr, created = models.Cdr.objects.get_or_create(month=month, year=year)
         i, created = models.Invoice.objects.get_or_create(
             company=company, cdr=cdr)
         p = models.Period(invoice=i, start=start, end=end).save()
@@ -65,7 +65,7 @@ class NewRateView(generic.FormView):
 new_rate = login_required(NewRateView.as_view())
 
 
-class NewCdrView(CreateView):
+class NewCdrView(generic.FormView):
 
     """ Vista de new_cdr """
 
@@ -75,7 +75,13 @@ class NewCdrView(CreateView):
     document = models.Cdr
 
     def form_valid(self, form):
-        tasks.insert_cdr.delay(form.instance)
+        year = form.cleaned_data.get('year')
+        month = form.cleaned_data.get('month')
+        entel = form.cleaned_data.get('entel_file')
+        ctc = form.cleaned_data.get('ctc_file')
+        sti = form.cleaned_data.get('sti_file')
+        cdr, created = models.Cdr.objects.get_or_create(month=month, year=year)
+        tasks.insert_cdr.delay(cdr, [entel, ctc], sti)
 
         return super(NewCdrView, self).form_valid(form)
 

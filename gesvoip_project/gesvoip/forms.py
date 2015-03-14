@@ -18,12 +18,23 @@ class NumberTextInput(forms.widgets.TextInput):
     input_type = 'number'
 
 
-class CdrForm(DocumentForm):
+class CdrForm(forms.Form):
 
-    class Meta:
-        document = models.Cdr
-        fields = (
-            'year', 'month', 'incoming_ctc', 'incoming_entel', 'outgoing')
+    MONTHS = list(choices.MONTHS)
+    MONTHS.insert(0, ('', '---------'))
+    YEARS = choices.YEARS
+    YEARS.insert(0, ('', '---------'))
+    month = forms.ChoiceField(
+        label='Mes',
+        choices=MONTHS,
+        widget=forms.Select())
+    year = forms.ChoiceField(
+        label='Año',
+        choices=YEARS,
+        widget=forms.Select())
+    entel_file = forms.FileField(label='Archivo ENTEL (CSV)')
+    ctc_file = forms.FileField(label='Archivo CTC (CSV)')
+    sti_file = forms.FileField(label='Archivo STI (CSV)')
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()

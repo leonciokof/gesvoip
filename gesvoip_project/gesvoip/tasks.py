@@ -29,7 +29,7 @@ def load_portability():
             tep_file = 'Dailyfiles/TEP_%s.txt' % today
             destination = '/tmp/TEP_%s.txt' % today
             sftp.get(tep_file, destination)
-            
+
             with open(destination, 'r') as f:
                 f.next()
                 reader = csv.DictReader(f, delimiter=';')
@@ -61,13 +61,10 @@ def load_portability():
 
 
 @task()
-def insert_cdr(cdr):
+def insert_cdr(cdr, incomings, outgoing):
     try:
-        # Carga previa de portados
-        # load_portability()
-
-        for c in choices.COMPANIAS:
-            cdr.insert_incoming(c[0])
+        for incoming in incomings:
+            cdr.insert_incoming(incoming)
 
         for c in models.Company.objects(invoicing='monthly'):
             i = models.Invoice.objects.get(

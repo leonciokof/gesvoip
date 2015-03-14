@@ -12,6 +12,7 @@ from django.conf import settings
 
 from nptime import nptime
 from pymongo import MongoClient
+import arrow
 import mongoengine
 
 from . import choices, patterns
@@ -168,9 +169,6 @@ class Cdr(mongoengine.Document):
     month = mongoengine.StringField(
         max_length=2, choices=choices.MONTHS, verbose_name='mes',
         required=True)
-    incoming_ctc = mongoengine.FileField(verbose_name='CTC', required=True)
-    incoming_entel = mongoengine.FileField(verbose_name='ENTEL', required=True)
-    outgoing = mongoengine.FileField(verbose_name='STI', required=True)
     processed = mongoengine.BooleanField(default=False)
 
     def __unicode__(self):
@@ -180,21 +178,16 @@ class Cdr(mongoengine.Document):
         """Retorna la fecha para traficos."""
         return self.year + self.month
 
-    def valid_ani(self, ani):
-        if len(ani) == 11 and re.search(patterns.valid_ani, ani):
-            return True
-
-        else:
-            return False
-
-    def get_active(self, ani, final_number, dialed_number):
+    def get_valid(self, ani, final_number, dialed_number, ingress_duration):
         """Funcion que determina si un registro debe o no ser facturado"""
         p1 = re.search(patterns.national, ani)
         p2 = re.search(patterns.national, final_number)
         p3 = re.search(patterns.special2, final_number)
         p4 = re.search(patterns.pattern_112, dialed_number)
+        p5 = len(ani) == 11 and re.search(patterns.valid_ani, ani)
+        p6 = ingress_duration > 0
 
-        return True if p1 and p2 and not p3 and not p4 else False
+        return True if p1 and p2 and not p3 and not p4 and p5 and p6 else False
 
     def get_type_incoming(self, ani, final_number):
         """Funcion que determina el tipo de llamada"""
@@ -462,122 +455,84 @@ class Cdr(mongoengine.Document):
 
         return None if l is None else l.entity
 
-    def insert_incoming(self, name):
-        if name == 'ENTEL':
-            incoming = self.incoming_entel.read()
-
-        else:
-            incoming = self.incoming_ctc.read()
-
-        incoming_file = StringIO.StringIO(incoming)
+    def insert_incoming(self, incoming_file):
         incoming_dict = csv.DictReader(incoming_file, delimiter=',')
 
         def reader_to_incomming(reader):
             for r in reader:
-                yield {
-                    'connect_time': dt.datetime.strptime(
-                        r['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S'),
-                    'ani': r['ANI'],
-                    'ani_number': r['ANI_NUMBER'],
-                    'ingress_duration': int(r['INGRESS_DURATION']),
-                    'dialed_number': r['DIALED_NUMBER'],
-                    'final_number': r['FINAL_NUMBER'],
-                    'cdr': self.pk}
+                observation = None
+                entity = None
+                company = None
+                _type = None
+                connect_time = arrow.get(
+                    r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                ingress_duration = int(r['INGRESS_DURATION'])
+                valid = self.get_valid(
+                    r['ANI'], r['FINAL_NUMBER'], r['DIALED_NUMBER'],
+                    r['INGRESS_DURATION'])
 
-        db = MongoClient(settings.MONGODB_URI).gesvoip
-        db.incoming.insert(reader_to_incomming(incoming_dict))
+                if valid:
+                    company = self.get_company(r['ANI'])
 
-    def process_incomming(self):
-        # Incoming.objects(cdr=self).where('this.ani.length == 11').update(
-        #     set__valid=True)
+                    if company is None:
+                        valid = False
+                        observation = 'ani sin numeracion'
 
-        Incoming.objects(
-            cdr=self,
-            ani__startswith='56',
-            final_number__startswith='56',
-            final_number__not__startswith=patterns.special2,
-            dialed_number__startswith='112').update(set__valid=True)
-
-        for row in incoming_dict:
-            observation = None
-            valid = False
-            tipo = None
-            entity = None
-            company = None
-
-            if self.valid_ani(row['ANI']):
-                valid = self.get_active(
-                    row['ANI'], row['FINAL_NUMBER'], row['DIALED_NUMBER'])
-
-            else:
-                observation = 'ani invalido'
-
-            if valid:
-                company = self.get_company(row['ANI'])
-
-                if company is None:
-                    observation = 'ani sin numeracion'
+                    else:
+                        _type = self.get_type_incoming(
+                            r['ANI'], r['DIALED_NUMBER'])
+                        entity = self.get_entity(r['FINAL_NUMBER'])
 
                 else:
-                    tipo = self.get_type_incoming(
-                        row['ANI'], row['DIALED_NUMBER'])
-                    entity = self.get_entity(row['FINAL_NUMBER'])
+                    observation = 'No cumple con los filtros'
 
-            else:
-                observation = 'No cumple con los filtros'
+                if valid:
+                    for rango in self.split_schedule(
+                            connect_time, ingress_duration,
+                            company):
+                        fecha_llamada = rango['fecha_llamada']
 
-            ingress_duration = int(row['INGRESS_DURATION'])
-            connect_time = dt.datetime.strptime(
-                row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
+                        if str(fecha_llamada.month) != self.month:
+                            fecha_llamada = connect_time.date()
 
-            if valid and ingress_duration > 0:
-                for rango in self.split_schedule(
-                        connect_time, ingress_duration,
-                        company):
-                    fecha_llamada = rango['fecha_llamada']
+                        hora_llamada = rango['hora_inicio']
+                        schedule = self.schedule_compay(
+                            fecha_llamada, hora_llamada, company)
+                        ingress_duration = rango['duracion']
+                        connect_time = dt.datetime.combine(
+                            fecha_llamada, hora_llamada)
+                        yield Incoming(
+                            connect_time=connect_time,
+                            ani=r['ANI'],
+                            ani_number=r['ANI_NUMBER'],
+                            ingress_duration=ingress_duration,
+                            dialed_number=r['DIALED_NUMBER'],
+                            final_number=r['FINAL_NUMBER'],
+                            cdr=self,
+                            valid=valid,
+                            observation=observation,
+                            company=company,
+                            _type=_type,
+                            schedule=schedule,
+                            entity=entity)
 
-                    if str(fecha_llamada.month) != self.month:
-                        fecha_llamada = connect_time.date()
-
-                    hora_llamada = rango['hora_inicio']
-                    horario = self.schedule_compay(
-                        fecha_llamada, hora_llamada, company)
-                    duracion = rango['duracion']
-                    connect_time2 = dt.datetime.combine(
-                        fecha_llamada, hora_llamada)
-                    Incoming(
-                        connect_time=connect_time2,
-                        ani=row['ANI'],
-                        ani_number=row['ANI_NUMBER'],
-                        ingress_duration=duracion,
-                        dialed_number=row['DIALED_NUMBER'],
-                        final_number=row['FINAL_NUMBER'],
+                else:
+                    yield Incoming(
+                        connect_time=connect_time,
+                        ani=r['ANI'],
+                        ani_number=r['ANI_NUMBER'],
+                        ingress_duration=ingress_duration,
+                        dialed_number=r['DIALED_NUMBER'],
+                        final_number=r['FINAL_NUMBER'],
                         cdr=self,
                         valid=valid,
-                        observation=observation,
                         company=company,
-                        _type=tipo,
-                        schedule=horario,
-                        entity=entity
-                    ).save()
+                        _type=_type,
+                        entity=entity,
+                        observation=observation)
 
-            else:
-                Incoming(
-                    connect_time=connect_time,
-                    ani=row['ANI'],
-                    ani_number=row['ANI_NUMBER'],
-                    ingress_duration=ingress_duration,
-                    dialed_number=row['DIALED_NUMBER'],
-                    final_number=row['FINAL_NUMBER'],
-                    cdr=self,
-                    valid=valid,
-                    observation=observation,
-                    company=company,
-                    _type=tipo,
-                    entity=entity
-                ).save()
-
-        return True
+        Incoming.objects.insert(
+            reader_to_incomming(incoming_dict), load_bulk=False)
 
     def get_zone_range(self, ani):
         if re.search(patterns.movil, ani):
