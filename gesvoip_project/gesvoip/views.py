@@ -81,7 +81,7 @@ class NewCdrView(generic.FormView):
         ctc = form.cleaned_data.get('ctc_file')
         sti = form.cleaned_data.get('sti_file')
         cdr, created = models.Cdr.objects.get_or_create(month=month, year=year)
-        tasks.insert_cdr.delay(cdr.id, [entel, ctc], sti)
+        tasks.insert_cdr.delay(str(cdr.id), [entel, ctc], sti)
 
         return super(NewCdrView, self).form_valid(form)
 
