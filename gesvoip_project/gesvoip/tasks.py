@@ -100,7 +100,7 @@ def insert_cdr(cdr, incomings, outgoing):
             i.invoiced = True
             i.save()
 
-        cdr.insert_outgoing()
+        cdr.insert_outgoing(outgoing)
         send_email(
             ['Leonardo Gatica <lgaticastyle@gmail.com>'],
             'Proceso finalizado',

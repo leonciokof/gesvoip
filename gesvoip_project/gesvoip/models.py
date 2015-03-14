@@ -633,44 +633,43 @@ class Cdr(mongoengine.Document):
             else:
                 return None
 
-    def insert_outgoing(self):
-        outgoing = self.outgoing.read()
-        outgoing_file = StringIO.StringIO(outgoing)
+    def insert_outgoing(self, outgoing_file):
         outgoing_dict = csv.DictReader(outgoing_file, delimiter=',')
 
-        for row in outgoing_dict:
-            _type = self.get_type_outgoing(row['ANI'], row['FINAL_NUMBER'])
-            company = self.get_company(row['FINAL_NUMBER'])
-            connect_time = dt.datetime.strptime(
-                row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
-            ingress_duration = int(row['INGRESS_DURATION'])
-            line = Line.objects(number=row['ANI_NUMBER']).first()
-            schedule = self.get_horario(connect_time)
-            entity = self.get_entity(row['FINAL_NUMBER'])
+        def reader_to_outgoing(reader):
+            for r in reader:
+                _type = self.get_type_outgoing(r['ANI'], r['FINAL_NUMBER'])
+                company = self.get_company(r['FINAL_NUMBER'])
+                connect_time = dt.datetime.strptime(
+                    r['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
+                ingress_duration = int(r['INGRESS_DURATION'])
+                line = Line.objects(number=r['ANI_NUMBER']).first()
+                schedule = self.get_horario(connect_time)
+                entity = self.get_entity(r['FINAL_NUMBER'])
 
-            if company and _type and ingress_duration > 0:
-                valid = True
+                if company and _type and ingress_duration > 0:
+                    valid = True
 
-            else:
-                valid = False
+                else:
+                    valid = False
 
-            Outgoing(
-                connect_time=connect_time,
-                ani=row['ANI'],
-                ani_number=row['ANI_NUMBER'],
-                final_number=row['FINAL_NUMBER'],
-                dialed_number=row['DIALED_NUMBER'],
-                ingress_duration=ingress_duration,
-                cdr=self,
-                valid=valid,
-                company=company,
-                _type=_type,
-                line=line,
-                schedule=schedule,
-                entity=entity
-            ).save()
+                yield Outgoing(
+                    connect_time=connect_time,
+                    ani=r['ANI'],
+                    ani_number=r['ANI_NUMBER'],
+                    final_number=r['FINAL_NUMBER'],
+                    dialed_number=r['DIALED_NUMBER'],
+                    ingress_duration=ingress_duration,
+                    cdr=self,
+                    valid=valid,
+                    company=company,
+                    _type=_type,
+                    line=line,
+                    schedule=schedule,
+                    entity=entity)
 
-        return True
+        Outgoing.objects.insert(
+            reader_to_outgoing(outgoing_dict), load_bulk=False)
 
     def get_ingress_duration_by_type(cdr, company, _type, schedule):
         return Incoming.objects(
