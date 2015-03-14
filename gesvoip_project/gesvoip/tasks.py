@@ -61,8 +61,10 @@ def load_portability():
 
 
 @task()
-def insert_cdr(cdr, incomings, outgoing):
+def insert_cdr(cdr_id, incomings, outgoing):
     try:
+        cdr = models.Cdr.objects.get(id=cdr_id)
+
         for incoming in incomings:
             cdr.insert_incoming(incoming)
             send_email(
