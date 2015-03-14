@@ -61,12 +61,12 @@ def load_portability():
 
 
 @task()
-def insert_cdr(cdr_id, incomings, outgoing):
+def insert_cdr(cdr_id):
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
 
-        for incoming in incomings:
-            cdr.insert_incoming(incoming)
+        for c in choices.COMPANIAS:
+            cdr.insert_incoming(c[0])
             send_email(
                 ['Leonardo Gatica <lgaticastyle@gmail.com>'],
                 'Incoming finalizado',
@@ -113,6 +113,8 @@ def insert_cdr(cdr_id, incomings, outgoing):
                 {})
 
         cdr.insert_outgoing(outgoing)
+        cdr.processed = True
+        cdr.save()
         send_email(
             ['Leonardo Gatica <lgaticastyle@gmail.com>'],
             'Outgoing finalizado',

@@ -169,6 +169,9 @@ class Cdr(mongoengine.Document):
     month = mongoengine.StringField(
         max_length=2, choices=choices.MONTHS, verbose_name='mes',
         required=True)
+    incoming_ctc = mongoengine.FileField(verbose_name='CTC', required=True)
+    incoming_entel = mongoengine.FileField(verbose_name='ENTEL', required=True)
+    outgoing = mongoengine.FileField(verbose_name='STI', required=True)
     processed = mongoengine.BooleanField(default=False)
 
     def __unicode__(self):
@@ -455,7 +458,14 @@ class Cdr(mongoengine.Document):
 
         return None if l is None else l.entity
 
-    def insert_incoming(self, incoming_file):
+    def insert_incoming(self, name):
+        if name == 'ENTEL':
+            incoming = self.incoming_entel.read()
+
+        else:
+            incoming = self.incoming_ctc.read()
+
+        incoming_file = StringIO.StringIO(incoming)
         incoming_dict = csv.DictReader(incoming_file, delimiter=',')
 
         def reader_to_incomming(reader):
@@ -633,7 +643,9 @@ class Cdr(mongoengine.Document):
             else:
                 return None
 
-    def insert_outgoing(self, outgoing_file):
+    def insert_outgoing(self):
+        outgoing = self.outgoing.read()
+        outgoing_file = StringIO.StringIO(outgoing)
         outgoing_dict = csv.DictReader(outgoing_file, delimiter=',')
 
         def reader_to_outgoing(reader):

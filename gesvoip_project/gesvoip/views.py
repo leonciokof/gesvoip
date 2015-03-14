@@ -72,7 +72,6 @@ class NewCdrView(generic.FormView):
     form_class = forms.CdrForm
     success_url = reverse_lazy('gesvoip:new_cdr')
     template_name = 'gesvoip/new_cdr.html'
-    document = models.Cdr
 
     def form_valid(self, form):
         year = form.cleaned_data.get('year')
@@ -81,7 +80,11 @@ class NewCdrView(generic.FormView):
         ctc = form.cleaned_data.get('ctc_file')
         sti = form.cleaned_data.get('sti_file')
         cdr, created = models.Cdr.objects.get_or_create(month=month, year=year)
-        tasks.insert_cdr.delay(str(cdr.id), [entel, ctc], sti)
+        cdr.incoming_ctc = ctc
+        cdr.incoming_entel = entel
+        cdr.outgoing = sti
+        cdr.save()
+        tasks.insert_cdr.delay(str(cdr.id))
 
         return super(NewCdrView, self).form_valid(form)
 
