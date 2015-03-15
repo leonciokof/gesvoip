@@ -70,7 +70,7 @@ class Numeration(mongoengine.Document):
                     numeration='%s%s' % (r['zona'], r['rango']), company=c)
 
         cls.objects.delete()
-        cls.insert(reader_to_portability(numbers), load_bulk=False)
+        cls.objects.insert(reader_to_portability(numbers), load_bulk=False)
 
 
 class Commune(mongoengine.Document):

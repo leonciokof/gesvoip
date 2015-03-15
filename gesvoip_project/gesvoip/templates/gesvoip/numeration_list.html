@@ -24,15 +24,13 @@
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Zona</th>
-                          <th>Rango</th>
+                          <th>Numeración</th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.zone }}</td>
-                          <td>{{ obj.get_range }}</td>
+                          <td>{{ obj.numeration }}</td>
                         </tr>
                         {% endfor %}
                       </tbody>
