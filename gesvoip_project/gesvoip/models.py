@@ -600,7 +600,7 @@ class Cdr(mongoengine.Document):
                                     connect_time__lte=end).update(
                                         set__schedule=t)
 
-                    else if d == 'bussines':
+                    elif d == 'bussines':
                         for i in Incoming.objects.filter(
                                 cdr=cdr, valid=True, company=c,
                                 weekday__gte=0,
