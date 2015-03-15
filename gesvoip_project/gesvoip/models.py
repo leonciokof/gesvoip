@@ -44,17 +44,16 @@ class Numeration(mongoengine.Document):
 
     """Modelo de las numeraciones."""
 
-    zone = mongoengine.IntField()
-    _range = mongoengine.IntField()
+    numeration = mongoengine.StringField()
     company = mongoengine.ReferenceField(
         Company, reverse_delete_rule=mongoengine.CASCADE)
 
     meta = {
-        'indexes': [('zone', '_range')]
+        'indexes': ['numeration']
     }
 
     def __unicode__(self):
-        return u'{0}{1}'.format(self.zone, self._range)
+        return self.numeration
 
     def get_range(self):
         return self._range
@@ -68,7 +67,7 @@ class Numeration(mongoengine.Document):
                 c = Company.objects.filter(
                     idoidd__in=[int(r['ido'])]).first()
                 yield cls(
-                    zone=int(r['zona']), _range=int(r['rango']), company=c)
+                    numeration='%s%s' % (r['zona'], r['rango']), company=c)
 
         cls.objects.delete()
         cls.insert(reader_to_portability(numbers), load_bulk=False)
@@ -220,21 +219,19 @@ class Cdr(mongoengine.Document):
             else:
                 return 'nacional'
 
-    def get_day(self, fecha):
-        holiday = Holiday.objects(date=fecha).first()
-
-        if holiday is not None:
-            return 'festivo'
+    def get_day(self, connect_time, festives):
+        if connect_time.date() in festives:
+            return 'festive'
 
         else:
-            if fecha.weekday() in range(5):
-                return 'habil'
+            if connect_time.weekday() in range(5):
+                return 'bussines'
 
-            elif fecha.weekday() == 5:
-                return 'sabado'
+            elif connect_time.weekday() == 5:
+                return 'saturday'
 
             else:
-                return 'festivo'
+                return 'festive'
 
     def schedule_compay(self, fecha_llamada, hora_llamada, compania):
         def get_schedule(name):
@@ -467,105 +464,252 @@ class Cdr(mongoengine.Document):
 
         incoming_file = StringIO.StringIO(incoming)
         incoming_dict = csv.DictReader(incoming_file, delimiter=',')
+        date = '%s-%s' % (self.year, self.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+        festives = Holiday.objects(
+            date__gte=start, date__lt=end).values_list('date')
+        festives = [f.date() for f in festives]
 
         def reader_to_incomming(reader):
             for r in reader:
-                observation = None
-                entity = None
-                company = None
-                _type = None
                 connect_time = arrow.get(
                     r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                disconnect_time = arrow.get(
+                    r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                _type = self.get_type_incoming(r['ANI'], r['DIALED_NUMBER'])
+
+                if re.search(patterns.pattern_num_6, r['ANI']):
+                    numeration = r['ANI'][2:][:6]
+
+                else:
+                    numeration = r['ANI'][2:][:5]
+
+                day = self.get_day(connect_time, festives)
                 ingress_duration = int(r['INGRESS_DURATION'])
                 valid = self.get_valid(
                     r['ANI'], r['FINAL_NUMBER'], r['DIALED_NUMBER'],
-                    r['INGRESS_DURATION'])
+                    ingress_duration)
+                weekday = connect_time.weekday()
 
-                if valid:
-                    company = self.get_company(r['ANI'])
-
-                    if company is None:
-                        valid = False
-                        observation = 'ani sin numeracion'
-
-                    else:
-                        _type = self.get_type_incoming(
-                            r['ANI'], r['DIALED_NUMBER'])
-                        entity = self.get_entity(r['FINAL_NUMBER'])
-
-                else:
+                if not valid:
                     observation = 'No cumple con los filtros'
 
-                if valid:
-                    for rango in self.split_schedule(
-                            connect_time, ingress_duration,
-                            company):
-                        fecha_llamada = rango['fecha_llamada']
-
-                        if str(fecha_llamada.month) != self.month:
-                            fecha_llamada = connect_time.date()
-
-                        hora_llamada = rango['hora_inicio']
-                        schedule = self.schedule_compay(
-                            fecha_llamada, hora_llamada, company)
-                        ingress_duration = rango['duracion']
-                        connect_time = dt.datetime.combine(
-                            fecha_llamada, hora_llamada)
-                        yield Incoming(
-                            connect_time=connect_time,
-                            ani=r['ANI'],
-                            ani_number=r['ANI_NUMBER'],
-                            ingress_duration=ingress_duration,
-                            dialed_number=r['DIALED_NUMBER'],
-                            final_number=r['FINAL_NUMBER'],
-                            cdr=self,
-                            valid=valid,
-                            observation=observation,
-                            company=company,
-                            _type=_type,
-                            schedule=schedule,
-                            entity=entity)
-
                 else:
-                    yield Incoming(
-                        connect_time=connect_time,
-                        ani=r['ANI'],
-                        ani_number=r['ANI_NUMBER'],
-                        ingress_duration=ingress_duration,
-                        dialed_number=r['DIALED_NUMBER'],
-                        final_number=r['FINAL_NUMBER'],
-                        cdr=self,
-                        valid=valid,
-                        company=company,
-                        _type=_type,
-                        entity=entity,
-                        observation=observation)
+                    observation = None
+
+                yield Incoming(
+                    connect_time=connect_time,
+                    disconnect_time=disconnect_time,
+                    ani=r['ANI'],
+                    ani_number=r['ANI_NUMBER'],
+                    ingress_duration=ingress_duration,
+                    dialed_number=r['DIALED_NUMBER'],
+                    final_number=r['FINAL_NUMBER'],
+                    cdr=self,
+                    valid=valid,
+                    numeration=numeration,
+                    _type=_type,
+                    weekday=weekday,
+                    observation=observation,
+                    day=day)
 
         Incoming.objects.insert(
             reader_to_incomming(incoming_dict), load_bulk=False)
 
+        for c in Portability.objects.distinct('company'):
+            numbers = Portability.objects.filter(company=c).values_list(
+                'number')
+            Incoming.objects.filter(
+                cdr=self, valid=True, ani__in=numbers,
+                company=None).update(set__company=c)
+
+        for c in Numeration.objects.distinct('company'):
+            numerations = Numeration.objects.filter(company=c).values_list(
+                'numeration')
+            Incoming.objects.filter(
+                cdr=self, valid=True, numeration__in=numerations,
+                company=None).update(set__company=c)
+
+        Incoming.objects.filter(
+            cdr=self, valid=True, company=None).update(
+                set__valid=False, set__observation='Sin empresa')
+        date = '%s-%s' % (cdr.year, cdr.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+        festives = Holiday.objects(
+            date__gte=start, date__lt=end).values_list('date')
+        festives = [f.date() for f in festives]
+
+        for i in Incoming.objects.filter(cdr=cdr, valid=True):
+            for d in c.schedules.keys():
+                day = c.schedules.get(t)
+                types = day.keys()
+
+                for i, t in enumerate(types):
+                    day_type = day.get(t)
+                    time_start = arrow.get(
+                        day_type.get('start'), 'H:mm:ss')
+                    time_end = arrow.get(
+                        day_type.get('end'), 'H:mm:ss')
+
+                    if d == 'festive':
+                        for f in festives:
+                            start = arrow.get(f)
+
+                            if time_start < time_end:
+                                start = start.replace(
+                                    hour=time_start.hour,
+                                    minute=time_start.minute,
+                                    second=time_start.second)
+                                end = start.replace(
+                                    hour=time_end.hour,
+                                    minute=time_end.minute,
+                                    second=time_end.second)
+                                Incoming.objects.filter(
+                                    cdr=cdr, valid=True, company=c,
+                                    connect_time__gte=start,
+                                    connect_time__lte=end).update(
+                                        set__schedule=t)
+
+                            else:
+                                start = start.replace(
+                                    hour=time_start.hour,
+                                    minute=time_start.minute,
+                                    second=time_start.second)
+                                end = start.replace(
+                                    hour=23,
+                                    minute=59,
+                                    second=59)
+                                Incoming.objects.filter(
+                                    cdr=cdr, valid=True, company=c,
+                                    connect_time__gte=start,
+                                    connect_time__lte=end).update(
+                                        set__schedule=t)
+                                start = start.replace(
+                                    hour=0,
+                                    minute=0,
+                                    second=0)
+                                end = start.replace(
+                                    hour=time_end.hour,
+                                    minute=time_end.minute,
+                                    second=time_end.second)
+                                Incoming.objects.filter(
+                                    cdr=cdr, valid=True, company=c,
+                                    connect_time__gte=start,
+                                    connect_time__lte=end).update(
+                                        set__schedule=t)
+
+                    else if d == 'bussines':
+                        for i in Incoming.objects.filter(
+                                cdr=cdr, valid=True, company=c,
+                                weekday__gte=0,
+                                weekday__lte=4,
+                                schedule=None):
+                            start = arrow.get(i.connect_time)
+
+                            if time_start < time_end:
+                                s = start.replace(
+                                    hour=time_start.hour,
+                                    minute=time_start.minute,
+                                    second=time_start.second)
+                                e = start.replace(
+                                    hour=time_end.hour,
+                                    minute=time_end.minute,
+                                    second=time_end.second)
+
+                                if s <= arrow.get(i.connect_time) <= e:
+                                    i.schedule = t
+                                    i.save()
+
+                            else:
+                                s = start.replace(
+                                    hour=time_start.hour,
+                                    minute=time_start.minute,
+                                    second=time_start.second)
+                                e = start.replace(
+                                    hour=23,
+                                    minute=59,
+                                    second=59)
+
+                                if s <= arrow.get(i.connect_time) <= e:
+                                    i.schedule = t
+                                    i.save()
+
+                                s = start.replace(
+                                    hour=0,
+                                    minute=0,
+                                    second=0)
+                                e = start.replace(
+                                    hour=time_end.hour,
+                                    minute=time_end.minute,
+                                    second=time_end.second)
+
+                                if s <= arrow.get(i.connect_time) <= e:
+                                    i.schedule = t
+                                    i.save()
+
+                    else:
+                        for i in Incoming.objects.filter(
+                                cdr=cdr, valid=True, company=c,
+                                weekday=5,
+                                schedule=None):
+                            start = arrow.get(i.connect_time)
+
+                            if time_start < time_end:
+                                s = start.replace(
+                                    hour=time_start.hour,
+                                    minute=time_start.minute,
+                                    second=time_start.second)
+                                e = start.replace(
+                                    hour=time_end.hour,
+                                    minute=time_end.minute,
+                                    second=time_end.second)
+
+                                if s <= arrow.get(i.connect_time) <= e:
+                                    i.schedule = t
+                                    i.save()
+
+                            else:
+                                s = start.replace(
+                                    hour=time_start.hour,
+                                    minute=time_start.minute,
+                                    second=time_start.second)
+                                e = start.replace(
+                                    hour=23,
+                                    minute=59,
+                                    second=59)
+
+                                if s <= arrow.get(i.connect_time) <= e:
+                                    i.schedule = t
+                                    i.save()
+
+                                s = start.replace(
+                                    hour=0,
+                                    minute=0,
+                                    second=0)
+                                e = start.replace(
+                                    hour=time_end.hour,
+                                    minute=time_end.minute,
+                                    second=time_end.second)
+
+                                if s <= arrow.get(i.connect_time) <= e:
+                                    i.schedule = t
+                                    i.save()
+
+        Incoming.objects.filter(
+            cdr=self, valid=True, schedule=None).update(
+                set__valid=False, set__observation='Sin horario')
+
     def get_zone_range(self, ani):
-        if re.search(patterns.movil, ani):
-            zone = ani[2:][:1]
-            _range = ani[3:][:4]
-
-        elif re.search(patterns.pattern_92, ani):
-            zone = ani[2:][:2]
-            _range = ani[4:][:4]
-
-        elif re.search(patterns.province, ani):
-            zone = ani[2:][:2]
-            _range = ani[4:][:3]
-
-        elif re.search(patterns.santiago, ani):
-            zone = ani[2:][:1]
-            _range = ani[3:][:5]
+        Incoming.objects.filter(ani__startswith='569').update(set__numeration=)
+        if re.search(patterns.pattern_num_6, ani):
+            numeration = ani[2:][:6]
 
         else:
-            zone = ani[2:][:2]
-            _range = ani[4:][:3]
+            numeration = ani[2:][:5]
 
-        return {'zone': zone, '_range': _range}
+        return numeration
 
     def get_company(self, ani):
         p = Portability.objects(number=ani).first()
@@ -776,6 +920,7 @@ class Incoming(mongoengine.Document):
     """Modelo de las llamdas entrantes."""
 
     connect_time = mongoengine.DateTimeField()
+    disconnect_time = mongoengine.DateTimeField()
     ani = mongoengine.StringField()
     final_number = mongoengine.StringField()
     ani_number = mongoengine.StringField()
@@ -790,6 +935,8 @@ class Incoming(mongoengine.Document):
     _type = mongoengine.StringField()
     schedule = mongoengine.StringField()
     entity = mongoengine.StringField()
+    numeration = mongoengine.StringField()
+    weekday = mongoengine.IntField()
 
     def __unicode__(self):
         return str(self.connect_time)
