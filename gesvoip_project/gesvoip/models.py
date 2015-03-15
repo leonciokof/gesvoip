@@ -534,14 +534,14 @@ class Cdr(mongoengine.Document):
         Incoming.objects.filter(
             cdr=self, valid=True, company=None).update(
                 set__valid=False, set__observation='Sin empresa')
-        date = '%s-%s' % (cdr.year, cdr.month)
+        date = '%s-%s' % (self.year, self.month)
         start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
         end = start.replace(months=1)
         festives = Holiday.objects(
             date__gte=start, date__lt=end).values_list('date')
         festives = [f.date() for f in festives]
 
-        for i in Incoming.objects.filter(cdr=cdr, valid=True):
+        for i in Incoming.objects.filter(cdr=self, valid=True):
             for d in c.schedules.keys():
                 day = c.schedules.get(t)
                 types = day.keys()
@@ -567,7 +567,7 @@ class Cdr(mongoengine.Document):
                                     minute=time_end.minute,
                                     second=time_end.second)
                                 Incoming.objects.filter(
-                                    cdr=cdr, valid=True, company=c,
+                                    cdr=self, valid=True, company=c,
                                     connect_time__gte=start,
                                     connect_time__lte=end).update(
                                         set__schedule=t)
@@ -582,7 +582,7 @@ class Cdr(mongoengine.Document):
                                     minute=59,
                                     second=59)
                                 Incoming.objects.filter(
-                                    cdr=cdr, valid=True, company=c,
+                                    cdr=self, valid=True, company=c,
                                     connect_time__gte=start,
                                     connect_time__lte=end).update(
                                         set__schedule=t)
@@ -595,14 +595,14 @@ class Cdr(mongoengine.Document):
                                     minute=time_end.minute,
                                     second=time_end.second)
                                 Incoming.objects.filter(
-                                    cdr=cdr, valid=True, company=c,
+                                    cdr=self, valid=True, company=c,
                                     connect_time__gte=start,
                                     connect_time__lte=end).update(
                                         set__schedule=t)
 
                     elif d == 'bussines':
                         for i in Incoming.objects.filter(
-                                cdr=cdr, valid=True, company=c,
+                                cdr=self, valid=True, company=c,
                                 weekday__gte=0,
                                 weekday__lte=4,
                                 schedule=None):
@@ -651,7 +651,7 @@ class Cdr(mongoengine.Document):
 
                     else:
                         for i in Incoming.objects.filter(
-                                cdr=cdr, valid=True, company=c,
+                                cdr=self, valid=True, company=c,
                                 weekday=5,
                                 schedule=None):
                             start = arrow.get(i.connect_time)
