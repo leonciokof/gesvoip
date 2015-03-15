@@ -62,6 +62,11 @@ def load_portability():
 
 @task()
 def insert_cdr(cdr_id):
+    send_email(
+        ['Leonardo Gatica <lgaticastyle@gmail.com>'],
+        'Proceso iniciado',
+        'gesvoip_success',
+        {})
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
 
