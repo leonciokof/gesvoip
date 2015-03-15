@@ -702,7 +702,6 @@ class Cdr(mongoengine.Document):
                 set__valid=False, set__observation='Sin horario')
 
     def get_zone_range(self, ani):
-        Incoming.objects.filter(ani__startswith='569').update(set__numeration=)
         if re.search(patterns.pattern_num_6, ani):
             numeration = ani[2:][:6]
 
