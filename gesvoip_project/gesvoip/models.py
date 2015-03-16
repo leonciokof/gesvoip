@@ -749,7 +749,7 @@ class Cdr(mongoengine.Document):
 
         return type_call
 
-    def get_horario(self, connect_time):
+    def get_horario(self, ct):
         """
         Metodo que determina el tipo de horario de una llamada
         :param connect_time: Fecha y hora de la llamada.
@@ -757,55 +757,37 @@ class Cdr(mongoengine.Document):
         """
         horario = None
 
-        if connect_time.weekday() in range(5):
-            start = connect_time.replace(hour=8, minute=0, second=0)
-            end = connect_time.replace(hour=19, minute=59, second=59)
+        def start(connect_time, hour):
+            return connect_time.replace(hour=hour, minute=0, second=0)
 
-            if start <= connect_time <= end:
+        def end(connect_time, hour):
+            return connect_time.replace(hour=hour, minute=59, second=59)
+
+        if connect_time.weekday() in range(5):
+            if start(connect_time, 8) <= connect_time <= end(19):
                 horario = 'normal'
 
-            start = connect_time.replace(hour=20, minute=0, second=0)
-            end = connect_time.replace(hour=23, minute=59, second=59)
-
-            elif start <= connect_time <= end:
+            elif start(connect_time, 20) <= connect_time <= end(23):
                 horario = 'reducido'
 
-            start = connect_time.replace(hour=0, minute=0, second=0)
-            end = connect_time.replace(hour=7, minute=59, second=59)
-
-            elif start <= connect_time <= end:
+            elif start(connect_time, 0) <= connect_time <= end(7):
                 horario = 'nocturno'
 
         elif connect_time.weekday() == 5:
-            start = connect_time.replace(hour=8, minute=0, second=0)
-            end = connect_time.replace(hour=13, minute=59, second=59)
-
-            if start <= connect_time <= end:
+            if start(connect_time, 8) <= connect_time <= end(13):
                 horario = 'normal'
 
-            start = connect_time.replace(hour=14, minute=0, second=0)
-            end = connect_time.replace(hour=23, minute=59, second=59)
-
-            elif start <= connect_time <= end:
+            elif start(connect_time, 14) <= connect_time <= end(23):
                 horario = 'reducido'
 
-            start = connect_time.replace(hour=0, minute=0, second=0)
-            end = connect_time.replace(hour=7, minute=59, second=59)
-
-            elif start <= connect_time <= end:
+            elif start(connect_time, 0) <= connect_time <= end(7):
                 horario = 'nocturno'
 
         else:
-            start = connect_time.replace(hour=8, minute=0, second=0)
-            end = connect_time.replace(hour=23, minute=59, second=59)
-
-            if start <= connect_time <= end:
+            if start(connect_time, 8) <= connect_time <= end(23):
                 horario = 'reducido'
 
-            start = connect_time.replace(hour=0, minute=0, second=0)
-            end = connect_time.replace(hour=23, minute=59, second=59)
-
-            elif start <= connect_time <= end:
+            elif start(connect_time, 0) <= connect_time <= end(7):
                 horario = 'nocturno'
 
         return horario
