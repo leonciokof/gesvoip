@@ -117,7 +117,7 @@ def insert_cdr(cdr_id):
                 'gesvoip_success',
                 {})
 
-        cdr.insert_outgoing(outgoing)
+        cdr.insert_outgoing()
         cdr.processed = True
         cdr.save()
         send_email(

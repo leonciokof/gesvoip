@@ -499,8 +499,8 @@ class Cdr(mongoengine.Document):
                     observation = None
 
                 yield Incoming(
-                    connect_time=connect_time,
-                    disconnect_time=disconnect_time,
+                    connect_time=connect_time.datetime,
+                    disconnect_time=disconnect_time.datetime,
                     ani=r['ANI'],
                     ani_number=r['ANI_NUMBER'],
                     ingress_duration=ingress_duration,
@@ -755,36 +755,60 @@ class Cdr(mongoengine.Document):
         :param connect_time: Fecha y hora de la llamada.
         :type connect_time: datetime.datetime
         """
+        horario = None
 
-        if 0 < connect_time.date().isoweekday() < 6:
-            if dt.time(8, 0) <= connect_time.time() <= dt.time(19, 59, 59):
-                return 'normal'
+        if connect_time.weekday() in range(5):
+            start = connect_time.replace(hour=8, minute=0, second=0)
+            end = connect_time.replace(hour=19, minute=59, second=59)
 
-            elif dt.time(20, 0) <= connect_time.time() <= dt.time(23, 59, 59):
-                return 'reducido'
+            if start <= connect_time <= end:
+                horario = 'normal'
 
-            elif dt.time(0, 0) <= connect_time.time() <= dt.time(7, 59, 59):
-                return 'nocturno'
+            start = connect_time.replace(hour=20, minute=0, second=0)
+            end = connect_time.replace(hour=23, minute=59, second=59)
 
-        elif connect_time.date().isoweekday() == 6:
-            if dt.time(8, 0) <= connect_time.time() <= dt.time(13, 59, 59):
-                return 'normal'
+            elif start <= connect_time <= end:
+                horario = 'reducido'
 
-            elif dt.time(14, 0) <= connect_time.time() <= dt.time(23, 59, 59):
-                return 'reducido'
+            start = connect_time.replace(hour=0, minute=0, second=0)
+            end = connect_time.replace(hour=7, minute=59, second=59)
 
-            elif dt.time(0, 0) <= connect_time.time() <= dt.time(7, 59, 59):
-                return 'nocturno'
+            elif start <= connect_time <= end:
+                horario = 'nocturno'
+
+        elif connect_time.weekday() == 5:
+            start = connect_time.replace(hour=8, minute=0, second=0)
+            end = connect_time.replace(hour=13, minute=59, second=59)
+
+            if start <= connect_time <= end:
+                horario = 'normal'
+
+            start = connect_time.replace(hour=14, minute=0, second=0)
+            end = connect_time.replace(hour=23, minute=59, second=59)
+
+            elif start <= connect_time <= end:
+                horario = 'reducido'
+
+            start = connect_time.replace(hour=0, minute=0, second=0)
+            end = connect_time.replace(hour=7, minute=59, second=59)
+
+            elif start <= connect_time <= end:
+                horario = 'nocturno'
 
         else:
-            if dt.time(8, 0) <= connect_time.time() <= dt.time(23, 59, 59):
-                return 'reducido'
+            start = connect_time.replace(hour=8, minute=0, second=0)
+            end = connect_time.replace(hour=23, minute=59, second=59)
 
-            elif dt.time(0, 0) <= connect_time.time() <= dt.time(23, 59, 59):
-                return 'nocturno'
+            if start <= connect_time <= end:
+                horario = 'reducido'
 
-            else:
-                return None
+            start = connect_time.replace(hour=0, minute=0, second=0)
+            end = connect_time.replace(hour=23, minute=59, second=59)
+
+            elif start <= connect_time <= end:
+                horario = 'nocturno'
+
+        return horario
 
     def insert_outgoing(self):
         outgoing = self.outgoing.read()
@@ -794,22 +818,28 @@ class Cdr(mongoengine.Document):
         def reader_to_outgoing(reader):
             for r in reader:
                 _type = self.get_type_outgoing(r['ANI'], r['FINAL_NUMBER'])
-                company = self.get_company(r['FINAL_NUMBER'])
-                connect_time = dt.datetime.strptime(
-                    r['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S')
+                connect_time = arrow.get(
+                    r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                disconnect_time = arrow.get(
+                    r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                 ingress_duration = int(r['INGRESS_DURATION'])
-                line = Line.objects(number=r['ANI_NUMBER']).first()
                 schedule = self.get_horario(connect_time)
-                entity = self.get_entity(r['FINAL_NUMBER'])
 
-                if company and _type and ingress_duration > 0:
+                if re.search(patterns.pattern_num_6, r['FINAL_NUMBER']):
+                    numeration = r['FINAL_NUMBER'][2:][:6]
+
+                else:
+                    numeration = r['FINAL_NUMBER'][2:][:5]
+
+                if _type and ingress_duration > 0:
                     valid = True
 
                 else:
                     valid = False
 
                 yield Outgoing(
-                    connect_time=connect_time,
+                    connect_time=connect_time.datetime,
+                    disconnect_time=disconnect_time.datetime,
                     ani=r['ANI'],
                     ani_number=r['ANI_NUMBER'],
                     final_number=r['FINAL_NUMBER'],
@@ -817,14 +847,41 @@ class Cdr(mongoengine.Document):
                     ingress_duration=ingress_duration,
                     cdr=self,
                     valid=valid,
-                    company=company,
                     _type=_type,
-                    line=line,
                     schedule=schedule,
-                    entity=entity)
+                    numeration=numeration)
 
         Outgoing.objects.insert(
             reader_to_outgoing(outgoing_dict), load_bulk=False)
+
+        for c in Portability.objects.distinct('company'):
+            numbers = Portability.objects.filter(company=c).values_list(
+                'number')
+            Outgoing.objects.filter(
+                cdr=self, valid=True, final_number__in=numbers,
+                company=None).update(set__company=c)
+
+        for c in Numeration.objects.distinct('company'):
+            numerations = Numeration.objects.filter(company=c).values_list(
+                'numeration')
+            Outgoing.objects.filter(
+                cdr=self, valid=True, numeration__in=numerations,
+                company=None).update(set__company=c)
+
+        Outgoing.objects.filter(
+            cdr=self, valid=True, company=None).update(
+                set__valid=False, set__observation='Sin empresa')
+
+        for e in Line.objects.distinct('entity'):
+            numbers = Line.objects.filter(entity=e).values_list(
+                'number')
+            Outgoing.objects.filter(
+                cdr=self, valid=True, final_number__in=numbers).update(
+                    set__entity=e)
+
+        for l in Line.objects.all():
+            Outgoing.objects.filter(
+                cdr=self, valid=True, ani_number=l.number).update(set__line=l)
 
     def get_ingress_duration_by_type(cdr, company, _type, schedule):
         return Incoming.objects(
@@ -946,6 +1003,7 @@ class Outgoing(mongoengine.Document):
     """Modelo de las llamdas salientes."""
 
     connect_time = mongoengine.DateTimeField()
+    disconnect_time = mongoengine.DateTimeField()
     ani = mongoengine.StringField()
     final_number = mongoengine.StringField()
     ani_number = mongoengine.StringField()
@@ -959,6 +1017,7 @@ class Outgoing(mongoengine.Document):
     _type = mongoengine.StringField()
     schedule = mongoengine.StringField()
     entity = mongoengine.StringField()
+    numeration = mongoengine.StringField()
 
     def __unicode__(self):
         return str(self.connect_time)
