@@ -517,14 +517,13 @@ class Cdr(mongoengine.Document):
                         '$gte': v.get('start'),
                         '$lte': v.get('end')}})
 
-            send_message(dumps(q))
-
             return q
 
         for c in companies:
-            for t in ['normal', 'reducido', 'nocturno']:
-                Outgoing.objects(
-                    __raw__=get_kwargs(c, t)).update(set__schedule=t)
+            if c.schedules not in [None, {}]:
+                for t in ['normal', 'reducido', 'nocturno']:
+                    Outgoing.objects(
+                        __raw__=get_kwargs(c, t)).update(set__schedule=t)
 
         Incoming.objects.filter(
             cdr=self, valid=True, schedule=None).update(
