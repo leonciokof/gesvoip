@@ -69,6 +69,7 @@ def insert_cdr(cdr_id):
         {})
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
+        models.Incoming.objects.filter(cdr=cdr).delete()
 
         for c in choices.COMPANIAS:
             cdr.insert_incoming(c[0])
@@ -111,18 +112,19 @@ def insert_cdr(cdr_id):
             i.total = models.Period.objects(invoice=i).sum('total')
             i.invoiced = True
             i.save()
-            send_email(
-                ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-                'Invoice %s finalizada' % c.name,
-                'gesvoip_success',
-                {})
 
+        models.Outgoing.objects.filter(cdr=cdr).delete()
+        send_email(
+            ['Leonardo Gatica <lgaticastyle@gmail.com>'],
+            'Outgoing iniciado',
+            'gesvoip_success',
+            {})
         cdr.insert_outgoing()
         cdr.processed = True
         cdr.save()
         send_email(
             ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-            'Outgoing finalizado',
+            'Proceso finalizado',
             'gesvoip_success',
             {})
 

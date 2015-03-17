@@ -233,40 +233,6 @@ class Cdr(mongoengine.Document):
             else:
                 return 'festive'
 
-    def schedule_compay(self, fecha_llamada, hora_llamada, compania):
-        def get_schedule(name):
-            tipo = dia.get(name)
-
-            if tipo:
-                start = dt.datetime.strptime(tipo['start'], '%H:%M:%S').time()
-                end = dt.datetime.strptime(tipo['end'], '%H:%M:%S').time()
-
-                if start < end:
-                    if start <= hora_llamada <= end:
-                        return name
-
-                else:
-                    if start <= hora_llamada <= dt.time(23, 59, 59):
-                        return name
-
-                    elif dt.time(0, 0) <= hora_llamada <= end:
-                        return name
-
-            else:
-                return None
-
-        dia = compania.schedules.get(self.get_day(fecha_llamada))
-
-        if dia:
-            for n in ['normal', 'reducido', 'nocturno']:
-                tipo = get_schedule(n)
-
-                if tipo is not None:
-                    return tipo
-
-        else:
-            return None
-
     def split_schedule(self, connect_time, duracion, compania):
         def split1(start, end):
             start = nptime().from_time(
@@ -450,10 +416,8 @@ class Cdr(mongoengine.Document):
                 'hora_inicio': hora_inicio,
                 'duracion': duracion},)
 
-    def get_entity(self, final_number):
-        l = Line.objects(number=final_number).first()
-
-        return None if l is None else l.entity
+    def get_timestamp(self, connect_time):
+        return arrow.get(connect_time.format('H:mm:ss'), 'H:mm:ss').timestamp
 
     def insert_incoming(self, name):
         if name == 'ENTEL':
@@ -478,25 +442,18 @@ class Cdr(mongoengine.Document):
                 disconnect_time = arrow.get(
                     r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                 _type = self.get_type_incoming(r['ANI'], r['DIALED_NUMBER'])
+                day = self.get_day(connect_time, festives)
+                ingress_duration = int(r['INGRESS_DURATION'])
+                valid = self.get_valid(
+                    r['ANI'], r['FINAL_NUMBER'], r['DIALED_NUMBER'],
+                    ingress_duration)
+                observation = None if valid else 'No cumple con los filtros'
 
                 if re.search(patterns.pattern_num_6, r['ANI']):
                     numeration = r['ANI'][2:][:6]
 
                 else:
                     numeration = r['ANI'][2:][:5]
-
-                day = self.get_day(connect_time, festives)
-                ingress_duration = int(r['INGRESS_DURATION'])
-                valid = self.get_valid(
-                    r['ANI'], r['FINAL_NUMBER'], r['DIALED_NUMBER'],
-                    ingress_duration)
-                weekday = connect_time.weekday()
-
-                if not valid:
-                    observation = 'No cumple con los filtros'
-
-                else:
-                    observation = None
 
                 yield Incoming(
                     connect_time=connect_time.datetime,
@@ -510,9 +467,10 @@ class Cdr(mongoengine.Document):
                     valid=valid,
                     numeration=numeration,
                     _type=_type,
-                    weekday=weekday,
+                    weekday=connect_time.weekday(),
                     observation=observation,
-                    day=day)
+                    day=day,
+                    timestamp=self.get_timestamp(connect_time))
 
         Incoming.objects.insert(
             reader_to_incomming(incoming_dict), load_bulk=False)
@@ -534,197 +492,36 @@ class Cdr(mongoengine.Document):
         Incoming.objects.filter(
             cdr=self, valid=True, company=None).update(
                 set__valid=False, set__observation='Sin empresa')
-        date = '%s-%s' % (self.year, self.month)
-        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
-        end = start.replace(months=1)
-        festives = Holiday.objects(
-            date__gte=start, date__lt=end).values_list('date')
-        festives = [f.date() for f in festives]
+        companies = Incoming.objects.filter(
+            cdr=self, valid=True).distinct('company')
 
-        for i in Incoming.objects.filter(cdr=self, valid=True):
-            for d in c.schedules.keys():
-                day = c.schedules.get(t)
-                types = day.keys()
+        def get_kwargs(schedules, _type):
+            q = Q(cdr=self) & Q(valid=True)
+            q1 = Q()
+            ranges = {
+                k: {
+                    'start': arrow.get(
+                        v.get(_type).get('start'), 'H:mm:ss').timestamp,
+                    'end': arrow.get(
+                        v.get(_type).get('end'), 'H:mm:ss').timestamp}
+                for k, v in schedules.items() if _type in v.keys()}
 
-                for i, t in enumerate(types):
-                    day_type = day.get(t)
-                    time_start = arrow.get(
-                        day_type.get('start'), 'H:mm:ss')
-                    time_end = arrow.get(
-                        day_type.get('end'), 'H:mm:ss')
+            for k, v in ranges.items():
+                q1 = q1 | (Q(day=k) & Q(timestamp__gte=v.get('start')) &
+                    Q(timestamp__lte=v.get('end')))
 
-                    if d == 'festive':
-                        for f in festives:
-                            start = arrow.get(f)
+            q = q & q1
 
-                            if time_start < time_end:
-                                start = start.replace(
-                                    hour=time_start.hour,
-                                    minute=time_start.minute,
-                                    second=time_start.second)
-                                end = start.replace(
-                                    hour=time_end.hour,
-                                    minute=time_end.minute,
-                                    second=time_end.second)
-                                Incoming.objects.filter(
-                                    cdr=self, valid=True, company=c,
-                                    connect_time__gte=start,
-                                    connect_time__lte=end).update(
-                                        set__schedule=t)
+            return q
 
-                            else:
-                                start = start.replace(
-                                    hour=time_start.hour,
-                                    minute=time_start.minute,
-                                    second=time_start.second)
-                                end = start.replace(
-                                    hour=23,
-                                    minute=59,
-                                    second=59)
-                                Incoming.objects.filter(
-                                    cdr=self, valid=True, company=c,
-                                    connect_time__gte=start,
-                                    connect_time__lte=end).update(
-                                        set__schedule=t)
-                                start = start.replace(
-                                    hour=0,
-                                    minute=0,
-                                    second=0)
-                                end = start.replace(
-                                    hour=time_end.hour,
-                                    minute=time_end.minute,
-                                    second=time_end.second)
-                                Incoming.objects.filter(
-                                    cdr=self, valid=True, company=c,
-                                    connect_time__gte=start,
-                                    connect_time__lte=end).update(
-                                        set__schedule=t)
-
-                    elif d == 'bussines':
-                        for i in Incoming.objects.filter(
-                                cdr=self, valid=True, company=c,
-                                weekday__gte=0,
-                                weekday__lte=4,
-                                schedule=None):
-                            start = arrow.get(i.connect_time)
-
-                            if time_start < time_end:
-                                s = start.replace(
-                                    hour=time_start.hour,
-                                    minute=time_start.minute,
-                                    second=time_start.second)
-                                e = start.replace(
-                                    hour=time_end.hour,
-                                    minute=time_end.minute,
-                                    second=time_end.second)
-
-                                if s <= arrow.get(i.connect_time) <= e:
-                                    i.schedule = t
-                                    i.save()
-
-                            else:
-                                s = start.replace(
-                                    hour=time_start.hour,
-                                    minute=time_start.minute,
-                                    second=time_start.second)
-                                e = start.replace(
-                                    hour=23,
-                                    minute=59,
-                                    second=59)
-
-                                if s <= arrow.get(i.connect_time) <= e:
-                                    i.schedule = t
-                                    i.save()
-
-                                s = start.replace(
-                                    hour=0,
-                                    minute=0,
-                                    second=0)
-                                e = start.replace(
-                                    hour=time_end.hour,
-                                    minute=time_end.minute,
-                                    second=time_end.second)
-
-                                if s <= arrow.get(i.connect_time) <= e:
-                                    i.schedule = t
-                                    i.save()
-
-                    else:
-                        for i in Incoming.objects.filter(
-                                cdr=self, valid=True, company=c,
-                                weekday=5,
-                                schedule=None):
-                            start = arrow.get(i.connect_time)
-
-                            if time_start < time_end:
-                                s = start.replace(
-                                    hour=time_start.hour,
-                                    minute=time_start.minute,
-                                    second=time_start.second)
-                                e = start.replace(
-                                    hour=time_end.hour,
-                                    minute=time_end.minute,
-                                    second=time_end.second)
-
-                                if s <= arrow.get(i.connect_time) <= e:
-                                    i.schedule = t
-                                    i.save()
-
-                            else:
-                                s = start.replace(
-                                    hour=time_start.hour,
-                                    minute=time_start.minute,
-                                    second=time_start.second)
-                                e = start.replace(
-                                    hour=23,
-                                    minute=59,
-                                    second=59)
-
-                                if s <= arrow.get(i.connect_time) <= e:
-                                    i.schedule = t
-                                    i.save()
-
-                                s = start.replace(
-                                    hour=0,
-                                    minute=0,
-                                    second=0)
-                                e = start.replace(
-                                    hour=time_end.hour,
-                                    minute=time_end.minute,
-                                    second=time_end.second)
-
-                                if s <= arrow.get(i.connect_time) <= e:
-                                    i.schedule = t
-                                    i.save()
+        for c in companies:
+            for t in ['normal', 'reducido', 'nocturno']:
+                Outgoing.objects.filter(
+                    get_kwargs(c.schedules, t)).update(set__schedule=t)
 
         Incoming.objects.filter(
             cdr=self, valid=True, schedule=None).update(
                 set__valid=False, set__observation='Sin horario')
-
-    def get_zone_range(self, ani):
-        if re.search(patterns.pattern_num_6, ani):
-            numeration = ani[2:][:6]
-
-        else:
-            numeration = ani[2:][:5]
-
-        return numeration
-
-    def get_company(self, ani):
-        p = Portability.objects(number=ani).first()
-
-        if p is not None:
-            return p.company
-
-        else:
-            kwargs = self.get_zone_range(ani)
-            n = Numeration.objects(**kwargs).first()
-
-            if n is not None:
-                return n.company
-
-            else:
-                return None
 
     def get_type_outgoing(self, ani, final_number):
         type_call = None
@@ -749,49 +546,6 @@ class Cdr(mongoengine.Document):
 
         return type_call
 
-    def get_horario(self, ct):
-        """
-        Metodo que determina el tipo de horario de una llamada
-        :param connect_time: Fecha y hora de la llamada.
-        :type connect_time: datetime.datetime
-        """
-        horario = None
-
-        def start(connect_time, hour):
-            return connect_time.replace(hour=hour, minute=0, second=0)
-
-        def end(connect_time, hour):
-            return connect_time.replace(hour=hour, minute=59, second=59)
-
-        if connect_time.weekday() in range(5):
-            if start(connect_time, 8) <= connect_time <= end(19):
-                horario = 'normal'
-
-            elif start(connect_time, 20) <= connect_time <= end(23):
-                horario = 'reducido'
-
-            elif start(connect_time, 0) <= connect_time <= end(7):
-                horario = 'nocturno'
-
-        elif connect_time.weekday() == 5:
-            if start(connect_time, 8) <= connect_time <= end(13):
-                horario = 'normal'
-
-            elif start(connect_time, 14) <= connect_time <= end(23):
-                horario = 'reducido'
-
-            elif start(connect_time, 0) <= connect_time <= end(7):
-                horario = 'nocturno'
-
-        else:
-            if start(connect_time, 8) <= connect_time <= end(23):
-                horario = 'reducido'
-
-            elif start(connect_time, 0) <= connect_time <= end(7):
-                horario = 'nocturno'
-
-        return horario
-
     def insert_outgoing(self):
         outgoing = self.outgoing.read()
         outgoing_file = StringIO.StringIO(outgoing)
@@ -799,25 +553,19 @@ class Cdr(mongoengine.Document):
 
         def reader_to_outgoing(reader):
             for r in reader:
-                _type = self.get_type_outgoing(r['ANI'], r['FINAL_NUMBER'])
                 connect_time = arrow.get(
                     r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                 disconnect_time = arrow.get(
                     r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                 ingress_duration = int(r['INGRESS_DURATION'])
-                schedule = self.get_horario(connect_time)
+                _type = self.get_type_outgoing(r['ANI'], r['FINAL_NUMBER'])
+                valid = True if _type and ingress_duration > 0 else False
 
                 if re.search(patterns.pattern_num_6, r['FINAL_NUMBER']):
                     numeration = r['FINAL_NUMBER'][2:][:6]
 
                 else:
                     numeration = r['FINAL_NUMBER'][2:][:5]
-
-                if _type and ingress_duration > 0:
-                    valid = True
-
-                else:
-                    valid = False
 
                 yield Outgoing(
                     connect_time=connect_time.datetime,
@@ -830,8 +578,9 @@ class Cdr(mongoengine.Document):
                     cdr=self,
                     valid=valid,
                     _type=_type,
-                    schedule=schedule,
-                    numeration=numeration)
+                    numeration=numeration,
+                    weekday=connect_time.weekday(),
+                    timestamp=self.get_timestamp(connect_time))
 
         Outgoing.objects.insert(
             reader_to_outgoing(outgoing_dict), load_bulk=False)
@@ -853,6 +602,33 @@ class Cdr(mongoengine.Document):
         Outgoing.objects.filter(
             cdr=self, valid=True, company=None).update(
                 set__valid=False, set__observation='Sin empresa')
+
+        def start(hour):
+            return arrow.get(1, 1, 1, hour).timestamp
+
+        def end(connect_time, hour):
+            return arrow.get(1, 1, 1, hour, 59, 59).timestamp
+
+        Outgoing.objects.filter(
+            Q(cdr=self) & Q(valid=True) & ((Q(weekday__gte=0) &
+                Q(weekday__lte=4) & Q(timestamp__gte=start(8)) &
+                Q(timestamp__lte=end(19))) | (Q(weekday=5) &
+                Q(timestamp__gte=start(8)) &
+                Q(timestamp__lte=end(13))))).update(set__schedule='normal')
+
+        Outgoing.objects.filter(
+            Q(cdr=self) & Q(valid=True) & ((Q(weekday__gte=0) &
+                Q(weekday__lte=4) & Q(timestamp__gte=start(20)) &
+                Q(timestamp__lte=end(23))) | (Q(weekday=5) &
+                Q(timestamp__gte=start(14)) &
+                Q(timestamp__lte=end(23))) | (Q(weekday=6) &
+                Q(timestamp__gte=start(8)) &
+                Q(timestamp__lte=end(23))))).update(set__schedule='reducido')
+
+        Outgoing.objects.filter(
+            cdr=self, valid=True, timestamp__gte=start(0),
+            timestamp__lte=end(7)).update(
+                set__schedule='nocturno')
 
         for e in Line.objects.distinct('entity'):
             numbers = Line.objects.filter(entity=e).values_list(
@@ -975,6 +751,7 @@ class Incoming(mongoengine.Document):
     entity = mongoengine.StringField()
     numeration = mongoengine.StringField()
     weekday = mongoengine.IntField()
+    timestamp = mongoengine.IntField()
 
     def __unicode__(self):
         return str(self.connect_time)
@@ -1000,6 +777,8 @@ class Outgoing(mongoengine.Document):
     schedule = mongoengine.StringField()
     entity = mongoengine.StringField()
     numeration = mongoengine.StringField()
+    weekday = mongoengine.IntField()
+    timestamp = mongoengine.IntField()
 
     def __unicode__(self):
         return str(self.connect_time)
