@@ -6,12 +6,12 @@ try:
 except:
     from io import StringIO
 import datetime as dt
-import json
 import re
 
 from django.conf import settings
 from django.db.models import Q
 
+from bson.json_util import dumps
 from nptime import nptime
 from pymongo import MongoClient
 import arrow
@@ -515,7 +515,7 @@ class Cdr(mongoengine.Document):
                         '$gte': v.get('start'),
                         '$lte': v.get('end')}})
 
-            send_message(json.dumps(q))
+            send_message(dumps(q))
 
             return q
 
