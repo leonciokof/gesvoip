@@ -497,7 +497,7 @@ class Cdr(mongoengine.Document):
             cdr=self, valid=True).distinct('company')
 
         def get_kwargs(company, _type):
-            q = {'cdr': cdr.id,  'company': company.id, '$or': []}
+            q = {'cdr': self.id,  'company': company.id, '$or': []}
             ranges = {
                 k: {
                     'start': arrow.get(
@@ -507,7 +507,8 @@ class Cdr(mongoengine.Document):
                 for k, v in company.schedules.items() if _type in v.keys()}
 
             for k, v in ranges.items():
-                q.append({
+                q['$or'].append({
+                    'day': k,
                     'timestamp': {
                         '$gte': v.get('start'),
                         '$lte': v.get('end')}})
