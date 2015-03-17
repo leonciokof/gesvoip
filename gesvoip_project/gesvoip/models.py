@@ -499,6 +499,8 @@ class Cdr(mongoengine.Document):
             cdr=self, valid=True).distinct('company')
 
         def get_kwargs(company, _type):
+            types = {'normal': 'normal', 'reducido': 'reduced', 'nocturno': 'nightly'}
+            _type = types.get(_type)
             q = {'cdr': self.id,  'company': company.id, '$or': []}
             ranges = {
                 k: {
