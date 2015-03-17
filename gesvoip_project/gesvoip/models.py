@@ -496,29 +496,28 @@ class Cdr(mongoengine.Document):
         companies = Incoming.objects.filter(
             cdr=self, valid=True).distinct('company')
 
-        def get_kwargs(schedules, _type):
-            q = Q(cdr=self) & Q(valid=True)
-            q1 = Q()
+        def get_kwargs(company, _type):
+            q = {'cdr': cdr.id,  'company': company.id, '$or': []}
             ranges = {
                 k: {
                     'start': arrow.get(
                         v.get(_type).get('start'), 'H:mm:ss').timestamp,
                     'end': arrow.get(
                         v.get(_type).get('end'), 'H:mm:ss').timestamp}
-                for k, v in schedules.items() if _type in v.keys()}
+                for k, v in company.schedules.items() if _type in v.keys()}
 
             for k, v in ranges.items():
-                q1 = q1 | (Q(day=k) & Q(timestamp__gte=v.get('start')) &
-                    Q(timestamp__lte=v.get('end')))
-
-            q = q & q1
+                q.append({
+                    'timestamp': {
+                        '$gte': v.get('start'),
+                        '$lte': v.get('end')}})
 
             return q
 
         for c in companies:
             for t in ['normal', 'reducido', 'nocturno']:
-                Outgoing.objects.filter(
-                    get_kwargs(c.schedules, t)).update(set__schedule=t)
+                Outgoing.objects(
+                    __raw__=get_kwargs(c, t)).update(set__schedule=t)
 
         Incoming.objects.filter(
             cdr=self, valid=True, schedule=None).update(
@@ -751,6 +750,7 @@ class Incoming(mongoengine.Document):
     schedule = mongoengine.StringField()
     entity = mongoengine.StringField()
     numeration = mongoengine.StringField()
+    day = mongoengine.StringField()
     weekday = mongoengine.IntField()
     timestamp = mongoengine.IntField()
 
