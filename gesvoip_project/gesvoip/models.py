@@ -9,6 +9,7 @@ import datetime as dt
 import re
 
 from django.conf import settings
+from django.db.models import Q
 
 from nptime import nptime
 from pymongo import MongoClient
