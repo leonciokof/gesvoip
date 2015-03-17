@@ -1,19 +1,18 @@
 from __future__ import absolute_import
-import os
-
-from celery import task
-
 import csv
 import datetime as dt
+import os
 
 from django.conf import settings
 from django.core.mail import EmailMessage
 
+from celery import task
 from pymongo import MongoClient
 from raven import Client
 import pysftp
 
 from . import choices, models
+from .utils import send_message
 
 dsn = settings.RAVEN_CONFIG['dsn'] if not settings.DEBUG else ''
 client = Client(dsn)
@@ -62,22 +61,15 @@ def load_portability():
 
 @task()
 def insert_cdr(cdr_id):
-    send_email(
-        ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-        'Proceso iniciado',
-        'gesvoip_success',
-        {})
+    send_message('Proceso iniciado')
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
         models.Incoming.objects.filter(cdr=cdr).delete()
 
         for c in choices.COMPANIAS:
+            send_message('%s iniciado' % c[0])
             cdr.insert_incoming(c[0])
-            send_email(
-                ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-                'Incoming finalizado',
-                'gesvoip_success',
-                {})
+            send_message('%s finalizado' % c[0])
 
         for c in models.Company.objects(invoicing='monthly'):
             i = models.Invoice.objects.get(
@@ -114,19 +106,12 @@ def insert_cdr(cdr_id):
             i.save()
 
         models.Outgoing.objects.filter(cdr=cdr).delete()
-        send_email(
-            ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-            'Outgoing iniciado',
-            'gesvoip_success',
-            {})
+        send_message('sti iniciado')
         cdr.insert_outgoing()
+        send_message('sti finalizado')
         cdr.processed = True
         cdr.save()
-        send_email(
-            ['Leonardo Gatica <lgaticastyle@gmail.com>'],
-            'Proceso finalizado',
-            'gesvoip_success',
-            {})
+        send_message('proceso finalizado')
 
     except Exception:
         client.captureException()

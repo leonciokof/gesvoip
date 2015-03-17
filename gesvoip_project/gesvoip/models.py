@@ -17,6 +17,7 @@ import arrow
 import mongoengine
 
 from . import choices, patterns
+from .utils import send_message
 
 
 class Company(mongoengine.Document):
@@ -512,6 +513,8 @@ class Cdr(mongoengine.Document):
                     'timestamp': {
                         '$gte': v.get('start'),
                         '$lte': v.get('end')}})
+
+            send_message(json.dumps(q))
 
             return q
 
