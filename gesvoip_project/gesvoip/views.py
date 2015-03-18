@@ -622,7 +622,8 @@ class IncomingValidListView(ListView):
         queryset = super(IncomingValidListView, self).get_queryset()
         invoice = models.Invoice.objects.get(pk=self.kwargs.get('pk'))
         return queryset.filter(
-            cdr=invoice.cdr, company=invoice.company, valid=True)
+            cdr=invoice.cdr, company=invoice.company,
+            valid=True).order_by('connect_time')
 
     def get_context_data(self, **kwargs):
         context = super(IncomingValidListView, self).get_context_data(**kwargs)
