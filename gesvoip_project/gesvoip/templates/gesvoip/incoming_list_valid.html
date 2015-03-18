@@ -29,6 +29,8 @@
                           <th>Duración</th>
                           <th>Origen</th>
                           <th>Destino</th>
+                          <th>Horario</th>
+                          <th>Tipo</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -39,6 +41,8 @@
                           <td>{{ obj.ingress_duration }}</td>
                           <td>{{ obj.ani_number }}</td>
                           <td>{{ obj.dialed_number }}</td>
+                          <td>{{ obj.schedule }}</td>
+                          <td>{{ obj._type }}</td>
                         </tr>
                         {% endfor %}
                       </tbody>
