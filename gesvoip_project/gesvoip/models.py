@@ -9,7 +9,7 @@ import datetime as dt
 import re
 
 from django.conf import settings
-from django.db.models import Q
+from mongoengine.queryset import Q
 
 from bson.json_util import dumps
 from nptime import nptime
@@ -182,45 +182,6 @@ class Cdr(mongoengine.Document):
     def get_date(self):
         """Retorna la fecha para traficos."""
         return self.year + self.month
-
-    def get_valid(self, ani, final_number, dialed_number, ingress_duration):
-        """Funcion que determina si un registro debe o no ser facturado"""
-        p1 = re.search(patterns.national, ani)
-        p2 = re.search(patterns.national, final_number)
-        p3 = re.search(patterns.special2, final_number)
-        p4 = re.search(patterns.pattern_112, dialed_number)
-        p5 = len(ani) == 11 and re.search(patterns.valid_ani, ani)
-        p6 = ingress_duration > 0
-
-        return True if p1 and p2 and not p3 and not p4 and p5 and p6 else False
-
-    def get_type_incoming(self, ani, final_number):
-        """Funcion que determina el tipo de llamada"""
-        if re.search(patterns.pattern_564469, final_number):
-            if re.search(patterns.movil, ani):
-                return 'voip-movil'
-
-            elif not re.search(patterns.national, ani):
-                return 'voip-ldi'
-
-            else:
-                return 'voip-local'
-
-        else:
-            if re.search(patterns.movil, ani):
-                return 'movil'
-
-            elif not re.search(patterns.national, ani):
-                return 'internacional'
-
-            elif re.search(patterns.santiago, ani):
-                return 'local'
-
-            elif re.search(patterns.special, ani):
-                return 'especial'
-
-            else:
-                return 'nacional'
 
     def get_day(self, connect_time, festives):
         if connect_time.date() in festives:
@@ -444,13 +405,8 @@ class Cdr(mongoengine.Document):
                     r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                 disconnect_time = arrow.get(
                     r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
-                _type = self.get_type_incoming(r['ANI'], r['DIALED_NUMBER'])
                 day = self.get_day(connect_time, festives)
                 ingress_duration = int(r['INGRESS_DURATION'])
-                valid = self.get_valid(
-                    r['ANI'], r['FINAL_NUMBER'], r['DIALED_NUMBER'],
-                    ingress_duration)
-                observation = None if valid else 'No cumple con los filtros'
 
                 if re.search(patterns.pattern_num_6, r['ANI']):
                     numeration = r['ANI'][2:][:6]
@@ -467,90 +423,17 @@ class Cdr(mongoengine.Document):
                     dialed_number=r['DIALED_NUMBER'],
                     final_number=r['FINAL_NUMBER'],
                     cdr=self,
-                    valid=valid,
                     numeration=numeration,
-                    _type=_type,
                     weekday=connect_time.weekday(),
-                    observation=observation,
                     day=day,
                     timestamp=self.get_timestamp(connect_time))
 
         Incoming.objects.insert(
             reader_to_incomming(incoming_dict), load_bulk=False)
-
-        for c in Portability.objects.distinct('company'):
-            numbers = Portability.objects.filter(company=c).values_list(
-                'number')
-            Incoming.objects.filter(
-                cdr=self, valid=True, ani__in=numbers,
-                company=None).update(set__company=c)
-
-        for c in Numeration.objects.distinct('company'):
-            numerations = Numeration.objects.filter(company=c).values_list(
-                'numeration')
-            Incoming.objects.filter(
-                cdr=self, valid=True, numeration__in=numerations,
-                company=None).update(set__company=c)
-
-        Incoming.objects.filter(
-            cdr=self, valid=True, company=None).update(
-                set__valid=False, set__observation='Sin empresa')
-        companies = Incoming.objects.filter(
-            cdr=self, valid=True).distinct('company')
-
-        def get_kwargs(company, _type):
-            types = {'normal': 'normal', 'reducido': 'reduced', 'nocturno': 'nightly'}
-            _type = types.get(_type)
-            q = {'cdr': self.id,  'company': company.id, '$or': []}
-            ranges = {
-                k: {
-                    'start': arrow.get(
-                        v.get(_type).get('start'), 'H:mm:ss').timestamp,
-                    'end': arrow.get(
-                        v.get(_type).get('end'), 'H:mm:ss').timestamp}
-                for k, v in company.schedules.items() if _type in v.keys()}
-
-            for k, v in ranges.items():
-                q['$or'].append({
-                    'day': k,
-                    'timestamp': {
-                        '$gte': v.get('start'),
-                        '$lte': v.get('end')}})
-
-            return q
-
-        for c in companies:
-            if c.schedules not in [None, {}]:
-                for t in ['normal', 'reducido', 'nocturno']:
-                    Incoming.objects(
-                        __raw__=get_kwargs(c, t)).update(set__schedule=t)
-
-        Incoming.objects.filter(
-            cdr=self, valid=True, schedule=None).update(
-                set__valid=False, set__observation='Sin horario')
-
-    def get_type_outgoing(self, ani, final_number):
-        type_call = None
-
-        if re.search(patterns.pattern_56446, ani):
-            if re.search(patterns.movil, final_number):
-                type_call = 'voip-movil'
-
-            elif re.search(patterns.national, final_number):
-                type_call = 'voip-local'
-
-        elif re.search(patterns.national, ani):
-            if re.search(patterns.movil, final_number):
-                type_call = 'movil'
-
-            elif (re.search(patterns.national, final_number)
-                    and not re.search(patterns.pattern_56446, final_number)):
-                type_call = 'local'
-
-            elif not re.search(patterns.national, final_number):
-                type_call = 'internacional'
-
-        return type_call
+        Incoming.set_valid(self)
+        Incoming.set_type(self)
+        Incoming.set_company(self)
+        Incoming.set_schedule(self)
 
     def insert_outgoing(self):
         outgoing = self.outgoing.read()
@@ -564,8 +447,6 @@ class Cdr(mongoengine.Document):
                 disconnect_time = arrow.get(
                     r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                 ingress_duration = int(r['INGRESS_DURATION'])
-                _type = self.get_type_outgoing(r['ANI'], r['FINAL_NUMBER'])
-                valid = True if _type and ingress_duration > 0 else False
 
                 if re.search(patterns.pattern_num_6, r['FINAL_NUMBER']):
                     numeration = r['FINAL_NUMBER'][2:][:6]
@@ -582,70 +463,51 @@ class Cdr(mongoengine.Document):
                     dialed_number=r['DIALED_NUMBER'],
                     ingress_duration=ingress_duration,
                     cdr=self,
-                    valid=valid,
-                    _type=_type,
                     numeration=numeration,
                     weekday=connect_time.weekday(),
                     timestamp=self.get_timestamp(connect_time))
 
         Outgoing.objects.insert(
             reader_to_outgoing(outgoing_dict), load_bulk=False)
+        Outgoing.set_type(self)
+        Outgoing.set_valid(self)
+        Outgoing.set_company(self)
+        Outgoing.set_schedule(self)
+        Outgoing.set_entity(self)
+        Outgoing.set_line(self)
 
-        for c in Portability.objects.distinct('company'):
-            numbers = Portability.objects.filter(company=c).values_list(
-                'number')
-            Outgoing.objects.filter(
-                cdr=self, valid=True, final_number__in=numbers,
-                company=None).update(set__company=c)
+    def complete_invoices(self):
+        for c in models.Company.objects(invoicing='monthly'):
+            i = models.Invoice.objects.get(company=c, cdr=self)
 
-        for c in Numeration.objects.distinct('company'):
-            numerations = Numeration.objects.filter(company=c).values_list(
-                'numeration')
-            Outgoing.objects.filter(
-                cdr=self, valid=True, numeration__in=numerations,
-                company=None).update(set__company=c)
+            for p in models.Period.objects(invoice=i):
+                for r in models.Rate.objects(period=p):
+                    r.call_number = models.Incoming.objects(
+                        company=c,
+                        connect_time__gte=p.start.date(),
+                        connect_time__lte=p.end.date(),
+                        schedule=r._type).count()
+                    r.call_duration = models.Incoming.objects(
+                        company=c,
+                        connect_time__gte=p.start.date(),
+                        connect_time__lte=p.end.date(),
+                        schedule=r._type).sum('ingress_duration')
+                    r.total = r.call_duration * r.price
+                    r.save()
 
-        Outgoing.objects.filter(
-            cdr=self, valid=True, company=None).update(
-                set__valid=False, set__observation='Sin empresa')
+                p.call_number = models.Rate.objects(
+                    period=p).sum('call_number')
+                p.call_duration = models.Rate.objects(
+                    period=p).sum('call_duration')
+                p.total = models.Rate.objects(period=p).sum('total')
+                p.save()
 
-        def start(hour):
-            return arrow.get(1, 1, 1, hour).timestamp
-
-        def end(connect_time, hour):
-            return arrow.get(1, 1, 1, hour, 59, 59).timestamp
-
-        Outgoing.objects.filter(
-            Q(cdr=self) & Q(valid=True) & ((Q(weekday__gte=0) &
-                Q(weekday__lte=4) & Q(timestamp__gte=start(8)) &
-                Q(timestamp__lte=end(19))) | (Q(weekday=5) &
-                Q(timestamp__gte=start(8)) &
-                Q(timestamp__lte=end(13))))).update(set__schedule='normal')
-
-        Outgoing.objects.filter(
-            Q(cdr=self) & Q(valid=True) & ((Q(weekday__gte=0) &
-                Q(weekday__lte=4) & Q(timestamp__gte=start(20)) &
-                Q(timestamp__lte=end(23))) | (Q(weekday=5) &
-                Q(timestamp__gte=start(14)) &
-                Q(timestamp__lte=end(23))) | (Q(weekday=6) &
-                Q(timestamp__gte=start(8)) &
-                Q(timestamp__lte=end(23))))).update(set__schedule='reducido')
-
-        Outgoing.objects.filter(
-            cdr=self, valid=True, timestamp__gte=start(0),
-            timestamp__lte=end(7)).update(
-                set__schedule='nocturno')
-
-        for e in Line.objects.distinct('entity'):
-            numbers = Line.objects.filter(entity=e).values_list(
-                'number')
-            Outgoing.objects.filter(
-                cdr=self, valid=True, final_number__in=numbers).update(
-                    set__entity=e)
-
-        for l in Line.objects.all():
-            Outgoing.objects.filter(
-                cdr=self, valid=True, ani_number=l.number).update(set__line=l)
+            i.call_number = models.Period.objects(invoice=i).sum('call_number')
+            i.call_duration = models.Period.objects(
+                invoice=i).sum('call_duration')
+            i.total = models.Period.objects(invoice=i).sum('total')
+            i.invoiced = True
+            i.save()
 
     def get_ingress_duration_by_type(cdr, company, _type, schedule):
         return Incoming.objects(
@@ -748,9 +610,9 @@ class Incoming(mongoengine.Document):
     dialed_number = mongoengine.StringField()
     cdr = mongoengine.ReferenceField(
         Cdr, reverse_delete_rule=mongoengine.CASCADE)
-    valid = mongoengine.BooleanField()
+    valid = mongoengine.BooleanField(default=False)
     invoiced = mongoengine.BooleanField(default=False)
-    observation = mongoengine.StringField()
+    observation = mongoengine.StringField(default='No cumple con los filtros')
     company = mongoengine.ReferenceField(Company)
     _type = mongoengine.StringField()
     schedule = mongoengine.StringField()
@@ -762,6 +624,101 @@ class Incoming(mongoengine.Document):
 
     def __unicode__(self):
         return str(self.connect_time)
+
+    @classmethod
+    def set_valid(cls, cdr):
+        """Funcion que establece si un registro debe o no ser facturado"""
+        q = {
+            'ani': patterns.national,
+            'final_number': patterns.national,
+            'final_number': patterns.special2,
+            'dialed_number': patterns.pattern_112,
+            'ingress_duration': {'$gt': 0}}
+        cls.objects(__raw__=q).update(set__valid=True, set__observation=None)
+
+    @classmethod
+    def set_type(cls, cdr):
+        """Funcion que establece el tipo de llamada"""
+        cls.objects(
+            cdr=cdr, final_number=patterns.voip,
+            ani=patterns.movil).update(set___type='voip-movil')
+        cls.objects(
+            cdr=cdr, final_number=patterns.voip,
+            ani=patterns.international,
+            _type=None).update(set___type='voip-ldi')
+        cls.objects(
+            cdr=cdr, final_number=patterns.voip,
+            _type=None).update(set___type='voip-local')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.movil, _type=None).update(set___type='movil')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.international,
+            _type=None).update(set___type='internacional')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.santiago, _type=None).update(set___type='local')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.special, _type=None).update(set___type='especial')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            _type=None).update(set___type='nacional')
+
+    @classmethod
+    def set_company(cls, cdr):
+        for c in Portability.objects.distinct('company'):
+            numbers = Portability.objects(company=c).values_list(
+                'number')
+            cls.objects(
+                cdr=cdr, valid=True, ani__in=numbers).update(set__company=c)
+
+        for c in Numeration.objects.distinct('company'):
+            numerations = Numeration.objects(company=c).values_list(
+                'numeration')
+            cls.objects(
+                cdr=cdr, valid=True, numeration__in=numerations,
+                company=None).update(set__company=c)
+
+        cls.objects(
+            cdr=cdr, valid=True, company=None).update(
+                set__valid=False, set__observation='Sin empresa')
+
+    @classmethod
+    def set_schedule(cls, cdr):
+        companies = cls.objects(cdr=cdr, valid=True).distinct('company')
+
+        def get_kwargs(company, _type):
+            types = {'normal': 'normal', 'reducido': 'reduced', 'nocturno': 'nightly'}
+            _type = types.get(_type)
+            q = {'cdr': cdr.id,  'company': company.id, '$or': []}
+            ranges = {
+                k: {
+                    'start': arrow.get(
+                        v.get(_type).get('start'), 'H:mm:ss').timestamp,
+                    'end': arrow.get(
+                        v.get(_type).get('end'), 'H:mm:ss').timestamp}
+                for k, v in company.schedules.items() if _type in v.keys()}
+
+            for k, v in ranges.items():
+                q['$or'].append({
+                    'day': k,
+                    'timestamp': {
+                        '$gte': v.get('start'),
+                        '$lte': v.get('end')}})
+
+            return q
+
+        for c in companies:
+            if c.schedules not in [None, {}]:
+                for t in ['normal', 'reducido', 'nocturno']:
+                    cls.objects(
+                        __raw__=get_kwargs(c, t)).update(set__schedule=t)
+
+        cls.objects(
+            cdr=cdr, valid=True, schedule=None).update(
+                set__valid=False, set__observation='Sin horario')
 
 
 class Outgoing(mongoengine.Document):
@@ -777,7 +734,8 @@ class Outgoing(mongoengine.Document):
     dialed_number = mongoengine.StringField()
     cdr = mongoengine.ReferenceField(
         Cdr, reverse_delete_rule=mongoengine.CASCADE)
-    valid = mongoengine.BooleanField()
+    valid = mongoengine.BooleanField(default=False)
+    observation = mongoengine.StringField(default='No cumple con los filtros')
     company = mongoengine.ReferenceField(Company)
     line = mongoengine.ReferenceField(Line)
     _type = mongoengine.StringField()
@@ -789,6 +747,98 @@ class Outgoing(mongoengine.Document):
 
     def __unicode__(self):
         return str(self.connect_time)
+
+    @classmethod
+    def set_type(cls, cdr):
+        cls.objects(
+            cdr=cdr, ani=patterns.pattern_56446,
+            final_number=patterns.movil).update(set___type='voip-movil')
+        cls.objects(
+            cdr=cdr, ani=patterns.pattern_56446,
+            final_number=patterns.national,
+            _type=None).update(set___type='voip-local')
+        cls.objects(
+            cdr=cdr, ani=patterns.national,
+            final_number=patterns.movil, _type=None).update(set___type='movil')
+        q = {
+            'cdr': cdr.id,
+            'ani': patterns.national,
+            '_type': None,
+            'final_number': patterns.national,
+            'final_number': patterns.pattern_not_56446}
+        cls.objects(__raw__=q).update(set___type='local')
+        cls.objects(
+            cdr=cdr, ani=patterns.national,
+            final_number=patterns.international,
+            _type=None).update(set___type='internacional')
+
+    @classmethod
+    def set_valid(cls, cdr):
+        cls.objects(cdr=cdr, _type__ne=None, ingress_duration__gt=0).update(
+            set__valid=True, set__observation=None)
+
+    @classmethod
+    def set_company(cls, cdr):
+        for c in Portability.objects.distinct('company'):
+            numbers = Portability.objects(company=c).values_list('number')
+            cls.objects(
+                cdr=cdr, valid=True,
+                final_number__in=numbers).update(set__company=c)
+
+        for c in Numeration.objects.distinct('company'):
+            numerations = Numeration.objects(company=c).values_list(
+                'numeration')
+            cls.objects(
+                cdr=cdr, valid=True, numeration__in=numerations,
+                company=None).update(set__company=c)
+
+        cls.objects(
+            cdr=cdr, valid=True, company=None).update(
+                set__valid=False, set__observation='Sin empresa')
+
+    @classmethod
+    def set_schedule(cls, cdr):
+        def start(hour):
+            return arrow.get(1, 1, 1, hour).timestamp
+
+        def end(connect_time, hour):
+            return arrow.get(1, 1, 1, hour, 59, 59).timestamp
+
+        cls.objects(
+            Q(cdr=cdr) & Q(valid=True) & ((Q(weekday__gte=0) &
+                Q(weekday__lte=4) & Q(timestamp__gte=start(8)) &
+                Q(timestamp__lte=end(19))) | (Q(weekday=5) &
+                Q(timestamp__gte=start(8)) &
+                Q(timestamp__lte=end(13))))).update(set__schedule='normal')
+
+        cls.objects(
+            Q(cdr=cdr) & Q(valid=True) &
+            Q(schedule=None) & ((Q(weekday__gte=0) &
+                Q(weekday__lte=4) & Q(timestamp__gte=start(20)) &
+                Q(timestamp__lte=end(23))) | (Q(weekday=5) &
+                Q(timestamp__gte=start(14)) &
+                Q(timestamp__lte=end(23))) | (Q(weekday=6) &
+                Q(timestamp__gte=start(8)) &
+                Q(timestamp__lte=end(23))))).update(set__schedule='reducido')
+
+        cls.objects(
+            cdr=cdr, valid=True, schedule=None, timestamp__gte=start(0),
+            timestamp__lte=end(7)).update(set__schedule='nocturno')
+
+    @classmethod
+    def set_entity(cls, cdr):
+        for e in Line.objects.distinct('entity'):
+            numbers = Line.objects(entity=e).values_list(
+                'number')
+            Outgoing.objects(
+                cdr=cdr, valid=True, final_number__in=numbers).update(
+                    set__entity=e)
+
+    @classmethod
+    def set_line(cls, cdr):
+        for l in Line.objects.all():
+            Outgoing.objects(
+                cdr=cdr, valid=True, ani_number=l.number).update(set__line=l)
 
 
 class Portability(mongoengine.Document):

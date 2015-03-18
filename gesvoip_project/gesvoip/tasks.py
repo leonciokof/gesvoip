@@ -71,40 +71,9 @@ def insert_cdr(cdr_id):
             cdr.insert_incoming(c[0])
             send_message('%s finalizado' % c[0])
 
-        for c in models.Company.objects(invoicing='monthly'):
-            i = models.Invoice.objects.get(
-                company=c, cdr=cdr)
-
-            for p in models.Period.objects(invoice=i):
-                for r in models.Rate.objects(period=p):
-                    r.call_number = models.Incoming.objects(
-                        company=c,
-                        connect_time__gte=p.start.date(),
-                        connect_time__lte=p.end.date(),
-                        schedule=r._type).count()
-                    r.call_duration = models.Incoming.objects(
-                        company=c,
-                        connect_time__gte=p.start.date(),
-                        connect_time__lte=p.end.date(),
-                        schedule=r._type).sum('ingress_duration')
-                    r.total = r.call_duration * r.price
-                    r.save()
-
-                p.call_number = models.Rate.objects(
-                    period=p).sum('call_number')
-                p.call_duration = models.Rate.objects(
-                    period=p).sum('call_duration')
-                p.total = models.Rate.objects(period=p).sum('total')
-                p.save()
-
-            i.call_number = models.Period.objects(
-                invoice=i).sum('call_number')
-            i.call_duration = models.Period.objects(
-                invoice=i).sum('call_duration')
-            i.total = models.Period.objects(invoice=i).sum('total')
-            i.invoiced = True
-            i.save()
-
+        send_message('invoices iniciado')
+        cdr.complete_invoices()
+        send_message('invoices finalizado')
         models.Outgoing.objects.filter(cdr=cdr).delete()
         send_message('sti iniciado')
         cdr.insert_outgoing()
