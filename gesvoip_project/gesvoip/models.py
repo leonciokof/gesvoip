@@ -522,7 +522,7 @@ class Cdr(mongoengine.Document):
         for c in companies:
             if c.schedules not in [None, {}]:
                 for t in ['normal', 'reducido', 'nocturno']:
-                    Outgoing.objects(
+                    Incoming.objects(
                         __raw__=get_kwargs(c, t)).update(set__schedule=t)
 
         Incoming.objects.filter(
