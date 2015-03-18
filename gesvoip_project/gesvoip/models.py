@@ -392,12 +392,6 @@ class Cdr(mongoengine.Document):
 
         incoming_file = StringIO.StringIO(incoming)
         incoming_dict = csv.DictReader(incoming_file, delimiter=',')
-        date = '%s-%s' % (self.year, self.month)
-        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
-        end = start.replace(months=1)
-        festives = Holiday.objects(
-            date__gte=start, date__lt=end).values_list('date')
-        festives = [f.date() for f in festives]
 
         def reader_to_incomming(reader):
             for r in reader:
@@ -405,8 +399,17 @@ class Cdr(mongoengine.Document):
                     r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                 disconnect_time = arrow.get(
                     r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
-                day = self.get_day(connect_time, festives)
                 ingress_duration = int(r['INGRESS_DURATION'])
+                weekday = connect_time.weekday()
+
+                if weekday in range(5):
+                    day = 'bussines'
+
+                elif weekday == 5:
+                    day = 'saturday'
+
+                else:
+                    day = 'festive'
 
                 if re.search(patterns.pattern_num_6, r['ANI']):
                     numeration = r['ANI'][2:][:6]
@@ -424,13 +427,15 @@ class Cdr(mongoengine.Document):
                     final_number=r['FINAL_NUMBER'],
                     cdr=self,
                     numeration=numeration,
-                    weekday=connect_time.weekday(),
+                    weekday=weekday,
                     day=day,
-                    timestamp=self.get_timestamp(connect_time))
+                    timestamp=self.get_timestamp(connect_time),
+                    date=connect_time.format('YYYY-MM-DD'))
 
         Incoming.objects.insert(
             reader_to_incomming(incoming_dict), load_bulk=False)
         Incoming.set_valid(self)
+        Incoming.set_festive(self)
         Incoming.set_type(self)
         Incoming.set_company(self)
         Incoming.set_schedule(self)
@@ -621,6 +626,7 @@ class Incoming(mongoengine.Document):
     day = mongoengine.StringField()
     weekday = mongoengine.IntField()
     timestamp = mongoengine.IntField()
+    date = mongoengine.StringField()
 
     def __unicode__(self):
         return str(self.connect_time)
@@ -639,6 +645,17 @@ class Incoming(mongoengine.Document):
             'dialed_number': patterns.pattern_112,
             'ingress_duration': {'$gt': 0}}
         cls.objects(__raw__=q).update(set__valid=True, set__observation=None)
+
+    @classmethod
+    def set_festive(cls, cdr):
+        date = '%s-%s' % (cdr.year, cdr.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+        festives = Holiday.objects(
+            date__gte=start, date__lt=end).values_list('date')
+        festives = [f.format('YYYY-MM-DD') for f in festives]
+        cls.objects(
+            cdr=cdr, valid=True, date__in=festives).update(set__day='festive')
 
     @classmethod
     def set_type(cls, cdr):
