@@ -832,7 +832,7 @@ class Outgoing(mongoengine.Document):
         def start(hour):
             return arrow.get(1, 1, 1, hour).timestamp
 
-        def end(connect_time, hour):
+        def end(hour):
             return arrow.get(1, 1, 1, hour, 59, 59).timestamp
 
         q1 = Q(cdr=cdr) & Q(valid=True)
