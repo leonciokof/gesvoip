@@ -697,9 +697,13 @@ class Incoming(mongoengine.Document):
 
     @classmethod
     def set_company(cls, cdr):
+        date = '%s-%s' % (cdr.year, cdr.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+
         for c in Portability.objects.distinct('company'):
-            numbers = Portability.objects(company=c).values_list(
-                'number')
+            numbers = Portability.objects(
+                company=c, date__lt=end.datetime).values_list('number')
             cls.objects(
                 cdr=cdr, valid=True, ani__in=numbers).update(set__company=c)
 
@@ -810,8 +814,13 @@ class Outgoing(mongoengine.Document):
 
     @classmethod
     def set_company(cls, cdr):
+        date = '%s-%s' % (cdr.year, cdr.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+
         for c in Portability.objects.distinct('company'):
-            numbers = Portability.objects(company=c).values_list('number')
+            numbers = Portability.objects(
+                company=c, date__lt=end.datetime).values_list('number')
             cls.objects(
                 cdr=cdr, valid=True,
                 final_number__in=numbers).update(set__company=c)
