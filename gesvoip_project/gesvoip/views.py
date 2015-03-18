@@ -616,12 +616,20 @@ class IncomingValidListView(ListView):
 
     document = models.Incoming
     paginate_by = 25
+    template_name = 'gesvoip/incoming_list_valid.html'
 
     def get_queryset(self):
         queryset = super(IncomingValidListView, self).get_queryset()
         invoice = models.Invoice.objects.get(pk=self.kwargs.get('pk'))
         return queryset.filter(
             cdr=invoice.cdr, company=invoice.company, valid=True)
+
+    def get_context_data(self, **kwargs):
+        context = super(IncomingValidListView, self).get_context_data(**kwargs)
+        context.update({
+            'invoice': models.Invoice.objects.get(pk=self.kwargs.get('pk'))})
+
+        return context
 
 incoming_valid_list = login_required(IncomingValidListView.as_view())
 
