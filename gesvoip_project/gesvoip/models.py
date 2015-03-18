@@ -727,11 +727,23 @@ class Incoming(mongoengine.Document):
                 for k, v in company.schedules.items() if _type in v.keys()}
 
             for k, v in ranges.items():
-                q['$or'].append({
-                    'day': k,
-                    'timestamp': {
-                        '$gte': v.get('start'),
-                        '$lte': v.get('end')}})
+                start = v.get('start')
+                end = v.get('end')
+
+                if start < end:
+                    q['$or'].append({
+                        'day': k, 'timestamp': {'$gte': start, '$lte': end}})
+
+                else:
+                    start1 = start
+                    end1 = arrow.get('23:59:59', 'H:mm:ss').timestamp
+                    start2 = arrow.get('0:00:00', 'H:mm:ss').timestamp
+                    end2 = end
+                    q['$or'].append({
+                        'day': k,
+                        '$or': [
+                            {'timestamp': {'$gte': start1, '$lte': end1}},
+                            {'timestamp': {'$gte': start2, '$lte': end2}}]})
 
             return q
 
