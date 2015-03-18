@@ -625,6 +625,10 @@ class Incoming(mongoengine.Document):
     def __unicode__(self):
         return str(self.connect_time)
 
+    @property
+    def type(self):
+        return self._type
+
     @classmethod
     def set_valid(cls, cdr):
         """Funcion que establece si un registro debe o no ser facturado"""
