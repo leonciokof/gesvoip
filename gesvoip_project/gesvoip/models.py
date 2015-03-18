@@ -413,11 +413,11 @@ class Cdr(mongoengine.Document):
                     else:
                         day = 'festive'
 
-                    if re.search(patterns.pattern_num_6, r['ANI']):
-                        numeration = r['ANI'][2:][:6]
+                    if re.search(patterns.movil, r['ANI']):
+                        numeration = r['ANI'][2:][:5]
 
                     else:
-                        numeration = r['ANI'][2:][:5]
+                        numeration = r['ANI'][2:][:6]
 
                     yield Incoming(
                         connect_time=connect_time.datetime,
@@ -439,11 +439,21 @@ class Cdr(mongoengine.Document):
             send_message('%s finalizado' % c[0])
 
     def process_incoming(self):
+        send_message('set_valid iniciado')
         Incoming.set_valid(self)
+        send_message('set_valid finalizado')
+        send_message('set_festive iniciado')
         Incoming.set_festive(self)
+        send_message('set_festive finalizado')
+        send_message('set_type iniciado')
         Incoming.set_type(self)
+        send_message('set_type finalizado')
+        send_message('set_company iniciado')
         Incoming.set_company(self)
+        send_message('set_company finalizado')
+        send_message('set_schedule iniciado')
         Incoming.set_schedule(self)
+        send_message('set_schedule finalizado')
 
     def insert_outgoing(self):
         outgoing = self.outgoing.read()
