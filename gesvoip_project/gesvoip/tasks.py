@@ -61,7 +61,6 @@ def load_portability():
 
 @task()
 def insert_cdr(cdr_id):
-    send_message('Proceso iniciado')
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
         models.Incoming.objects.filter(cdr=cdr).delete()
@@ -80,7 +79,6 @@ def insert_cdr(cdr_id):
         send_message('sti finalizado')
         cdr.processed = True
         cdr.save()
-        send_message('proceso finalizado')
 
     except Exception:
         client.captureException()

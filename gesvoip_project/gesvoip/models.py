@@ -17,7 +17,6 @@ import arrow
 import mongoengine
 
 from . import choices, patterns
-from .utils import send_message
 
 
 class Company(mongoengine.Document):
@@ -383,7 +382,6 @@ class Cdr(mongoengine.Document):
         return arrow.get(connect_time.format('H:mm:ss'), 'H:mm:ss').timestamp
 
     def insert_incoming(self, name):
-        send_message('Inicio carga %s' % name)
         if name == 'ENTEL':
             incoming = self.incoming_entel.read()
 
@@ -434,22 +432,11 @@ class Cdr(mongoengine.Document):
 
         Incoming.objects.insert(
             reader_to_incomming(incoming_dict), load_bulk=False)
-        send_message('Fin carga %s' % name)
-        send_message('Inicio set_valid')
         Incoming.set_valid(self)
-        send_message('Fin set_valid')
-        send_message('Inicio set_festive')
         Incoming.set_festive(self)
-        send_message('Fin set_festive')
-        send_message('Inicio set_type')
         Incoming.set_type(self)
-        send_message('Fin set_type')
-        send_message('Inicio set_company')
         Incoming.set_company(self)
-        send_message('Fin set_company')
-        send_message('Inicio set_schedule')
         Incoming.set_schedule(self)
-        send_message('Fin set_schedule')
 
     def insert_outgoing(self):
         outgoing = self.outgoing.read()
@@ -494,33 +481,36 @@ class Cdr(mongoengine.Document):
 
     def complete_invoices(self):
         for c in Company.objects(invoicing='monthly'):
-            i = Invoice.objects.get(company=c, cdr=self)
+            i = Invoice.objects(company=c, cdr=self).first()
 
-            for p in Period.objects(invoice=i):
-                for r in Rate.objects(period=p):
-                    r.call_number = Incoming.objects(
-                        company=c,
-                        connect_time__gte=p.start.date(),
-                        connect_time__lte=p.end.date(),
-                        schedule=r._type).count()
-                    r.call_duration = Incoming.objects(
-                        company=c,
-                        connect_time__gte=p.start.date(),
-                        connect_time__lte=p.end.date(),
-                        schedule=r._type).sum('ingress_duration')
-                    r.total = r.call_duration * r.price
-                    r.save()
+            if i is not None:
+                for p in Period.objects(invoice=i):
+                    for r in Rate.objects(period=p):
+                        r.call_number = Incoming.objects(
+                            company=c,
+                            connect_time__gte=p.start.date(),
+                            connect_time__lte=p.end.date(),
+                            schedule=r._type).count()
+                        r.call_duration = Incoming.objects(
+                            company=c,
+                            connect_time__gte=p.start.date(),
+                            connect_time__lte=p.end.date(),
+                            schedule=r._type).sum('ingress_duration')
+                        r.total = r.call_duration * r.price
+                        r.save()
 
-                p.call_number = Rate.objects(period=p).sum('call_number')
-                p.call_duration = Rate.objects(period=p).sum('call_duration')
-                p.total = Rate.objects(period=p).sum('total')
-                p.save()
+                    p.call_number = Rate.objects(period=p).sum('call_number')
+                    p.call_duration = Rate.objects(period=p).sum(
+                        'call_duration')
+                    p.total = Rate.objects(period=p).sum('total')
+                    p.save()
 
-            i.call_number = Period.objects(invoice=i).sum('call_number')
-            i.call_duration = Period.objects(invoice=i).sum('call_duration')
-            i.total = Period.objects(invoice=i).sum('total')
-            i.invoiced = True
-            i.save()
+                i.call_number = Period.objects(invoice=i).sum('call_number')
+                i.call_duration = Period.objects(invoice=i).sum(
+                    'call_duration')
+                i.total = Period.objects(invoice=i).sum('total')
+                i.invoiced = True
+                i.save()
 
     def get_ingress_duration_by_type(self, company, _type, schedule):
         return Incoming.objects(
@@ -647,7 +637,7 @@ class Incoming(mongoengine.Document):
     def set_valid(cls, cdr):
         """Funcion que establece si un registro debe o no ser facturado"""
         q = {
-            'ani': patterns.national,
+            'ani': patterns.valid_ani2,
             'final_number': patterns.national,
             'final_number': patterns.special2,
             'dialed_number': patterns.pattern_112,
