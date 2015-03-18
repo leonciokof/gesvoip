@@ -11,7 +11,7 @@ from pymongo import MongoClient
 from raven import Client
 import pysftp
 
-from . import choices, models
+from . import models
 from .utils import send_message
 
 dsn = settings.RAVEN_CONFIG['dsn'] if not settings.DEBUG else ''
@@ -64,12 +64,10 @@ def insert_cdr(cdr_id):
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
         models.Incoming.objects.filter(cdr=cdr).delete()
-
-        for c in choices.COMPANIAS:
-            send_message('%s iniciado' % c[0])
-            cdr.insert_incoming(c[0])
-            send_message('%s finalizado' % c[0])
-
+        cdr.insert_incoming()
+        send_message('process iniciado')
+        cdr.process_incoming()
+        send_message('process finalizado')
         send_message('invoices iniciado')
         cdr.complete_invoices()
         send_message('invoices finalizado')

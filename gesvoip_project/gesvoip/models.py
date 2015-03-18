@@ -17,6 +17,7 @@ import arrow
 import mongoengine
 
 from . import choices, patterns
+from .utils import send_message
 
 
 class Company(mongoengine.Document):
@@ -381,57 +382,63 @@ class Cdr(mongoengine.Document):
     def get_timestamp(self, connect_time):
         return arrow.get(connect_time.format('H:mm:ss'), 'H:mm:ss').timestamp
 
-    def insert_incoming(self, name):
-        if name == 'ENTEL':
-            incoming = self.incoming_entel.read()
+    def insert_incoming(self):
+        for c in choices.COMPANIAS:
+            send_message('%s iniciado' % c[0])
 
-        else:
-            incoming = self.incoming_ctc.read()
+            if c[0] == 'ENTEL':
+                incoming = self.incoming_entel.read()
 
-        incoming_file = StringIO.StringIO(incoming)
-        incoming_dict = csv.DictReader(incoming_file, delimiter=',')
+            else:
+                incoming = self.incoming_ctc.read()
 
-        def reader_to_incomming(reader):
-            for r in reader:
-                connect_time = arrow.get(
-                    r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
-                disconnect_time = arrow.get(
-                    r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
-                ingress_duration = int(r['INGRESS_DURATION'])
-                weekday = connect_time.weekday()
+            incoming_file = StringIO.StringIO(incoming)
+            incoming_dict = csv.DictReader(incoming_file, delimiter=',')
 
-                if weekday in range(5):
-                    day = 'bussines'
+            def reader_to_incomming(reader):
+                for r in reader:
+                    connect_time = arrow.get(
+                        r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                    disconnect_time = arrow.get(
+                        r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                    ingress_duration = int(r['INGRESS_DURATION'])
+                    weekday = connect_time.weekday()
 
-                elif weekday == 5:
-                    day = 'saturday'
+                    if weekday in range(5):
+                        day = 'bussines'
 
-                else:
-                    day = 'festive'
+                    elif weekday == 5:
+                        day = 'saturday'
 
-                if re.search(patterns.pattern_num_6, r['ANI']):
-                    numeration = r['ANI'][2:][:6]
+                    else:
+                        day = 'festive'
 
-                else:
-                    numeration = r['ANI'][2:][:5]
+                    if re.search(patterns.pattern_num_6, r['ANI']):
+                        numeration = r['ANI'][2:][:6]
 
-                yield Incoming(
-                    connect_time=connect_time.datetime,
-                    disconnect_time=disconnect_time.datetime,
-                    ani=r['ANI'],
-                    ani_number=r['ANI_NUMBER'],
-                    ingress_duration=ingress_duration,
-                    dialed_number=r['DIALED_NUMBER'],
-                    final_number=r['FINAL_NUMBER'],
-                    cdr=self,
-                    numeration=numeration,
-                    weekday=weekday,
-                    day=day,
-                    timestamp=self.get_timestamp(connect_time),
-                    date=connect_time.format('YYYY-MM-DD'))
+                    else:
+                        numeration = r['ANI'][2:][:5]
 
-        Incoming.objects.insert(
-            reader_to_incomming(incoming_dict), load_bulk=False)
+                    yield Incoming(
+                        connect_time=connect_time.datetime,
+                        disconnect_time=disconnect_time.datetime,
+                        ani=r['ANI'],
+                        ani_number=r['ANI_NUMBER'],
+                        ingress_duration=ingress_duration,
+                        dialed_number=r['DIALED_NUMBER'],
+                        final_number=r['FINAL_NUMBER'],
+                        cdr=self,
+                        numeration=numeration,
+                        weekday=weekday,
+                        day=day,
+                        timestamp=self.get_timestamp(connect_time),
+                        date=connect_time.format('YYYY-MM-DD'))
+
+            Incoming.objects.insert(
+                reader_to_incomming(incoming_dict), load_bulk=False)
+            send_message('%s finalizado' % c[0])
+
+    def process_incoming(self):
         Incoming.set_valid(self)
         Incoming.set_festive(self)
         Incoming.set_type(self)
