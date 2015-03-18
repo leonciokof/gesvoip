@@ -34,8 +34,8 @@
                       <tbody>
                         {% for obj in object_list %}
                         <tr>
-                          <td>{{ obj.connect_time|date:"SHORT_DATETIME_FORMAT" }}</td>
-                          <td>{{ obj.disconnect_time|date:"SHORT_DATETIME_FORMAT" }}</td>
+                          <td>{{ obj.connect_time|date:"d/m/Y H:i:s" }}</td>
+                          <td>{{ obj.disconnect_time|date:"d/m/Y H:i:s" }}</td>
                           <td>{{ obj.ingress_duration }}</td>
                           <td>{{ obj.ani_number }}</td>
                           <td>{{ obj.dialed_number }}</td>
