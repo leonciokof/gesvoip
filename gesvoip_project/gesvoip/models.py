@@ -490,7 +490,7 @@ class Cdr(mongoengine.Document):
         Outgoing.set_company(self)
         Outgoing.set_schedule(self)
         Outgoing.set_entity(self)
-        Outgoing.set_line(self)
+        # Outgoing.set_line(self)
 
     def complete_invoices(self):
         for c in Company.objects(invoicing='monthly'):
