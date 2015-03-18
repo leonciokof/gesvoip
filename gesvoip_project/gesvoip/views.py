@@ -621,7 +621,7 @@ class IncomingValidListView(ListView):
         queryset = super(IncomingValidListView, self).get_queryset()
         invoice = models.Invoice.objects.get(pk=self.kwargs.get('pk'))
         return queryset.filter(
-            cdr=invoice.cdr, company=invoice.company, invoiced=True)
+            cdr=invoice.cdr, company=invoice.company, valid=True)
 
 incoming_valid_list = login_required(IncomingValidListView.as_view())
 
