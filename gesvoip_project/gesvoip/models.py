@@ -11,7 +11,6 @@ import re
 from django.conf import settings
 from mongoengine.queryset import Q
 
-from bson.json_util import dumps
 from nptime import nptime
 from pymongo import MongoClient
 import arrow
@@ -384,7 +383,7 @@ class Cdr(mongoengine.Document):
         return arrow.get(connect_time.format('H:mm:ss'), 'H:mm:ss').timestamp
 
     def insert_incoming(self, name):
-    	send_message('Inicio carga %s' % name)
+        send_message('Inicio carga %s' % name)
         if name == 'ENTEL':
             incoming = self.incoming_entel.read()
 
@@ -435,8 +434,8 @@ class Cdr(mongoengine.Document):
 
         Incoming.objects.insert(
             reader_to_incomming(incoming_dict), load_bulk=False)
-		send_message('Fin carga %s' % name)
-		send_message('Inicio set_valid')
+        send_message('Fin carga %s' % name)
+        send_message('Inicio set_valid')
         Incoming.set_valid(self)
         send_message('Fin set_valid')
         send_message('Inicio set_festive')
@@ -523,24 +522,24 @@ class Cdr(mongoengine.Document):
             i.invoiced = True
             i.save()
 
-    def get_ingress_duration_by_type(cdr, company, _type, schedule):
+    def get_ingress_duration_by_type(self, company, _type, schedule):
         return Incoming.objects(
-            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            cdr=self, company=company, _type=_type, schedule=schedule,
             entity='Empresa').sum('ingress_duration')
 
-    def get_count_by_type(cdr, company, _type, schedule):
+    def get_count_by_type(self, company, _type, schedule):
         return Incoming.objects(
-            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            cdr=self, company=company, _type=_type, schedule=schedule,
             entity='Empresa').count()
 
-    def get_outgoing_ingress_duration(cdr, company, _type, schedule):
+    def get_outgoing_ingress_duration(self, company, _type, schedule):
         return Outgoing.objects(
-            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            cdr=self, company=company, _type=_type, schedule=schedule,
             entity='Empresa').sum('ingress_duration')
 
-    def get_outgoing_count(cdr, company, _type, schedule):
+    def get_outgoing_count(self, company, _type, schedule):
         return Outgoing.objects(
-            cdr=cdr, company=company, _type=_type, schedule=schedule,
+            cdr=self, company=company, _type=_type, schedule=schedule,
             entity='Empresa').count()
 
     def get_traffic(self, _type):
@@ -720,9 +719,11 @@ class Incoming(mongoengine.Document):
         companies = cls.objects(cdr=cdr, valid=True).distinct('company')
 
         def get_kwargs(company, _type):
-            types = {'normal': 'normal', 'reducido': 'reduced', 'nocturno': 'nightly'}
+            types = {
+                'normal': 'normal', 'reducido': 'reduced',
+                'nocturno': 'nightly'}
             _type = types.get(_type)
-            q = {'cdr': cdr.id,  'company': company.id, '$or': []}
+            q = {'cdr': cdr.id, 'company': company.id, '$or': []}
             ranges = {
                 k: {
                     'start': arrow.get(
@@ -834,23 +835,20 @@ class Outgoing(mongoengine.Document):
         def end(connect_time, hour):
             return arrow.get(1, 1, 1, hour, 59, 59).timestamp
 
-        cls.objects(
-            Q(cdr=cdr) & Q(valid=True) & ((Q(weekday__gte=0) &
-                Q(weekday__lte=4) & Q(timestamp__gte=start(8)) &
-                Q(timestamp__lte=end(19))) | (Q(weekday=5) &
-                Q(timestamp__gte=start(8)) &
-                Q(timestamp__lte=end(13))))).update(set__schedule='normal')
-
-        cls.objects(
-            Q(cdr=cdr) & Q(valid=True) &
-            Q(schedule=None) & ((Q(weekday__gte=0) &
-                Q(weekday__lte=4) & Q(timestamp__gte=start(20)) &
-                Q(timestamp__lte=end(23))) | (Q(weekday=5) &
-                Q(timestamp__gte=start(14)) &
-                Q(timestamp__lte=end(23))) | (Q(weekday=6) &
-                Q(timestamp__gte=start(8)) &
-                Q(timestamp__lte=end(23))))).update(set__schedule='reducido')
-
+        q1 = Q(cdr=cdr) & Q(valid=True)
+        q2 = Q(weekday__gte=0) & Q(weekday__lte=4)
+        q3 = Q(timestamp__gte=start(8)) & Q(timestamp__lte=end(19))
+        q4 = Q(weekday=5)
+        q5 = Q(timestamp__gte=start(8)) & Q(timestamp__lte=end(13))
+        cls.objects(q1 & ((q2 & q3) | (q4 & q5))).update(
+            set__schedule='normal')
+        q1 = Q(cdr=cdr) & Q(valid=True) & Q(schedule=None)
+        q3 = Q(timestamp__gte=start(20)) & Q(timestamp__lte=end(23))
+        q5 = Q(timestamp__gte=start(14)) & Q(timestamp__lte=end(23))
+        q6 = Q(weekday=6)
+        q7 = Q(timestamp__gte=start(8)) & Q(timestamp__lte=end(23))
+        cls.objects(q1 & ((q2 & q3) | (q4 & q5) | (q6 & q7))).update(
+            set__schedule='reducido')
         cls.objects(
             cdr=cdr, valid=True, schedule=None, timestamp__gte=start(0),
             timestamp__lte=end(7)).update(set__schedule='nocturno')
