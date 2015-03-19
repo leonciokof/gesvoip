@@ -716,14 +716,14 @@ class Incoming(mongoengine.Document):
         end = start.replace(months=1)
 
         for c in Portability.objects.distinct('company'):
-            numbers = Portability.objects(
-                company=c, date__lt=end.datetime).values_list('number')
+            numbers = list(Portability.objects(
+                company=c, date__lt=end.datetime).values_list('number'))
             cls.objects(
                 cdr=cdr, valid=True, ani__in=numbers).update(set__company=c)
 
         for c in Numeration.objects.distinct('company'):
-            numerations = Numeration.objects(company=c).values_list(
-                'numeration')
+            numerations = list(Numeration.objects(company=c).values_list(
+                'numeration'))
             cls.objects(
                 cdr=cdr, valid=True, numeration__in=numerations,
                 company=None).update(set__company=c)
@@ -848,15 +848,15 @@ class Outgoing(mongoengine.Document):
         end = start.replace(months=1)
 
         for c in Portability.objects.distinct('company'):
-            numbers = Portability.objects(
-                company=c, date__lt=end.datetime).values_list('number')
+            numbers = list(Portability.objects(
+                company=c, date__lt=end.datetime).values_list('number'))
             cls.objects(
                 cdr=cdr, valid=True,
                 final_number__in=numbers).update(set__company=c)
 
         for c in Numeration.objects.distinct('company'):
-            numerations = Numeration.objects(company=c).values_list(
-                'numeration')
+            numerations = list(Numeration.objects(company=c).values_list(
+                'numeration'))
             cls.objects(
                 cdr=cdr, valid=True, numeration__in=numerations,
                 company=None).update(set__company=c)
@@ -894,8 +894,8 @@ class Outgoing(mongoengine.Document):
     @classmethod
     def set_entity(cls, cdr):
         for e in Line.objects.distinct('entity'):
-            numbers = Line.objects(entity=e).values_list(
-                'number')
+            numbers = list(Line.objects(entity=e).values_list(
+                'number'))
             Outgoing.objects(
                 cdr=cdr, valid=True, final_number__in=numbers).update(
                     set__entity=e)
