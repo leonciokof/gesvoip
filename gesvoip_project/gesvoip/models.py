@@ -401,7 +401,6 @@ class Cdr(mongoengine.Document):
                         r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                     disconnect_time = arrow.get(
                         r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
-                    ingress_duration = int(r['INGRESS_DURATION'])
                     weekday = connect_time.weekday()
 
                     if weekday in range(5):
@@ -413,22 +412,17 @@ class Cdr(mongoengine.Document):
                     else:
                         day = 'festive'
 
-                    if re.search(patterns.movil, r['ANI']):
-                        numeration = r['ANI'][2:][:5]
-
-                    else:
-                        numeration = r['ANI'][2:][:6]
-
                     yield Incoming(
                         connect_time=connect_time.datetime,
                         disconnect_time=disconnect_time.datetime,
                         ani=r['ANI'],
                         ani_number=r['ANI_NUMBER'],
-                        ingress_duration=ingress_duration,
+                        ingress_duration=int(r['INGRESS_DURATION']),
                         dialed_number=r['DIALED_NUMBER'],
                         final_number=r['FINAL_NUMBER'],
                         cdr=self,
-                        numeration=numeration,
+                        numeration=r['ANI'][2:][:6],
+                        numeration5=r['ANI'][2:][:5],
                         weekday=weekday,
                         day=day,
                         timestamp=self.get_timestamp(connect_time),
@@ -650,6 +644,7 @@ class Incoming(mongoengine.Document):
     schedule = mongoengine.StringField()
     entity = mongoengine.StringField()
     numeration = mongoengine.StringField()
+    numeration5 = mongoengine.StringField()
     day = mongoengine.StringField()
     weekday = mongoengine.IntField()
     timestamp = mongoengine.IntField()
@@ -731,6 +726,9 @@ class Incoming(mongoengine.Document):
                 'numeration')
             cls.objects(
                 cdr=cdr, valid=True, numeration__in=numerations,
+                company=None).update(set__company=c)
+            cls.objects(
+                cdr=cdr, valid=True, numeration5__in=numerations,
                 company=None).update(set__company=c)
 
         cls.objects(
