@@ -72,9 +72,7 @@ def insert_cdr(cdr_id):
         cdr.complete_invoices()
         send_message('invoices finalizado')
         models.Outgoing.objects.filter(cdr=cdr).delete()
-        send_message('sti iniciado')
         cdr.insert_outgoing()
-        send_message('sti finalizado')
         cdr.processed = True
         cdr.save()
 
