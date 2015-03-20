@@ -509,15 +509,16 @@ class Cdr(mongoengine.Document):
             if i is not None:
                 for p in Period.objects(invoice=i):
                     for r in Rate.objects(period=p):
+                        end = arrow.get(p.end.date()).replace(days=1)
                         r.call_number = Incoming.objects(
                             company=c,
                             connect_time__gte=p.start.date(),
-                            connect_time__lte=p.end.date(),
+                            connect_time__lt=end.date(),
                             schedule=r._type).count()
                         r.call_duration = Incoming.objects(
                             company=c,
                             connect_time__gte=p.start.date(),
-                            connect_time__lte=p.end.date(),
+                            connect_time__lt=end.date(),
                             schedule=r._type).sum('ingress_duration')
                         r.total = r.call_duration * r.price
                         r.save()
