@@ -737,52 +737,18 @@ class Incoming(mongoengine.Document):
 
     @classmethod
     def set_schedule(cls, cdr):
-        companies = cls.objects(cdr=cdr, valid=True).distinct('company')
-
-        def get_kwargs(company, _type):
-            types = {
-                'normal': 'normal', 'reducido': 'reduced',
-                'nocturno': 'nightly'}
-            _type = types.get(_type)
-            q = {'cdr': cdr.id, 'company': company.id, '$or': []}
-            ranges = {
-                k: {
-                    'start': arrow.get(
-                        v.get(_type).get('start'), 'H:mm:ss').timestamp,
-                    'end': arrow.get(
-                        v.get(_type).get('end'), 'H:mm:ss').timestamp}
-                for k, v in company.schedules.items() if _type in v.keys()}
-
-            for k, v in ranges.items():
-                start = v.get('start')
-                end = v.get('end')
-
-                if start < end:
-                    q['$or'].append({
-                        'day': k, 'timestamp': {'$gte': start, '$lte': end}})
-
-                else:
-                    start1 = start
-                    end1 = arrow.get('23:59:59', 'H:mm:ss').timestamp
-                    start2 = arrow.get('0:00:00', 'H:mm:ss').timestamp
-                    end2 = end
-                    q['$or'].append({
-                        'day': k,
-                        '$or': [
-                            {'timestamp': {'$gte': start1, '$lte': end1}},
-                            {'timestamp': {'$gte': start2, '$lte': end2}}]})
-
-            return q
-
-        for c in companies:
-            if c.schedules not in [None, {}]:
-                for t in ['normal', 'reducido', 'nocturno']:
-                    cls.objects(
-                        __raw__=get_kwargs(c, t)).update(set__schedule=t)
-
         cls.objects(
-            cdr=cdr, valid=True, schedule=None).update(
-                set__valid=False, set__observation='Sin horario')
+            cdr=cdr, valid=True, day='bussines',
+            timestamp__gte=arrow.get('9:00:00', 'H:mm:ss').timestamp,
+            timestamp__lte=arrow.get('22:59:59', 'H:mm:ss').timestamp).update(
+                set__schedule='normal')
+        cls.objects(
+            cdr=cdr, valid=True, day__in=['saturday', 'festive'],
+            timestamp__gte=arrow.get('9:00:00', 'H:mm:ss').timestamp,
+            timestamp__lte=arrow.get('22:59:59', 'H:mm:ss').timestamp).update(
+                set__schedule='reducido')
+        cls.objects(cdr=cdr, valid=True, schedule=None).update(
+            set__schedule='nocturno')
 
 
 class Outgoing(mongoengine.Document):
