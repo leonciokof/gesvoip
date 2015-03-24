@@ -63,16 +63,16 @@ def load_portability():
 def insert_cdr(cdr_id):
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
+        send_message('Carga de llamadas entrantes iniciado')
         models.Incoming.objects.filter(cdr=cdr).delete()
         cdr.insert_incoming()
-        send_message('process iniciado')
         cdr.process_incoming()
-        send_message('process finalizado')
-        send_message('invoices iniciado')
         cdr.complete_invoices()
-        send_message('invoices finalizado')
+        send_message('Carga de llamadas entrantes finalizado')
+        send_message('Carga de llamadas salientes iniciado')
         models.Outgoing.objects.filter(cdr=cdr).delete()
         cdr.insert_outgoing()
+        send_message('Carga de llamadas salientes finalizado')
         cdr.processed = True
         cdr.save()
 

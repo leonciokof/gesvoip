@@ -17,7 +17,6 @@ import arrow
 import mongoengine
 
 from . import choices, patterns
-from .utils import send_message
 
 
 class Company(mongoengine.Document):
@@ -384,8 +383,6 @@ class Cdr(mongoengine.Document):
 
     def insert_incoming(self):
         for c in choices.COMPANIAS:
-            send_message('%s iniciado' % c[0])
-
             if c[0] == 'ENTEL':
                 incoming = self.incoming_entel.read()
 
@@ -445,24 +442,14 @@ class Cdr(mongoengine.Document):
 
             Incoming.objects.insert(
                 reader_to_incomming(incoming_dict), load_bulk=False)
-            send_message('%s finalizado' % c[0])
 
     def process_incoming(self):
-        send_message('set_festive iniciado')
         Incoming.set_festive(self)
-        send_message('set_festive finalizado')
-        send_message('set_type iniciado')
         Incoming.set_type(self)
-        send_message('set_type finalizado')
-        send_message('set_company iniciado')
         Incoming.set_company(self)
-        send_message('set_company finalizado')
-        send_message('set_schedule iniciado')
         Incoming.set_schedule(self)
-        send_message('set_schedule finalizado')
 
     def insert_outgoing(self):
-        send_message('insert_outgoing iniciado')
         outgoing = self.outgoing.read()
         outgoing_file = StringIO.StringIO(outgoing)
         outgoing_dict = csv.DictReader(outgoing_file, delimiter=',')
@@ -496,22 +483,11 @@ class Cdr(mongoengine.Document):
 
         Outgoing.objects.insert(
             reader_to_outgoing(outgoing_dict), load_bulk=False)
-        send_message('insert_outgoing finalizado')
-        send_message('set_type iniciado')
         Outgoing.set_type(self)
-        send_message('set_type finalizado')
-        send_message('set_valid iniciado')
         Outgoing.set_valid(self)
-        send_message('set_valid finalizado')
-        send_message('set_company iniciado')
         Outgoing.set_company(self)
-        send_message('set_company finalizado')
-        send_message('set_schedule iniciado')
         Outgoing.set_schedule(self)
-        send_message('set_schedule finalizado')
-        send_message('set_entity iniciado')
         Outgoing.set_entity(self)
-        send_message('set_entity finalizado')
         # Outgoing.set_line(self)
 
     def complete_invoices(self):
