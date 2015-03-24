@@ -397,8 +397,8 @@ class Cdr(mongoengine.Document):
 
             def get_valid(ani, final_number, dialed_number, ingress_duration):
                 p2 = re.search(patterns.national, final_number)
-                p3 = not re.search(patterns.special2, final_number)
-                p4 = not re.search(patterns.pattern_112, dialed_number)
+                p3 = re.search(patterns.special2, final_number)
+                p4 = re.search(patterns.pattern_112, dialed_number)
                 p5 = len(ani) == 11 and re.search(patterns.valid_ani, ani)
                 p6 = int(ingress_duration) > 0
 
