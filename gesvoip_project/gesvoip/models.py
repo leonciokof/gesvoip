@@ -395,12 +395,25 @@ class Cdr(mongoengine.Document):
             incoming_file = StringIO.StringIO(incoming)
             incoming_dict = csv.DictReader(incoming_file, delimiter=',')
 
+            def get_valid(ani, final_number, dialed_number, ingress_duration):
+                p2 = re.search(patterns.national, final_number)
+                p3 = not re.search(patterns.special2, final_number)
+                p4 = not re.search(patterns.pattern_112, dialed_number)
+                p5 = len(ani) == 11 and re.search(patterns.valid_ani, ani)
+                p6 = int(ingress_duration) > 0
+
+                return True if p2 and p3 and p4 and p5 and p6 else False
+
             def reader_to_incomming(reader):
                 for r in reader:
                     connect_time = arrow.get(
                         r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
                     disconnect_time = arrow.get(
                         r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                    valid = get_valid(
+                        r['ANI'], r['FINAL_NUMBER'], r['DIALED_NUMBER'],
+                        r['INGRESS_DURATION'])
+                    obs = None if valid else 'No cumple con los filtros'
                     weekday = connect_time.weekday()
 
                     if weekday in range(5):
@@ -426,16 +439,15 @@ class Cdr(mongoengine.Document):
                         weekday=weekday,
                         day=day,
                         timestamp=self.get_timestamp(connect_time),
-                        date=connect_time.format('YYYY-MM-DD'))
+                        date=connect_time.format('YYYY-MM-DD'),
+                        valid=valid,
+                        observation=obs)
 
             Incoming.objects.insert(
                 reader_to_incomming(incoming_dict), load_bulk=False)
             send_message('%s finalizado' % c[0])
 
     def process_incoming(self):
-        send_message('set_valid iniciado')
-        Incoming.set_valid(self)
-        send_message('set_valid finalizado')
         send_message('set_festive iniciado')
         Incoming.set_festive(self)
         send_message('set_festive finalizado')
@@ -639,7 +651,7 @@ class Incoming(mongoengine.Document):
         Cdr, reverse_delete_rule=mongoengine.CASCADE)
     valid = mongoengine.BooleanField(default=False)
     invoiced = mongoengine.BooleanField(default=False)
-    observation = mongoengine.StringField(default='No cumple con los filtros')
+    observation = mongoengine.StringField()
     company = mongoengine.ReferenceField(Company)
     _type = mongoengine.StringField()
     schedule = mongoengine.StringField()
@@ -657,17 +669,6 @@ class Incoming(mongoengine.Document):
     @property
     def type(self):
         return self._type
-
-    @classmethod
-    def set_valid(cls, cdr):
-        """Funcion que establece si un registro debe o no ser facturado"""
-        q = {
-            'ani': patterns.valid_ani2,
-            'final_number': patterns.national,
-            'final_number': patterns.special2,
-            'dialed_number': patterns.pattern_112,
-            'ingress_duration': {'$gt': 0}}
-        cls.objects(__raw__=q).update(set__valid=True, set__observation=None)
 
     @classmethod
     def set_festive(cls, cdr):
