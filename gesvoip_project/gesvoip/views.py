@@ -1,9 +1,11 @@
 import csv
 import datetime as dt
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import redirect
 from django.views import generic
 
 from mongogeneric import (
@@ -950,3 +952,11 @@ class NumerationUploadView(generic.FormView):
         return super(NumerationUploadView, self).form_valid(form)
 
 numeration_upload = login_required(NumerationUploadView.as_view())
+
+
+def cdr_reload(request, pk):
+    tasks.insert_cdr.delay(pk)
+    messages.info(
+        request, 'Se estan procesando las llamadas. Sera notificado por ' +
+        'email cuando finalize')
+    return redirect('gesvoip:cdr_list')

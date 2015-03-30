@@ -60,7 +60,7 @@ def load_portability():
 
 
 @task()
-def insert_cdr(cdr_id):
+def insert_cdr(cdr_id, email=None):
     try:
         cdr = models.Cdr.objects.get(id=cdr_id)
         send_message('Carga de llamadas entrantes iniciado')
@@ -75,6 +75,9 @@ def insert_cdr(cdr_id):
         send_message('Carga de llamadas salientes finalizado')
         cdr.processed = True
         cdr.save()
+
+        if email:
+            send_email([email], 'Proceso finalizado', 'gesvoip_success', {})
 
     except Exception:
         client.captureException()
