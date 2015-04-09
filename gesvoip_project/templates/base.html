@@ -1,0 +1,59 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gesvoip{% endblock title %}</title>
+    <link href="{% static 'gesvoip/favicon.ico' %}" rel="shortcut icon" type="image/png">
+    <link href="{% static 'gesvoip/css/combined.min.css' %}" rel="stylesheet">
+  </head>
+  <body>
+    <div id="wrapper">
+      <nav role="navigation" style="margin-bottom: 0;" class="navbar navbar-default navbar-static-top">
+        <div class="navbar-header">
+          <button type="button" data-toggle="collapse" data-target=".sidebar-collapse" class="navbar-toggle">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a href="#" class="navbar-brand">
+            <img src="{% static 'gesvoip/images/logo.png' %}">
+          </a>
+        </div>
+        <ul class="nav navbar-top-links navbar-right">
+          <li class="dropdown">
+            <a data-toggle="dropdown" href="#" class="dropdown-toggle">
+              <i class="fa fa-user fa-fw"></i>{{ user.get_full_name }}<i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-user">
+              <li><a href="{% url 'logout' %}?next=/"><i class="fa fa-sign-out fa-fw"></i>Salir</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <nav role="navigation" class="navbar-default navbar-static-side">
+        <div class="sidebar-collapse">
+          <ul id="side-menu" class="nav">
+            <li><a href="{% url 'gesvoip:company_list' %}">Compañias</a></li>
+            <li><a href="{% url 'gesvoip:cdr_list' %}">CDR</a></li>
+            <li><a href="{% url 'gesvoip:new_rate' %}">Cargar Tarifas</a></li>
+            <li><a href="{% url 'gesvoip:invoice_list' %}">Facturas</a></li>
+            <li><a href="{% url 'gesvoip:holiday_list' %}">Feriados</a></li>
+            <li><a href="{% url 'gesvoip:line_list' %}">Lineas</a></li>
+            <li><a href="{% url 'gesvoip:localcenter_list' %}">Centros Locales</a></li>
+            <li><a href="{% url 'gesvoip:ccaa_list' %}">Cargos de acceso</a></li>
+            <li><a href="{% url 'gesvoip:portability_upload' %}">Cargar portados</a></li>
+            <li><a href="{% url 'gesvoip:numeration_upload' %}">Cargar numeración</a></li>
+          </ul>
+        </div>
+      </nav>
+      {% block content %}{% endblock content %}
+    </div>
+    {% if debug %}
+    <script src="//localhost:35729/livereload.js"></script>
+    {% endif %}
+    <script src="{% static 'gesvoip/js/combined.min.js' %}"></script>
+  </body>
+</html>

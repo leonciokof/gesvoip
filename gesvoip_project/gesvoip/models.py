@@ -1,1648 +1,1047 @@
 # -*- coding: utf-8 -*-
 
-from calendar import monthrange
-from dateutil.rrule import rrule, DAILY
-from re import search
+import csv
+try:
+    import StringIO
+except:
+    from io import StringIO
 import datetime as dt
+import re
 
-from django.db import connection, models
-from django.db.models import Max, Min, Sum
+from django.conf import settings
+from mongoengine.queryset import Q
 
-from djorm_pgarray.fields import ArrayField
 from nptime import nptime
+from pymongo import MongoClient
+import arrow
+import mongoengine
 
 from . import choices, patterns
-from sti.models import Lineas, Cdr as CdrSti
 
 
-class Cdr(models.Model):
+class Company(mongoengine.Document):
 
-    def update_filename(instance, filename):
-        return 'logs/{0}-{1}-{2}.log'.format(
-            instance.year, instance.month, instance.compania)
+    """Modelo de compañias."""
 
-    id = models.AutoField(primary_key=True)
-    fecha = models.CharField(max_length=255, blank=True)
-    compania = models.CharField(max_length=255, choices=choices.COMPANIAS)
-    month = models.CharField(
-        max_length=2, choices=choices.MONTHS, default='', blank=True)
-    year = models.CharField(
-        max_length=4, choices=choices.YEARS, default='', blank=True)
-    source = models.FileField(
-        upload_to=update_filename, blank=True, null=True)
-    processed = models.BooleanField(default=False)
+    name = mongoengine.StringField(
+        unique=True, max_length=255, verbose_name=u'nombre')
+    idoidd = mongoengine.ListField(
+        mongoengine.IntField(), verbose_name=u'idoidd')
+    code = mongoengine.IntField(verbose_name=u'codigo')
+    schedules = mongoengine.DictField(verbose_name=u'horarios')
+    invoicing = mongoengine.StringField(
+        choices=choices.INVOICING, verbose_name=u'facturación')
+    id_compania = mongoengine.IntField()
 
-    class Meta:
-        db_table = 'cdr'
-        verbose_name = 'cdr'
-        verbose_name_plural = 'cdrs'
+    meta = {
+        'ordering': ['name']
+    }
 
     def __unicode__(self):
-        return u'{0} {1}'.format(self.fecha, self.compania)
+        return self.name
 
-    def valida_ani(self, ani):
-        if (search(patterns.pattern_zonas1, ani) and len(ani) == 11 or
-                search(patterns.pattern_zonas2, ani) and len(ani) == 10):
-            return True
 
-        else:
-            return False
+class Numeration(mongoengine.Document):
 
-    def get_activado_ctc(self, ani, dialed_number):
-        """Funcion que determina si un registro debe o no ser facturado"""
-        if search(patterns.pattern_569, ani):
-            return True
+    """Modelo de las numeraciones."""
 
-        elif (search(patterns.pattern_562, ani)
-                and not search(patterns.pattern_800, dialed_number)):
-            return True
+    numeration = mongoengine.StringField()
+    company = mongoengine.ReferenceField(
+        Company, reverse_delete_rule=mongoengine.CASCADE)
 
-        elif search(patterns.pattern_4469, dialed_number):
-            return True
+    meta = {
+        'indexes': ['numeration']
+    }
 
-        elif search(patterns.pattern_04469, dialed_number):
-            return True
+    def __unicode__(self):
+        return self.numeration
 
-        elif search(patterns.pattern_64469, dialed_number):
-            return True
-
-        else:
-            return False
-
-    def get_activado_entel(self, ani, dialed_number):
-        """Funcion que determina si un registro debe o no ser facturado"""
-        if search(patterns.pattern_0234469, dialed_number):
-            return True
-
-        elif search(patterns.pattern_4469, dialed_number):
-            return True
-
-        elif (search(patterns.pattern_64469, dialed_number) and
-                not search(patterns.pattern_112, dialed_number)):
-            return True
-
-        else:
-            return False
-
-    def get_zona_rango(self, ani):
-        """Funcion que determina el IDO de un ANI"""
-        if search(patterns.pattern_569, ani):
-            return ani[2:][:1], ani[3:][:4]
-
-        elif search(patterns.pattern_92, ani):
-            return ani[2:][:2], ani[4:][:4]
-
-        elif search(patterns.pattern_93, ani) and len(ani) == 11:
-            return ani[2:][:2], ani[4:][:4]
-
-        elif search(patterns.pattern_93, ani) and len(ani) == 10:
-            return ani[2:][:2], ani[4:][:3]
-
-        elif search(patterns.pattern_562, ani) and len(ani) == 11:
-            return ani[2:][:1], ani[3:][:5]
-
-        else:
-            return ani[2:][:2], ani[4:][:3]
-
-    def get_compania(self, zona, rango, ani, portados, numeracion):
-        """Funcion que retorna la compañia del numero de origen"""
-        numero = u'{0}{1}'.format(zona, rango)
-
-        if int(ani) in portados:
-            return portados[int(ani)]
-
-        elif numero in numeracion:
-            return numeracion[numero]
-
-        else:
-            return None
-
-    def get_tipo(self, ani, final_number):
-        """Funcion que determina el tipo de llamada"""
-        if search(patterns.pattern_564469, final_number):
-            if search(patterns.pattern_569, ani):
-                return 'voip-movil'
-
-            elif not search(patterns.pattern_56, ani):
-                return 'voip-ldi'
-
-            else:
-                return 'voip-local'
-
-        else:
-            if search(patterns.pattern_569, ani):
-                return 'movil'
-
-            elif not search(patterns.pattern_56, ani):
-                return 'internacional'
-
-            elif search(patterns.pattern_562, ani):
-                return 'local'
-
-            elif search(patterns.pattern_5610, ani):
-                return 'especial'
-
-            else:
-                return 'nacional'
-
-    def cargar_cdr(self):
-        logs = []
-        portados = {
-            p.numero: Ido.objects.get(codigo=p.ido).compania.id_compania
-            for p in Portados.objects.all()}
-        numeracion = {
-            n.__unicode__(): n.compania.id_compania
-            for n in Numeracion.objects.all()}
-
-        if self.compania == 'CTC':
-            get_activado = self.get_activado_ctc
-
-        elif self.compania == 'ENTEL':
-            get_activado = self.get_activado_entel
-
-        if self.source:
-            lines = [
-                r.split(',') for r in self.source.read().split('\r\n')[:-1]]
-            head = lines[0]
-
-            for line in lines[1:]:
-                row = dict(zip(head, line))
-                observacion = ''
-
-                if self.valida_ani(row['ANI']):
-                    activado = get_activado(
-                        row['ANI'], row['DIALED_NUMBER'])
-
-                else:
-                    activado = False
-                    observacion = 'ani invalido'
-
-                if activado:
-                    zona, rango = self.get_zona_rango(row['ANI'])
-                    compania_ani_number = self.get_compania(
-                        zona, rango, row['ANI'], portados, numeracion)
-
-                    if compania_ani_number is None:
-                        activado = False
-                        observacion = 'ani_number sin numeracion'
-
-                    tipo = self.get_tipo(row['ANI'], row['DIALED_NUMBER'])
-
-                else:
-                    compania_ani_number = None
-                    tipo = None
-                    observacion = 'No cumple con los filtros'
-
-                activado = 'activado' if activado else 'desactivado'
-                ani_number = int(row['ANI_NUMBER']) if row[
-                    'ANI_NUMBER'].isdigit() else None
-                ingress_duration = int(row['INGRESS_DURATION']) if row[
-                    'INGRESS_DURATION'].isdigit() else None
-                is_digit = row['DIALED_NUMBER'].isdigit()
-                length = len(row['DIALED_NUMBER']) < 20
-                dialed_number = int(
-                    row['DIALED_NUMBER']) if is_digit and length else None
-                logs.append(
-                    LogLlamadas(
-                        connect_time=dt.datetime.strptime(
-                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S'),
-                        ani_number=ani_number,
-                        ingress_duration=ingress_duration,
-                        dialed_number=dialed_number,
-                        fecha=self.fecha,
-                        compania_cdr=self.compania,
-                        estado=activado,
-                        motivo=observacion,
-                        compania_ani=compania_ani_number,
-                        tipo=tipo,
-                        hora=dt.datetime.strptime(
-                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S').time(),
-                        date=dt.datetime.strptime(
-                            row['CONNECT_TIME'], '%Y-%m-%d %H:%M:%S').date()
-                    )
-                )
-
-            LogLlamadas.objects.bulk_create(logs)
-
-            return True
-
-        return False
-
-    def save(self, *args, **kwargs):
-        if self.id is None:
-            self.fecha = '{0}-{1}'.format(self.year, self. month)
-
-        super(Cdr, self).save(*args, **kwargs)
+    def get_range(self):
+        return self._range
 
     @classmethod
-    def processes(cls):
-        results = []
+    def upload(cls, filename):
+        numbers = csv.DictReader(filename, delimiter=',')
 
-        for cdr in cls.objects.filter(processed=False).exclude(
-                source__isnull=True):
-            result = cdr.cargar_cdr()
-            result = 'Procesado' if result else 'Ocurrio un error'
-            results.append('{0}: {1}'.format(cdr.compania, result))
+        def reader_to_portability(reader):
+            for r in reader:
+                c = Company.objects.filter(
+                    idoidd__in=[int(r['ido'])]).first()
+                yield cls(
+                    numeration='%s%s' % (r['zona'], r['rango']), company=c)
 
-        return '\n'.join(results)
-
-
-class Compania(models.Model):
-    id_compania = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=255)
-    rut = models.CharField(max_length=255, blank=True)
-    entidad = models.CharField(max_length=255, blank=True)
-    id = models.IntegerField(blank=True, null=True)
-    codigo = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'compania'
-        verbose_name = 'compania'
-        verbose_name_plural = 'companias'
-        ordering = ('nombre',)
-
-    def __unicode__(self):
-        return self.nombre
+        cls.objects.delete()
+        cls.objects.insert(reader_to_portability(numbers), load_bulk=False)
 
 
-class DetFactura(models.Model):
-    id_detalle = models.AutoField(primary_key=True)
-    origen = models.IntegerField()
-    destino = models.IntegerField()
-    fecha = models.DateField()
-    hora = models.CharField(max_length=255)
-    duracion = models.FloatField()
-    tarifa = models.ForeignKey('Tarifa', db_column='tarifa')
-    horario = models.CharField(max_length=255, choices=choices.HORARIOS)
-    valor = models.FloatField()
-    compania = models.ForeignKey(Compania, db_column='compania')
-    factura = models.ForeignKey('Factura', db_column='factura')
+class Commune(mongoengine.Document):
 
-    class Meta:
-        db_table = 'det_factura'
-        verbose_name = 'detalle de factura'
-        verbose_name_plural = 'detalle de facturas'
+    """Modelo que representa las comunas"""
+
+    name = mongoengine.StringField(verbose_name='nombre')
+    code = mongoengine.StringField(verbose_name='codigo')
+    region = mongoengine.StringField(verbose_name='region')
+    province = mongoengine.StringField(verbose_name='provincia')
+    area = mongoengine.StringField(verbose_name='area')
+    zone = mongoengine.StringField(verbose_name='zona')
+    primary = mongoengine.StringField(verbose_name='primaria')
 
     def __unicode__(self):
-        return u'{0} {1}'.format(self.fecha, self.hora)
+        return self.name
 
 
-class Factura(models.Model):
-    id_factura = models.AutoField(primary_key=True)
-    compania = models.ForeignKey(Compania, db_column='compania')
-    fecha_inicio = ArrayField(dbtype="date", blank=True)
-    fecha_fin = ArrayField(dbtype="date", blank=True)
-    tarifa = ArrayField(dbtype="int", blank=True)
-    valor_normal = ArrayField(dbtype="float", blank=True)
-    valor_reducido = ArrayField(dbtype="float", blank=True)
-    valor_nocturno = ArrayField(dbtype="float", blank=True)
-    usuario = models.ForeignKey('Usuarios', db_column='usuario', default=38)
-    month = models.CharField(
-        max_length=2, choices=choices.MONTHS, default='', blank=True)
-    year = models.CharField(
-        max_length=4, choices=choices.YEARS, default='', blank=True)
-    valor_total = models.FloatField(null=True, blank=True, default=None)
-    total_llamadas = models.IntegerField(null=True, blank=True, default=None)
-    total_segundos = models.IntegerField(null=True, blank=True, default=None)
+class Line(mongoengine.Document):
 
-    class Meta:
-        db_table = 'factura'
-        ordering = ('-pk',)
-        verbose_name = 'factura'
-        verbose_name_plural = 'facturas'
+    """Modelo de los clientes de convergia."""
+
+    number = mongoengine.StringField(unique=True, verbose_name=u'numero')
+    name = mongoengine.StringField(max_length=255, verbose_name=u'nombre')
+    entity = mongoengine.StringField(
+        choices=choices.ENTITIES, verbose_name=u'entidad')
+    comments = mongoengine.StringField(verbose_name=u'comentarios')
+    zone = mongoengine.IntField(verbose_name=u'area')
+    city = mongoengine.IntField(verbose_name=u'comuna')
+    company = mongoengine.IntField(default=333)
+    rut = mongoengine.StringField(
+        max_length=12, verbose_name=u'rut propietario')
+    service = mongoengine.StringField(
+        choices=choices.SERVICES, verbose_name=u'servicio', default='voip')
+    mode = mongoengine.StringField(
+        choices=choices.MODES, verbose_name=u'modalidad', default='postpago')
+    due = mongoengine.FloatField(verbose_name=u'deuda vencida', default=0.0000)
+    active = mongoengine.BooleanField(default=False, verbose_name=u'activo')
+    document = mongoengine.IntField(verbose_name=u'documento')
+    special_service = mongoengine.StringField(
+        choices=choices.SPECIAL_SERVICES, verbose_name=u'servicio especial')
+    commune = mongoengine.ReferenceField(Commune)
+
+    meta = {
+        'ordering': ['number'],
+        'indexes': [('zone', 'city', 'entity', 'mode')]
+    }
 
     def __unicode__(self):
-        return u'{0}-{1} {2}'.format(self.year, self.month, self.compania)
+        return str(self.number)
 
-    def resumenes(self):
-        return self.resumenfactura_set.all()
+    @classmethod
+    def get_services(cls, date):
+        map_f = """
+        function() {
+            emit({commune: this.commune}, {count: 1, entity: this.entity});
+        }"""
+        reduce_f = """
+        function(key, values) {
+            var count = 0;
+            values.forEach(function(v) {
+                if (v.entity == 'empresa') {
+                    count += v.count;
+                }
+            });
+            return {count: count};
+        }"""
+        results = cls.objects.map_reduce(
+            map_f, reduce_f, output='inline')
 
-    def get_horarios(self):
-        horario = {
-            'habil': {
-                'normal': {},
-                'reducido': {},
-                'nocturno': {}},
-            'sabado': {
-                'normal': {},
-                'reducido': {},
-                'nocturno': {}},
-            'festivo': {
-                'normal': {},
-                'reducido': {},
-                'nocturno': {}}}
+        def services_cb(obj):
+            c = Commune.objects.get(pk=obj.key.get('commune'))
+            return [
+                314, date, c.primary, c.area, c.code, 1,
+                'TB', 'RE', 'H', 'PP', 'D', '0', int(obj.value.get('count'))]
 
-        resultados = Horario.objects.filter(compania=self.compania).exclude(
-            inicio__isnull=True)
+        r_filter = filter(lambda x: x.key.get('commune') is not None, results)
 
-        for r in resultados:
-            horario[r.dia][r.tipo]['inicio'] = r.inicio
-            horario[r.dia][r.tipo]['fin'] = r.fin
+        return map(services_cb, r_filter)
 
-        return horario
+    @classmethod
+    def get_subscriptors(cls, date):
+        count = cls.objects(
+            entity='empresa', number__startswith='564469').count()
 
-    def get_tarifas(self):
-        tarifas = {}
-        resultados = Tarifa.objects.filter(compania=self.compania)
+        return [[314, date, 'CO', count]] if count > 0 else [[]]
 
-        for r in resultados:
-            tarifas[r.fecha] = {}
-            tarifas[r.fecha] = {}
-            tarifas[r.fecha] = {}
-            tarifas[r.fecha] = {}
 
-        for r in resultados:
-            tarifas[r.fecha]['id_tarifa'] = r.id_tarifa
-            tarifas[r.fecha]['valor_normal'] = r.valor_normal
-            tarifas[r.fecha]['valor_reducido'] = r.valor_reducido
-            tarifas[r.fecha]['valor_nocturno'] = r.valor_nocturno
+class Cdr(mongoengine.Document):
 
-        return tarifas
+    """Modelo de los cdr."""
 
-    def horario_compania(self, dia, hora_llamada, horarios):
-        normal = horarios[dia]['normal']
-        reducido = horarios[dia]['reducido']
-        nocturno = horarios[dia]['nocturno']
+    year = mongoengine.StringField(
+        max_length=4, choices=choices.YEARS, verbose_name='año', required=True)
+    month = mongoengine.StringField(
+        max_length=2, choices=choices.MONTHS, verbose_name='mes',
+        required=True)
+    incoming_ctc = mongoengine.FileField(verbose_name='CTC', required=True)
+    incoming_entel = mongoengine.FileField(verbose_name='ENTEL', required=True)
+    outgoing = mongoengine.FileField(verbose_name='STI', required=True)
+    processed = mongoengine.BooleanField(default=False)
 
-        if len(normal) > 0:
-            if normal['inicio'] < normal['fin']:
-                if normal['inicio'] <= hora_llamada <= normal['fin']:
-                    return "normal"
+    def __unicode__(self):
+        return u'{0}-{1}'.format(self.year, self.month)
+
+    def get_date(self):
+        """Retorna la fecha para traficos."""
+        return self.year + self.month
+
+    def get_day(self, connect_time, festives):
+        if connect_time.date() in festives:
+            return 'festive'
+
+        else:
+            if connect_time.weekday() in range(5):
+                return 'bussines'
+
+            elif connect_time.weekday() == 5:
+                return 'saturday'
+
             else:
-                if normal['inicio'] <= hora_llamada <= dt.time(23, 59, 59):
-                    return "normal"
-                elif dt.time(0, 0) <= hora_llamada <= normal['fin']:
-                    return "normal"
+                return 'festive'
 
-        if len(reducido) > 0:
-            if reducido['inicio'] < reducido['fin']:
-                if reducido['inicio'] <= hora_llamada <= reducido['fin']:
-                    return "reducido"
+    def split_schedule(self, connect_time, duracion, compania):
+        def split1(start, end):
+            start = nptime().from_time(
+                dt.datetime.strptime(start, '%H:%M:%S').time())
+            end = nptime().from_time(
+                dt.datetime.strptime(end, '%H:%M:%S').time())
+
+            if hora_inicio < start < hora_fin:
+                duracion1 = int((start - hora_inicio).total_seconds())
+                duracion2 = int((hora_fin - start).total_seconds())
+
+                return (
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': hora_inicio,
+                        'duracion': duracion1
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': start,
+                        'duracion': duracion2})
+
+            elif hora_inicio < end < hora_fin:
+                duracion1 = int((end - hora_inicio).total_seconds())
+                duracion2 = int((hora_fin - end).total_seconds())
+
+                return (
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': hora_inicio,
+                        'duracion': duracion1
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': end + dt.timedelta(seconds=1),
+                        'duracion': duracion2})
+
             else:
-                if reducido['inicio'] <= hora_llamada <= dt.time(23, 59, 59):
-                    return "reducido"
-                elif dt.time(0, 0) <= hora_llamada <= reducido['fin']:
-                    return "reducido"
+                return None
 
-        if len(nocturno) > 0:
-            if nocturno['inicio'] < nocturno['fin']:
-                if nocturno['inicio'] <= hora_llamada <= nocturno['fin']:
-                    return "nocturno"
+        def split2(start, end):
+            start = nptime().from_time(
+                dt.datetime.strptime(start, '%H:%M:%S').time())
+            end = nptime().from_time(
+                dt.datetime.strptime(end, '%H:%M:%S').time())
+
+            if hora_inicio < start < dt.time(23, 59, 59):
+                duracion1 = int((start - hora_inicio).total_seconds())
+                duracion2 = int((nptime(23, 59, 59) - start).total_seconds())
+                duracion3 = int((hora_fin - nptime(0, 0)).total_seconds()) + 1
+
+                return (
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': hora_inicio,
+                        'duracion': duracion1
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': start,
+                        'duracion': duracion2
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada + dt.timedelta(
+                            days=1),
+                        'hora_inicio': nptime(0, 0),
+                        'duracion': duracion3})
+
+            elif hora_inicio < end < dt.time(23, 59, 59):
+                duracion1 = int((end - hora_inicio).total_seconds())
+                duracion2 = int((nptime(23, 59, 59) - end).total_seconds())
+                duracion3 = int((hora_fin - nptime(0, 0)).total_seconds()) + 1
+
+                return (
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': hora_inicio,
+                        'duracion': duracion1
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': end + dt.timedelta(seconds=1),
+                        'duracion': duracion2
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada + dt.timedelta(
+                            days=1),
+                        'hora_inicio': nptime(0, 0),
+                        'duracion': duracion3
+                    }
+                )
+
+            elif dt.time(0, 0) < start < hora_fin:
+                d1 = int((nptime(23, 59, 59) - hora_inicio).total_seconds())
+                d2 = int((start - nptime(0, 0)).total_seconds()) + 1
+                d3 = int((hora_fin - start).total_seconds())
+
+                return (
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': hora_inicio,
+                        'duracion': d1
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada + dt.timedelta(
+                            days=1),
+                        'hora_inicio': nptime(0, 0),
+                        'duracion': d2
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada + dt.timedelta(
+                            days=1),
+                        'hora_inicio': start,
+                        'duracion': d3})
+
+            elif dt.time(0, 0) <= end <= hora_fin:
+                d1 = int((nptime(23, 59, 59) - hora_inicio).total_seconds())
+                d2 = int((end - nptime(0, 0)).total_seconds()) + 1
+                d3 = int((hora_fin - end).total_seconds())
+
+                return (
+                    {
+                        'fecha_llamada': fecha_llamada,
+                        'hora_inicio': hora_inicio,
+                        'duracion': d1
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada + dt.timedelta(
+                            days=1),
+                        'hora_inicio': nptime(0, 0),
+                        'duracion': d2
+                    },
+                    {
+                        'fecha_llamada': fecha_llamada + dt.timedelta(
+                            days=1),
+                        'hora_inicio': end + dt.timedelta(seconds=1),
+                        'duracion': d3
+                    },
+                )
+
             else:
-                if nocturno['inicio'] <= hora_llamada <= dt.time(23, 59, 59):
-                    return "nocturno"
-                elif dt.time(0, 0) <= hora_llamada <= nocturno['fin']:
-                    return "nocturno"
+                return None
 
-    def split_horario(
-            self, dia, hora_llamada, duracion, fecha_llamada, horarios):
-        normal = horarios[dia]['normal']
-        reducido = horarios[dia]['reducido']
-        nocturno = horarios[dia]['nocturno']
-        hora_inicio = nptime().from_time(hora_llamada)
+        fecha_llamada = connect_time.date()
+        hora_inicio = nptime().from_time(connect_time.time())
         hora_fin = hora_inicio + dt.timedelta(seconds=float(duracion))
 
         if hora_inicio <= hora_fin:
-            if len(normal) > 0:
-                if hora_inicio < normal['inicio'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    normal['inicio']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                normal['inicio']
-                            ),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(normal['inicio'])
-                            ).total_seconds())
-                        },
-                    )
-                elif hora_inicio < normal['fin'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(normal['fin']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                normal['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(normal['fin'])
-                            ).total_seconds())
-                        },
-                    )
-            if len(reducido) > 0:
-                if hora_inicio < reducido['inicio'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    reducido['inicio']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                reducido['inicio']
-                            ),
-                            'duracion': int((
-                                hora_fin -
-                                            nptime().from_time(
-                                                reducido['inicio'])
-                                            ).total_seconds())
-                        },
-                    )
-                elif hora_inicio < reducido['fin'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    reducido['fin']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                reducido['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(reducido['fin'])
-                            ).total_seconds())
-                        },
-                    )
-            if len(nocturno) > 0:
-                if hora_inicio < nocturno['inicio'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    nocturno['inicio']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                nocturno['inicio']
-                            ),
-                            'duracion': int((
-                                hora_fin -
-                                            nptime().from_time(
-                                                nocturno['inicio'])
-                                            ).total_seconds())
-                        },
-                    )
-                elif hora_inicio < nocturno['fin'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    nocturno['fin']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                nocturno['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(nocturno['fin'])
-                            ).total_seconds())
-                        },
-                    )
-            return (
-                {
-                    'fecha_llamada': fecha_llamada,
-                    'hora_inicio': hora_inicio,
-                    'duracion': duracion,
-                },
-            )
-        else:
-            if len(normal) > 0:
-                if hora_inicio < normal['inicio'] < dt.time(23, 59, 59):
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    normal['inicio']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                normal['inicio']
-                            ),
-                            'duracion': int((
-                                nptime(23, 59, 59) - nptime().from_time(
-                                    normal['inicio'])
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                hora_fin - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        }
-                    )
-                elif hora_inicio < normal['fin'] < dt.time(23, 59, 59):
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(normal['fin']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                normal['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                nptime(23, 59, 59) - nptime().from_time(
-                                    normal['fin'])
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                hora_fin - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        }
-                    )
+            dia = compania.schedules.get(self.get_day(fecha_llamada))
 
-                elif dt.time(0, 0) < normal['inicio'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime(23, 59, 59) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                nptime().from_time(
-                                    normal['inicio']) - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime().from_time(
-                                normal['inicio']
-                            ),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(normal['inicio'])
-                            ).total_seconds())
-                        },
-                    )
-                elif dt.time(0, 0) <= normal['fin'] <= hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime(23, 59, 59) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                nptime().from_time(
-                                    normal['fin']) - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime().from_time(
-                                normal['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(normal['fin'])
-                            ).total_seconds())
-                        },
-                    )
-            if len(reducido) > 0:
-                if hora_inicio < reducido['inicio'] < dt.time(23, 59, 59):
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    reducido['inicio']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                reducido['inicio']
-                            ),
-                            'duracion': int((
-                                nptime(23, 59, 59) - nptime().from_time(
-                                    reducido['inicio'])
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                hora_fin - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        }
-                    )
-                elif hora_inicio < reducido['fin'] < dt.time(23, 59, 59):
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    reducido['fin']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                reducido['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                nptime(23, 59, 59) - nptime().from_time(
-                                    reducido['fin'])
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                hora_fin - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        }
-                    )
+            if dia:
+                for n in ['normal', 'reducido', 'nocturno']:
+                    tipo = dia.get(n)
 
-                elif dt.time(0, 0) < reducido['inicio'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime(23, 59, 59) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                nptime().from_time(
-                                    reducido['inicio']) - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime().from_time(
-                                reducido['inicio']
-                            ),
-                            'duracion': int((
-                                hora_fin -
-                                            nptime().from_time(
-                                                reducido['inicio'])
-                                            ).total_seconds())
-                        },
-                    )
-                elif dt.time(0, 0) <= reducido['fin'] <= hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime(23, 59, 59) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                nptime().from_time(
-                                    reducido['fin']) - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime().from_time(
-                                reducido['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(reducido['fin'])
-                            ).total_seconds())
-                        },
-                    )
-            if len(nocturno) > 0:
-                if hora_inicio < nocturno['inicio'] < dt.time(23, 59, 59):
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    nocturno['inicio']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                nocturno['inicio']
-                            ),
-                            'duracion': int((
-                                nptime(23, 59, 59) - nptime().from_time(
-                                    nocturno['inicio'])
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                hora_fin - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        }
-                    )
-                elif hora_inicio < nocturno['fin'] < dt.time(23, 59, 59):
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime().from_time(
-                                    nocturno['fin']) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': nptime().from_time(
-                                nocturno['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                nptime(23, 59, 59) - nptime().from_time(
-                                    nocturno['fin'])
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                hora_fin - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        }
-                    )
+                    if tipo:
+                        output = split1(tipo['start'], tipo['end'])
 
-                elif dt.time(0, 0) < nocturno['inicio'] < hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime(23, 59, 59) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                nptime().from_time(
-                                    nocturno['inicio']) - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime().from_time(
-                                nocturno['inicio']
-                            ),
-                            'duracion': int((
-                                hora_fin -
-                                            nptime().from_time(
-                                                nocturno['inicio'])
-                                            ).total_seconds())
-                        },
-                    )
-                elif dt.time(0, 0) <= nocturno['fin'] <= hora_fin:
-                    return (
-                        {
-                            'fecha_llamada': fecha_llamada,
-                            'hora_inicio': hora_inicio,
-                            'duracion': int((
-                                nptime(23, 59, 59) - hora_inicio
-                            ).total_seconds())
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime(0, 0),
-                            'duracion': int((
-                                nptime().from_time(
-                                    nocturno['fin']) - nptime(0, 0)
-                            ).total_seconds()) + 1
-                        },
-                        {
-                            'fecha_llamada': fecha_llamada + dt.timedelta(
-                                days=1),
-                            'hora_inicio': nptime().from_time(
-                                nocturno['fin']) + dt.timedelta(seconds=1),
-                            'duracion': int((
-                                hora_fin - nptime().from_time(nocturno['fin'])
-                            ).total_seconds())
-                        },
-                    )
+                        if output is not None:
+                            return output
 
-            return (
-                {
-                    'fecha_llamada': fecha_llamada,
-                    'hora_inicio': hora_inicio,
-                    'duracion': duracion
-                },
-            )
-
-    def cantidad_tarifa(self):
-        return Tarifa.objects.filter(
-            fecha__year=self.year, fecha__month=self.month,
-            compania=self.compania).count()
-
-    def cantidad_det_factura(self):
-        return DetFactura.objects.filter(
-            compania=self.compania, fecha__year=self.year,
-            fecha__month=self.month).count()
-
-    def get_log_llamadas(self):
-        fecha = '{0}-{1}'.format(self.year, self.month)
-
-        return LogLlamadas.objects.filter(
-            compania_ani=str(self.compania.id_compania), fecha=fecha,
-            estado='activado')
-
-    def get_feriados(self):
-        return Feriado.objects.values_list('fecha', flat=True)
-
-    def get_dia(self, fecha, dia, feriados):
-        if fecha in feriados:
-            dia = "festivo"
+            return ({
+                'fecha_llamada': fecha_llamada,
+                'hora_inicio': hora_inicio,
+                'duracion': duracion},)
 
         else:
-            if dia > 0 and dia < 6:
-                dia = "habil"
+            dia = compania.schedules.get(self.get_day(fecha_llamada))
 
-            if dia == 6:
-                dia = "sabado"
+            if dia:
+                for n in ['normal', 'reducido', 'nocturno']:
+                    tipo = dia.get(n)
 
-            if dia == 7:
-                dia = "festivo"
+                    if tipo:
+                        output = split2(tipo['start'], tipo['end'])
 
-        return dia
+                        if output is not None:
+                            return output
 
-    def update_logs(self):
-        """Funcion que guarda en la base dedatos el log de llamadas"""
-        fecha = '{0}-{1}'.format(self.year, self.month)
-        LogLlamadas.objects.filter(
-            compania_ani=str(self.compania.id_compania), fecha=fecha,
-            estado='activado').update(estado='facturado')
+            return ({
+                'fecha_llamada': fecha_llamada,
+                'hora_inicio': hora_inicio,
+                'duracion': duracion},)
 
-    def update_factura(self):
-        fechas_inicio = []
-        fechas_fin = []
-        tarifas = []
-        valores_normales = []
-        valores_reducidos = []
-        valores_nocturnos = []
-        limites = Tarifa.objects.filter(
-            compania=self.compania, fecha__year=self.year,
-            fecha__month=self.month
-        ).distinct(
-            'id_ingreso', 'valor_normal', 'valor_reducido',
-            'valor_nocturno')
+    def get_timestamp(self, connect_time):
+        return arrow.get(connect_time.format('H:mm:ss'), 'H:mm:ss').timestamp
 
-        for limite in limites:
-            fechas = Tarifa.objects.filter(id_ingreso=limite.id_ingreso)
-            fecha_inicio = fechas.aggregate(Min('fecha')).get('fecha__min')
-            fechas_inicio.append(fecha_inicio)
-            fecha_fin = fechas.aggregate(Max('fecha')).get('fecha__max')
-            fechas_fin.append(fecha_fin)
-            tarifa = fechas.aggregate(Min('id_tarifa')).get('id_tarifa__min')
-            tarifas.append(tarifa)
-            tarifa = Tarifa.objects.get(pk=tarifa)
-            valores = self.detfactura_set.filter(
-                horario__startswith='normal',
-                fecha__range=(fecha_inicio, fecha_fin))
-            valor_normal = valores.aggregate(Sum('valor')).get('valor__sum')
-            valores_normales.append(valor_normal)
-            duracion_normal = valores.aggregate(
-                Sum('duracion')).get('duracion__sum')
-
-            valores = self.detfactura_set.filter(
-                horario__startswith='reducido',
-                fecha__range=(fecha_inicio, fecha_fin))
-            valor_reducido = valores.aggregate(Sum('valor')).get('valor__sum')
-            valores_reducidos.append(valor_reducido)
-            duracion_reducido = valores.aggregate(
-                Sum('duracion')).get('duracion__sum')
-
-            valores = self.detfactura_set.filter(
-                horario__startswith='nocturno',
-                fecha__range=(fecha_inicio, fecha_fin))
-            valor_nocturno = valores.aggregate(Sum('valor')).get('valor__sum')
-            valores_nocturnos.append(valor_nocturno)
-            duracion_nocturno = valores.aggregate(
-                Sum('duracion')).get('duracion__sum')
-
-            total = valor_normal + valor_reducido + valor_nocturno
-
-            ResumenFactura(
-                factura=self,
-                fecha_inicio=fecha_inicio,
-                fecha_fin=fecha_fin,
-                duracion_normal=duracion_normal,
-                valor_normal=valor_normal,
-                tarifa_normal=tarifa.valor_normal,
-                duracion_reducido=duracion_reducido,
-                valor_reducido=valor_reducido,
-                tarifa_reducido=tarifa.valor_reducido,
-                duracion_nocturno=duracion_nocturno,
-                valor_nocturno=valor_nocturno,
-                tarifa_nocturno=tarifa.valor_nocturno,
-                total=total).save()
-
-        valor_total = self.detfactura_set.aggregate(
-            Sum('valor')).get('valor__sum')
-        total_segundos = self.detfactura_set.aggregate(
-            Sum('duracion')).get('duracion__sum')
-        total_llamadas = self.detfactura_set.count()
-
-        self.fecha_inicio = fechas_inicio
-        self.fecha_fin = fechas_fin
-        self.tarifa = tarifas
-        self.valor_normal = valores_normales
-        self.valor_reducido = valores_reducidos
-        self.valor_nocturno = valores_nocturnos
-        self.valor_total = valor_total
-        self.total_llamadas = total_llamadas
-        self.total_segundos = total_segundos
-        self.save()
-
-    def facturar(self):
-        fecha = '{0}-{1}'.format(self.year, self.month)
-        calendario = monthrange(int(self.year), int(self.month))
-        feriados = self.get_feriados()
-        horarios = self.get_horarios()
-        tarifas = self.get_tarifas()
-        logs = self.get_log_llamadas()
-
-        if (self.cantidad_tarifa() >= calendario[1]
-                and self.cantidad_det_factura() == 0
-                and logs.count() > 0):
-            llamadas = []
-            detalles = []
-
-            for log in logs:
-                id_llamada = log.id_log
-                origen = log.ani_number
-                destino = log.dialed_number
-                duracion = log.ingress_duration
-                fecha_llamada = log.connect_time.date()
-                hora_llamada = log.connect_time.time()
-                dia = self.get_dia(
-                    fecha_llamada, fecha_llamada.isoweekday(), feriados)
-
-                for rango in self.split_horario(
-                        dia, hora_llamada, duracion, fecha_llamada, horarios):
-                    fecha_llamada2 = rango['fecha_llamada']
-
-                    if str(fecha_llamada2.month) != fecha[-2:]:
-                        fecha_llamada2 = fecha_llamada
-
-                    dia2 = self.get_dia(
-                        fecha_llamada2, fecha_llamada2.isoweekday(), feriados)
-                    horario2 = self.horario_compania(
-                        dia2, rango['hora_inicio'], horarios)
-                    valor_tarifa = tarifas[fecha_llamada2]['valor_' + horario2]
-                    id_tarifa = tarifas[fecha_llamada2]['id_tarifa']
-                    duracion2 = rango['duracion']
-                    valor_llamada = valor_tarifa * duracion2
-                    hora_llamada2 = rango['hora_inicio']
-                    detalles.append(
-                        DetFactura(
-                            origen=origen,
-                            destino=destino,
-                            fecha=fecha_llamada2,
-                            hora=str(hora_llamada2),
-                            duracion=duracion2,
-                            tarifa=Tarifa.objects.get(pk=id_tarifa),
-                            horario=horario2,
-                            valor=valor_llamada,
-                            compania=self.compania,
-                            factura=self
-                        )
-                    )
-                    llamadas.append(id_llamada)
-
-            DetFactura.objects.bulk_create(detalles)
-            self.update_logs()
-            self.update_factura()
-
-    def reset_logs(self):
-        fecha = '{0}-{1}'.format(self.year, self. month)
-        LogLlamadas.objects.filter(
-            fecha=fecha, estado='facturado',
-            compania_ani=self.compania.pk).update(estado='activado')
-
-
-class Feriado(models.Model):
-    id_feriado = models.AutoField(primary_key=True)
-    fecha = models.DateField()
-
-    class Meta:
-        db_table = 'feriado'
-        verbose_name = 'feriado'
-        verbose_name_plural = 'feriados'
-        ordering = ('-fecha',)
-
-    def __unicode__(self):
-        return u'{0}'.format(self.fecha)
-
-
-class Horario(models.Model):
-    id = models.AutoField(primary_key=True)
-    dia = models.CharField(max_length=255, choices=choices.DIAS)
-    tipo = models.CharField(max_length=255, choices=choices.HORARIOS)
-    inicio = models.TimeField(blank=True, null=True)
-    fin = models.TimeField(blank=True, null=True)
-    compania = models.ForeignKey(Compania, db_column='compania')
-
-    class Meta:
-        db_table = 'horario'
-        verbose_name = 'horario'
-        verbose_name_plural = 'horarios'
-
-    def __unicode__(self):
-        return u'{0} {1}'.format(self.dia, self.tipo)
-
-
-class Ido(models.Model):
-    id = models.AutoField(primary_key=True)
-    codigo = models.IntegerField(unique=True)
-    compania = models.ForeignKey(Compania, db_column='compania')
-
-    class Meta:
-        db_table = 'ido'
-        verbose_name = 'ido'
-        verbose_name_plural = 'idos'
-        ordering = ('codigo',)
-
-    def __unicode__(self):
-        return u'{0}'.format(self.codigo)
-
-
-class LogLlamadas(models.Model):
-    id_log = models.AutoField(primary_key=True)
-    connect_time = models.DateTimeField(blank=True, null=True)
-    ani_number = models.CharField(max_length=255, blank=True)
-    ingress_duration = models.FloatField(blank=True, null=True)
-    dialed_number = models.CharField(max_length=255, blank=True)
-    fecha = models.CharField(max_length=7, blank=True)
-    compania_cdr = models.CharField(
-        max_length=255, blank=True, choices=choices.COMPANIAS)
-    estado = models.CharField(
-        max_length=255, blank=True, choices=choices.ESTADOS)
-    motivo = models.CharField(max_length=255, blank=True)
-    compania_ani = models.CharField(max_length=255, blank=True)
-    tipo = models.CharField(max_length=100, blank=True)
-    hora = models.TimeField(blank=True, null=True)
-    date = models.DateField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'log_llamadas'
-        verbose_name = 'registro de llamada'
-        verbose_name_plural = 'registro de llamadas'
-
-    def __unicode__(self):
-        return u'{0} {1}'.format(self.date, self.hora)
-
-    @classmethod
-    def get_llamadas_salientes(cls, fecha, tipo):
-        """
-        Metodo que obtiene las llamadas salientes en la tabla cdr de la base de
-        datos sti
-        """
-        cdrs = CdrSti.objects.filter(
-            fecha_cdr=fecha, descripcion=tipo).exclude(estado='desactivado')
-
-        for c in cdrs:
-            linea = Lineas.objects.filter(numero=c.ani_number)
-            c.linea = linea[0] if linea.count() > 0 else None
-
-        return cdrs
-
-    @classmethod
-    def get_dic_llamada_tiempo_by_idd(cls, fecha, tipo):
-        """
-        Metodo que obtiene la cantidad y tiempo de llamadas salientes para
-        cada compania
-        """
-        cdr_idd = CdrSti.objects.filter(
-            fecha_cdr=fecha, descripcion=tipo).exclude(estado='desactivado')
-        dic_llamada = {
-            c.idd: {
-                'normal': {'natural': 0, 'empresa': 0},
-                'reducido': {'natural': 0, 'empresa': 0},
-                'nocturno': {'natural': 0, 'empresa': 0}
-            }
-            for c in cdr_idd
-        }
-        dic_tiempo = {
-            c.idd: {
-                'normal': {'natural': 0, 'empresa': 0},
-                'reducido': {'natural': 0, 'empresa': 0},
-                'nocturno': {'natural': 0, 'empresa': 0}
-            }
-            for c in cdr_idd
-        }
-
-        cdrs = cls.get_llamadas_salientes(fecha, tipo)
-
-        for llamada in cdrs:
-            tipo_horario = cls.get_horario(llamada.hora, llamada.fecha)
-            if llamada.linea:
-                if llamada.linea.tipo_persona == 'Natural':
-                    dic_tiempo[llamada.idd][tipo_horario][
-                        'natural'] += llamada.ingress_duration
-                    dic_llamada[llamada.idd][tipo_horario]['natural'] += 1
-
-                else:
-                    dic_tiempo[llamada.idd][tipo_horario][
-                        'empresa'] += llamada.ingress_duration
-                    dic_llamada[llamada.idd][tipo_horario]['empresa'] += 1
-
-        return {
-            'llamada': dic_llamada, 'tiempo': dic_tiempo,
-            'log_llamadas': cdr_idd}
-
-    @classmethod
-    def get_companias_cod_empresa(cls):
-        """
-        Metodo que genera un diccionario con el iddido y el cod_empresa, ambos
-        de la tabla companias en la base de datos sti
-        """
-        return {
-            i.codigo: i.compania.codigo
-            for i in Ido.objects.exclude(codigo__isnull=True)}
-
-    @classmethod
-    def get_compania_id(cls):
-        """
-        Metodo que genera un diccionario con el id_compania y el id, ambos de
-        la tabla compania en la base de datos gesvoip
-        """
-        return {
-            c.id_compania: c.id
-            for c in Compania.objects.exclude(id__isnull=True)}
-
-    @classmethod
-    def get_horario(cls, hora, fecha):
-        """
-        Metodo que determina el tipo de horario de una llamada
-        :param hora: Hora de la llamada.
-        :type hora: datetime.time
-        :param fecha: Fecha de la llamada.
-        :type fecha: datetime.date
-        """
-        if fecha.isoweekday() in range(1, 6):
-            if dt.time(8, 0) <= hora <= dt.time(19, 59, 59):
-                return 'normal'
-
-            elif dt.time(20, 0) <= hora <= dt.time(23, 59, 59):
-                return 'reducido'
-
-            elif dt.time(0, 0) <= hora <= dt.time(7, 59, 59):
-                return 'nocturno'
-
-        elif fecha.isoweekday() == 6:
-            if dt.time(8, 0) <= hora <= dt.time(13, 59, 59):
-                return 'normal'
-
-            elif dt.time(14, 0) <= hora <= dt.time(23, 59, 59):
-                return 'reducido'
-
-            elif dt.time(0, 0) <= hora <= dt.time(7, 59, 59):
-                return 'nocturno'
-
-        else:
-            if dt.time(8, 0) <= hora <= dt.time(23, 59, 59):
-                return 'reducido'
-
-            elif dt.time(0, 0) <= hora <= dt.time(23, 59, 59):
-                return 'nocturno'
+    def insert_incoming(self):
+        for c in choices.COMPANIAS:
+            if c[0] == 'ENTEL':
+                incoming = self.incoming_entel.read()
 
             else:
-                return ''
+                incoming = self.incoming_ctc.read()
 
-    @classmethod
-    def get_tipo_persona(cls, tipo, fecha):
-        """
-        Metodo que obtiene el tipo de persona para un determinado numero
-        """
-        return {l.numero: l.tipo_persona for l in Lineas.objects.all()}
+            incoming_file = StringIO.StringIO(incoming)
+            incoming_dict = csv.DictReader(incoming_file, delimiter=',')
 
-    @classmethod
-    def get_llamadas_entrantes(cls, tipo, fecha):
-        """
-        Metodo que obtiene las llamadas entrantes en la tabla log_llamadas de
-        la base de datos gesvoip
-        """
-        return cls.objects.filter(
-            fecha=fecha, tipo=tipo).exclude(estado='desactivado')
+            def get_valid(ani, final_number, dialed_number, ingress_duration):
+                p2 = re.search(patterns.national, final_number)
+                p3 = re.search(patterns.special2, final_number)
+                p4 = re.search(patterns.pattern_112, dialed_number)
+                p5 = len(ani) == 11 and re.search(patterns.valid_ani, ani)
+                p6 = int(ingress_duration) > 0
 
-    @classmethod
-    def get_dic_llamada_tiempo_by_compania_ani(cls, tipo, fecha):
-        """
-        Metodo que obtiene la cantidad y tiempo de llamadas entrantes para
-        cada compania
-        """
-        logs = cls.objects.filter(
-            tipo=tipo, fecha=fecha
-        ).exclude(estado='desactivado').distinct('compania_ani')
-        dic_llamada = {
-            l.compania_ani: {
-                'normal': {'natural': 0, 'empresa': 0},
-                'reducido': {'natural': 0, 'empresa': 0},
-                'nocturno': {'natural': 0, 'empresa': 0}
-            }
-            for l in logs
-        }
-        dic_tiempo = {
-            l.compania_ani: {
-                'normal': {'natural': 0, 'empresa': 0},
-                'reducido': {'natural': 0, 'empresa': 0},
-                'nocturno': {'natural': 0, 'empresa': 0}
-            }
-            for l in logs
-        }
-        llamadas_entrantes = cls.get_llamadas_entrantes(tipo, fecha)
-        tipo_personas = cls.get_tipo_persona(tipo, fecha)
+                return True if p2 and p3 and p4 and p5 and p6 else False
 
-        for llamada in llamadas_entrantes:
-            if (len(str(llamada.dialed_number)) == 8 and
-                    str(llamada.dialed_number)[0] == '2'):
-                numero = int('562' + str(llamada.dialed_number))
+            def reader_to_incomming(reader):
+                for r in reader:
+                    connect_time = arrow.get(
+                        r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                    disconnect_time = arrow.get(
+                        r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                    valid = get_valid(
+                        r['ANI'], r['FINAL_NUMBER'], r['DIALED_NUMBER'],
+                        r['INGRESS_DURATION'])
+                    obs = None if valid else 'No cumple con los filtros'
+                    weekday = connect_time.weekday()
 
-                if numero in tipo_personas:
-                    tipo_persona = tipo_personas.get(numero)
+                    if weekday in range(5):
+                        day = 'bussines'
+
+                    elif weekday == 5:
+                        day = 'saturday'
+
+                    else:
+                        day = 'festive'
+
+                    yield Incoming(
+                        connect_time=connect_time.datetime,
+                        disconnect_time=disconnect_time.datetime,
+                        ani=r['ANI'],
+                        ani_number=r['ANI_NUMBER'],
+                        ingress_duration=int(r['INGRESS_DURATION']),
+                        dialed_number=r['DIALED_NUMBER'],
+                        final_number=r['FINAL_NUMBER'],
+                        cdr=self,
+                        numeration=r['ANI'][2:][:6],
+                        numeration5=r['ANI'][2:][:5],
+                        weekday=weekday,
+                        day=day,
+                        timestamp=self.get_timestamp(connect_time),
+                        date=connect_time.format('YYYY-MM-DD'),
+                        valid=valid,
+                        observation=obs)
+
+            Incoming.objects.insert(
+                reader_to_incomming(incoming_dict), load_bulk=False)
+
+    def process_incoming(self):
+        Incoming.set_festive(self)
+        Incoming.set_type(self)
+        Incoming.set_company(self)
+        Incoming.set_schedule(self)
+
+    def insert_outgoing(self):
+        outgoing = self.outgoing.read()
+        outgoing_file = StringIO.StringIO(outgoing)
+        outgoing_dict = csv.DictReader(outgoing_file, delimiter=',')
+
+        def reader_to_outgoing(reader):
+            for r in reader:
+                connect_time = arrow.get(
+                    r['CONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                disconnect_time = arrow.get(
+                    r['DISCONNECT_TIME'], 'YYYY-MM-DD HH:mm:ss')
+                ingress_duration = int(r['INGRESS_DURATION'])
+
+                if re.search(patterns.pattern_num_6, r['FINAL_NUMBER']):
+                    numeration = r['FINAL_NUMBER'][2:][:6]
 
                 else:
-                    tipo_persona = ''
+                    numeration = r['FINAL_NUMBER'][2:][:5]
 
-            else:
-                numero = int('56' + str(llamada.dialed_number))
+                yield Outgoing(
+                    connect_time=connect_time.datetime,
+                    disconnect_time=disconnect_time.datetime,
+                    ani=r['ANI'],
+                    ani_number=r['ANI_NUMBER'],
+                    final_number=r['FINAL_NUMBER'],
+                    dialed_number=r['DIALED_NUMBER'],
+                    ingress_duration=ingress_duration,
+                    cdr=self,
+                    numeration=numeration,
+                    weekday=connect_time.weekday(),
+                    timestamp=self.get_timestamp(connect_time))
 
-                if numero in tipo_personas:
-                    tipo_persona = tipo_personas.get(numero)
+        Outgoing.objects.insert(
+            reader_to_outgoing(outgoing_dict), load_bulk=False)
+        Outgoing.set_type(self)
+        Outgoing.set_valid(self)
+        Outgoing.set_company(self)
+        Outgoing.set_schedule(self)
+        Outgoing.set_entity(self)
+        # Outgoing.set_line(self)
 
-                else:
-                    tipo_persona = ''
+    def complete_invoices(self):
+        for c in Company.objects(invoicing='monthly'):
+            i = Invoice.objects(company=c, cdr=self).first()
 
-            tipo_horario = cls.get_horario(llamada.hora, llamada.date)
+            if i is not None:
+                for p in Period.objects(invoice=i):
+                    for r in Rate.objects(period=p):
+                        end = arrow.get(p.end.date()).replace(days=1)
+                        r.call_number = Incoming.objects(
+                            company=c,
+                            connect_time__gte=p.start.date(),
+                            connect_time__lt=end.date(),
+                            schedule=r._type).count()
+                        r.call_duration = Incoming.objects(
+                            company=c,
+                            connect_time__gte=p.start.date(),
+                            connect_time__lt=end.date(),
+                            schedule=r._type).sum('ingress_duration')
+                        r.total = r.call_duration * r.price
+                        r.save()
 
-            if tipo_persona == 'Natural':
-                dic_tiempo[llamada.compania_ani][
-                    tipo_horario]['natural'] += llamada.ingress_duration
-                dic_llamada[llamada.compania_ani][
-                    tipo_horario]['natural'] += 1
+                    p.call_number = Rate.objects(period=p).sum('call_number')
+                    p.call_duration = Rate.objects(period=p).sum(
+                        'call_duration')
+                    p.total = Rate.objects(period=p).sum('total')
+                    p.save()
 
-            else:
-                dic_tiempo[llamada.compania_ani][
-                    tipo_horario]['empresa'] += llamada.ingress_duration
-                dic_llamada[llamada.compania_ani][
-                    tipo_horario]['empresa'] += 1
+                i.call_number = Period.objects(invoice=i).sum('call_number')
+                i.call_duration = Period.objects(invoice=i).sum(
+                    'call_duration')
+                i.total = Period.objects(invoice=i).sum('total')
+                i.invoiced = True
+                i.save()
 
-        return {
-            'llamada': dic_llamada, 'tiempo': dic_tiempo, 'log_llamadas': logs}
+    def get_ingress_duration_by_type(self, company, _type, schedule):
+        return Incoming.objects(
+            cdr=self, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').sum('ingress_duration')
 
-    @classmethod
-    def get_trafico_local(cls, fecha):
-        """Metodo que obtiene el trafico de entrada para llamadas locales"""
+    def get_count_by_type(self, company, _type, schedule):
+        return Incoming.objects(
+            cdr=self, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').count()
+
+    def get_outgoing_ingress_duration(self, company, _type, schedule):
+        return Outgoing.objects(
+            cdr=self, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').sum('ingress_duration')
+
+    def get_outgoing_count(self, company, _type, schedule):
+        return Outgoing.objects(
+            cdr=self, company=company, _type=_type, schedule=schedule,
+            entity='Empresa').count()
+
+    def get_traffic(self, _type):
         items = []
-        tipo = 'local'
-        llamada_tiempo = cls.get_dic_llamada_tiempo_by_compania_ani(
-            tipo, fecha)
-        compania_id = cls.get_compania_id()
-        cod_empresa = cls.get_companias_cod_empresa()
-        dic_llamada = llamada_tiempo.get('llamada')
-        dic_tiempo = llamada_tiempo.get('tiempo')
-        logs = llamada_tiempo.get('log_llamadas')
+        date = self.get_date()
 
-        for fila in logs:
-            if int(fila.compania_ani) in compania_id:
-                iddido = compania_id.get(int(fila.compania_ani))
-                interconexion = cod_empresa.get(iddido)
-                horarios = ('normal', 'reducido', 'nocturno')
+        for c in Company.objects(invoicing='monthly'):
+            for s in map(lambda x: x[0], choices.TIPO_CHOICES):
+                ingress_duration = self.get_ingress_duration_by_type(
+                    self, c, _type, s)
+                count = self.get_count_by_type(self, c, _type, s)
 
-                if iddido is not None and interconexion is not None:
-                    for idx, horario in enumerate(horarios, start=4):
-                        if (dic_llamada.get(fila.compania_ani).get(
-                                horario).get('natural') > 0 and
-                                dic_tiempo.get(fila.compania_ani).get(
-                                horario).get('natural') > 0):
-                            items.append([
-                                314,
-                                fecha.replace('-', ''),
-                                'E',
-                                '06',
-                                2,
-                                int(interconexion),
-                                'TB',
-                                'RE',
-                                'NOR',
-                                '0{0}'.format(idx),
-                                dic_llamada.get(fila.compania_ani).get(
-                                    horario).get('natural'),
-                                int(
-                                    dic_tiempo.get(fila.compania_ani).get(
-                                        horario).get('natural'))])
+                if ingress_duration > 0 and count > 0:
+                    if _type == 'local':
+                        items.append(
+                            314, date, 'E', '06', '2', c.code, 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
-                        if (dic_llamada.get(fila.compania_ani).get(
-                                horario).get('empresa') > 0 and
-                                dic_tiempo.get(fila.compania_ani).get(
-                                horario).get('empresa') > 0):
-                            items.append([
-                                314,
-                                fecha.replace('-', ''),
-                                'E',
-                                '06',
-                                2,
-                                int(interconexion),
-                                'TB',
-                                'CO',
-                                'NOR',
-                                '0{0}'.format(idx),
-                                dic_llamada.get(fila.compania_ani).get(
-                                    horario).get('empresa'),
-                                int(
-                                    dic_tiempo.get(fila.compania_ani).get(
-                                        horario).get('empresa'))])
+                    elif _type == 'voip-local':
+                        items.append(
+                            314, date, 'E', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
 
-        """Metodo que obtiene el trafico de salida para llamadas locales"""
-        llamada_tiempo = cls.get_dic_llamada_tiempo_by_idd(fecha, tipo)
-        cdr_idd = llamada_tiempo.get('log_llamadas')
-        compania_id = cls.get_compania_id()
-        cod_empresa = cls.get_companias_cod_empresa()
+                    elif _type == 'movil':
+                        items.append(
+                            314, date, 'E', c.code, '06', '2', 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
-        for fila in cdr_idd:
-            if fila.idd in compania_id:
-                iddido = compania_id.get(fila.idd)
-                interconexion = cod_empresa.get(iddido)
-                horarios = ('normal', 'reducido', 'nocturno')
+                    elif _type == 'voip-movil':
+                        items.append(
+                            314, date, 'E', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
 
-                if iddido is not None and interconexion is not None:
-                    for idx, horario in enumerate(horarios, start=4):
-                        if (dic_llamada.get(fila.idd).get(
-                                horario).get('natural') > 0 and
-                                dic_tiempo.get(fila.idd).get(
-                                horario).get('natural') > 0):
-                            items.append([
-                                314,
-                                fecha.replace('-', ''),
-                                'S',
-                                '06',
-                                2,
-                                int(interconexion),
-                                'TB',
-                                'RE',
-                                'NOR',
-                                '0{0}'.format(idx),
-                                dic_llamada.get(fila.idd).get(
-                                    horario).get('natural'),
-                                int(
-                                    dic_tiempo.get(fila.idd).get(
-                                        horario).get('natural'))])
+                ingress_duration = self.get_outgoing_ingress_duration(
+                    self, c, _type, s)
+                count = self.get_outgoing_count(self, c, _type, s)
 
-                        if (dic_llamada.get(fila.idd).get(
-                                horario).get('empresa') > 0 and
-                                dic_tiempo.get(fila.idd).get(
-                                horario).get('empresa') > 0):
-                            items.append([
-                                314,
-                                fecha.replace('-', ''),
-                                'S',
-                                '06',
-                                2,
-                                int(interconexion),
-                                'TB',
-                                'CO',
-                                'NOR',
-                                '0{0}'.format(idx),
-                                dic_llamada.get(fila.idd).get(
-                                    horario).get('empresa'),
-                                int(
-                                    dic_tiempo.get(fila.idd).get(
-                                        horario).get('empresa'))])
+                if ingress_duration > 0 and count > 0:
+                    if _type == 'local':
+                        items.append(
+                            314, date, 'S', '06', '2', c.code, 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
+
+                    elif _type == 'voip-local':
+                        items.append(
+                            314, date, 'S', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
+
+                    elif _type == 'movil':
+                        items.append(
+                            314, date, 'S', c.code, '06', '2', 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
+
+                    elif _type == 'voip-movil':
+                        items.append(
+                            314, date, 'S', c.code, 'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration),
+                            round(ingress_duration) * 20)
+
+                    elif _type == 'internacional':
+                        items.append(
+                            314, date, 'LDI', 'S', 112, '06', 2, 'TB', 'CO',
+                            'NOR', '0%s' % s, count, round(ingress_duration))
 
         return items
 
 
-class Numeracion(models.Model):
-    id = models.AutoField(primary_key=True)
-    zona = models.IntegerField()
-    rango = models.IntegerField()
-    tipo = models.CharField(max_length=255, blank=True)
-    compania = models.ForeignKey(Compania, db_column='compania')
+class Incoming(mongoengine.Document):
 
-    class Meta:
-        db_table = 'numeracion'
-        verbose_name = 'numeracion'
-        verbose_name_plural = 'numeraciones'
+    """Modelo de las llamdas entrantes."""
 
-    def __unicode__(self):
-        return u'{0}{1}'.format(self.zona, self.rango)
-
-
-class NumeracionAmpliada(models.Model):
-    id_numeracion = models.AutoField(primary_key=True)
-    codigo = models.IntegerField()
-    numeracion = models.CharField(max_length=255)
-    compania = models.ForeignKey(Compania, db_column='compania')
-
-    class Meta:
-        db_table = 'numeracion_ampliada'
-        verbose_name = 'numeracion ampliada'
-        verbose_name_plural = 'numeraciones ampliadas'
-
-    def __unicode__(self):
-        return u'{0}{1}'.format(self.codigo, self.numeracion)
-
-
-class Portados(models.Model):
-    id = models.AutoField(primary_key=True)
-    numero = models.IntegerField(unique=True)
-    ido = models.IntegerField()
-    tipo = models.IntegerField(blank=True, null=True)
-    fecha = models.DateField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'portados'
-        verbose_name = 'portado'
-        verbose_name_plural = 'portados'
+    connect_time = mongoengine.DateTimeField()
+    disconnect_time = mongoengine.DateTimeField()
+    ani = mongoengine.StringField()
+    final_number = mongoengine.StringField()
+    ani_number = mongoengine.StringField()
+    ingress_duration = mongoengine.IntField()
+    dialed_number = mongoengine.StringField()
+    cdr = mongoengine.ReferenceField(
+        Cdr, reverse_delete_rule=mongoengine.CASCADE)
+    valid = mongoengine.BooleanField(default=False)
+    invoiced = mongoengine.BooleanField(default=False)
+    observation = mongoengine.StringField()
+    company = mongoengine.ReferenceField(Company)
+    _type = mongoengine.StringField()
+    schedule = mongoengine.StringField()
+    entity = mongoengine.StringField()
+    numeration = mongoengine.StringField()
+    numeration5 = mongoengine.StringField()
+    day = mongoengine.StringField()
+    weekday = mongoengine.IntField()
+    timestamp = mongoengine.IntField()
+    date = mongoengine.StringField()
 
     def __unicode__(self):
-        return u'{0}'.format(self.numero)
+        return str(self.connect_time)
 
-
-class Tarifa(models.Model):
-    id_tarifa = models.AutoField(primary_key=True)
-    compania = models.ForeignKey(Compania, db_column='compania')
-    fecha = models.DateField()
-    valor_normal = models.FloatField()
-    valor_reducido = models.FloatField()
-    valor_nocturno = models.FloatField()
-    tipo = models.CharField(max_length=255, blank=True, choices=choices.DIAS)
-    id_ingreso = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'tarifa'
-        verbose_name = 'tarifa'
-        verbose_name_plural = 'tarifas'
-
-    def __unicode__(self):
-        return self.tipo
+    @property
+    def type(self):
+        return self._type
 
     @classmethod
-    def get_next_id_ingreso(cls):
-        cursor = connection.cursor()
-        cursor.execute("SELECT nextval(%s)", ['sec_tarifa_ingreso'])
-        row = cursor.fetchone()
-
-        return row[0]
-
-    @classmethod
-    def ingress(
-            cls, compania, fecha_inicio, fecha_fin, valor_normal,
-            valor_reducido, valor_nocturno):
-        tarifas = []
-        id_ingreso = cls.get_next_id_ingreso()
-
-        for fecha in rrule(DAILY, dtstart=fecha_inicio, until=fecha_fin):
-            if cls.objects.filter(fecha=fecha).count() == 0:
-                if (fecha.weekday() == 0 or
-                        Feriado.objects.filter(fecha=fecha).count() > 0):
-                    tipo = 'festivo'
-
-                elif fecha.weekday() in range(1, 6):
-                    tipo = 'habil'
-
-                elif fecha.weekday() == 6:
-                    tipo = 'sabado'
-
-                tarifas.append(cls(
-                    compania=compania,
-                    fecha=fecha,
-                    valor_normal=valor_normal,
-                    valor_reducido=valor_reducido,
-                    valor_nocturno=valor_nocturno,
-                    tipo=tipo,
-                    id_ingreso=id_ingreso
-                ))
-
-        cls.objects.bulk_create(tarifas)
+    def set_festive(cls, cdr):
+        date = '%s-%s' % (cdr.year, cdr.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+        festives = Holiday.objects(
+            date__gte=start, date__lt=end).values_list('date')
+        festives = [f.format('YYYY-MM-DD') for f in festives]
+        cls.objects(
+            cdr=cdr, valid=True, date__in=festives).update(set__day='festive')
 
     @classmethod
-    def get_by_compania_and_fecha(cls, compania, year, month):
-        limites = []
-
-        for t in cls.objects.filter(
-                compania=compania, fecha__year=year,
-                fecha__month=month).distinct('id_ingreso'):
-            fechas = cls.objects.filter(id_ingreso=t.id_ingreso)
-            fecha_inicio = fechas.aggregate(Min('fecha')).get('fecha__min')
-            fecha_fin = fechas.aggregate(Max('fecha')).get('fecha__max')
-            limites.append({
-                'fecha_inicio': fecha_inicio, 'fecha_fin': fecha_fin,
-                'id_ingreso': t.id_ingreso})
-
-        return limites
+    def set_type(cls, cdr):
+        """Funcion que establece el tipo de llamada"""
+        cls.objects(
+            cdr=cdr, final_number=patterns.voip,
+            ani=patterns.movil).update(set___type='voip-movil')
+        cls.objects(
+            cdr=cdr, final_number=patterns.voip,
+            ani=patterns.international,
+            _type=None).update(set___type='voip-ldi')
+        cls.objects(
+            cdr=cdr, final_number=patterns.voip,
+            _type=None).update(set___type='voip-local')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.movil, _type=None).update(set___type='movil')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.international,
+            _type=None).update(set___type='internacional')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.santiago, _type=None).update(set___type='local')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            ani=patterns.special, _type=None).update(set___type='especial')
+        cls.objects(
+            cdr=cdr, final_number=patterns.normal,
+            _type=None).update(set___type='nacional')
 
     @classmethod
-    def get_by_id_ingreso(cls, id_ingreso):
-        return cls.objects.filter(id_ingreso=id_ingreso)[0]
+    def set_company(cls, cdr):
+        date = '%s-%s' % (cdr.year, cdr.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+
+        for c in Portability.objects.distinct('company'):
+            numbers = list(Portability.objects(
+                company=c, date__lt=end.datetime).values_list('number'))
+            cls.objects(
+                cdr=cdr, valid=True, ani__in=numbers).update(set__company=c)
+
+        for c in Numeration.objects.distinct('company'):
+            numerations = list(Numeration.objects(company=c).values_list(
+                'numeration'))
+            cls.objects(
+                cdr=cdr, valid=True, numeration__in=numerations,
+                company=None).update(set__company=c)
+            cls.objects(
+                cdr=cdr, valid=True, numeration5__in=numerations,
+                company=None).update(set__company=c)
+
+        cls.objects(
+            cdr=cdr, valid=True, company=None).update(
+                set__valid=False, set__observation='Sin empresa')
+
+    @classmethod
+    def set_schedule(cls, cdr):
+        cls.objects(
+            cdr=cdr, valid=True, day='bussines',
+            timestamp__gte=arrow.get('9:00:00', 'H:mm:ss').timestamp,
+            timestamp__lte=arrow.get('22:59:59', 'H:mm:ss').timestamp).update(
+                set__schedule='normal')
+        cls.objects(
+            cdr=cdr, valid=True, day__in=['saturday', 'festive'],
+            timestamp__gte=arrow.get('9:00:00', 'H:mm:ss').timestamp,
+            timestamp__lte=arrow.get('22:59:59', 'H:mm:ss').timestamp).update(
+                set__schedule='reducido')
+        cls.objects(cdr=cdr, valid=True, schedule=None).update(
+            set__schedule='nocturno')
 
 
-class Usuarios(models.Model):
-    id_usuario = models.AutoField(primary_key=True)
-    usuario = models.CharField(max_length=255)
-    password = models.CharField(max_length=255, blank=True)
-    nombre = models.CharField(max_length=255)
-    apellido = models.CharField(max_length=255)
-    correo = models.EmailField(blank=True)
-    rol = models.CharField(max_length=255, choices=choices.ROLES)
+class Outgoing(mongoengine.Document):
 
-    class Meta:
-        db_table = 'usuarios'
-        verbose_name = 'usuario'
-        verbose_name_plural = 'usuarios'
+    """Modelo de las llamdas salientes."""
+
+    connect_time = mongoengine.DateTimeField()
+    disconnect_time = mongoengine.DateTimeField()
+    ani = mongoengine.StringField()
+    final_number = mongoengine.StringField()
+    ani_number = mongoengine.StringField()
+    ingress_duration = mongoengine.IntField()
+    dialed_number = mongoengine.StringField()
+    cdr = mongoengine.ReferenceField(
+        Cdr, reverse_delete_rule=mongoengine.CASCADE)
+    valid = mongoengine.BooleanField(default=False)
+    observation = mongoengine.StringField(default='No cumple con los filtros')
+    company = mongoengine.ReferenceField(Company)
+    line = mongoengine.ReferenceField(Line)
+    _type = mongoengine.StringField()
+    schedule = mongoengine.StringField()
+    entity = mongoengine.StringField()
+    numeration = mongoengine.StringField()
+    weekday = mongoengine.IntField()
+    timestamp = mongoengine.IntField()
 
     def __unicode__(self):
-        return self.usuario
+        return str(self.connect_time)
 
-    def get_full_name(self):
-        return u'{0} {1}'.format(self.nombre, self.apellido)
+    @classmethod
+    def set_type(cls, cdr):
+        cls.objects(
+            cdr=cdr, ani=patterns.pattern_56446,
+            final_number=patterns.movil).update(set___type='voip-movil')
+        cls.objects(
+            cdr=cdr, ani=patterns.pattern_56446,
+            final_number=patterns.national,
+            _type=None).update(set___type='voip-local')
+        cls.objects(
+            cdr=cdr, ani=patterns.national,
+            final_number=patterns.movil, _type=None).update(set___type='movil')
+        q = {
+            'cdr': cdr.id,
+            'ani': patterns.national,
+            '_type': None,
+            'final_number': patterns.national,
+            'final_number': patterns.pattern_not_56446}
+        cls.objects(__raw__=q).update(set___type='local')
+        cls.objects(
+            cdr=cdr, ani=patterns.national,
+            final_number=patterns.international,
+            _type=None).update(set___type='internacional')
+
+    @classmethod
+    def set_valid(cls, cdr):
+        cls.objects(cdr=cdr, _type__ne=None, ingress_duration__gt=0).update(
+            set__valid=True, set__observation=None)
+
+    @classmethod
+    def set_company(cls, cdr):
+        date = '%s-%s' % (cdr.year, cdr.month)
+        start = arrow.get('%s-01' % date, 'YYYY-MM-DD')
+        end = start.replace(months=1)
+
+        for c in Portability.objects.distinct('company'):
+            numbers = list(Portability.objects(
+                company=c, date__lt=end.datetime).values_list('number'))
+            cls.objects(
+                cdr=cdr, valid=True,
+                final_number__in=numbers).update(set__company=c)
+
+        for c in Numeration.objects.distinct('company'):
+            numerations = list(Numeration.objects(company=c).values_list(
+                'numeration'))
+            cls.objects(
+                cdr=cdr, valid=True, numeration__in=numerations,
+                company=None).update(set__company=c)
+
+        cls.objects(
+            cdr=cdr, valid=True, company=None).update(
+                set__valid=False, set__observation='Sin empresa')
+
+    @classmethod
+    def set_schedule(cls, cdr):
+        def start(hour):
+            return arrow.get(1, 1, 1, hour).timestamp
+
+        def end(hour):
+            return arrow.get(1, 1, 1, hour, 59, 59).timestamp
+
+        q1 = Q(cdr=cdr) & Q(valid=True)
+        q2 = Q(weekday__gte=0) & Q(weekday__lte=4)
+        q3 = Q(timestamp__gte=start(8)) & Q(timestamp__lte=end(19))
+        q4 = Q(weekday=5)
+        q5 = Q(timestamp__gte=start(8)) & Q(timestamp__lte=end(13))
+        cls.objects(q1 & ((q2 & q3) | (q4 & q5))).update(
+            set__schedule='normal')
+        q1 = Q(cdr=cdr) & Q(valid=True) & Q(schedule=None)
+        q3 = Q(timestamp__gte=start(20)) & Q(timestamp__lte=end(23))
+        q5 = Q(timestamp__gte=start(14)) & Q(timestamp__lte=end(23))
+        q6 = Q(weekday=6)
+        q7 = Q(timestamp__gte=start(8)) & Q(timestamp__lte=end(23))
+        cls.objects(q1 & ((q2 & q3) | (q4 & q5) | (q6 & q7))).update(
+            set__schedule='reducido')
+        cls.objects(
+            cdr=cdr, valid=True, schedule=None, timestamp__gte=start(0),
+            timestamp__lte=end(7)).update(set__schedule='nocturno')
+
+    @classmethod
+    def set_entity(cls, cdr):
+        for e in Line.objects.distinct('entity'):
+            numbers = list(Line.objects(entity=e).values_list(
+                'number'))
+            Outgoing.objects(
+                cdr=cdr, valid=True, final_number__in=numbers).update(
+                    set__entity=e)
+
+    @classmethod
+    def set_line(cls, cdr):
+        for l in Line.objects.all():
+            Outgoing.objects(
+                cdr=cdr, valid=True, ani_number=l.number).update(set__line=l)
 
 
-class ResumenFactura(models.Model):
-    factura = models.ForeignKey(Factura)
-    fecha_inicio = models.DateField()
-    fecha_fin = models.DateField()
-    duracion_normal = models.IntegerField()
-    duracion_reducido = models.IntegerField()
-    duracion_nocturno = models.IntegerField()
-    tarifa_normal = models.FloatField()
-    tarifa_reducido = models.FloatField()
-    tarifa_nocturno = models.FloatField()
-    valor_normal = models.FloatField()
-    valor_reducido = models.FloatField()
-    valor_nocturno = models.FloatField()
-    total = models.FloatField()
+class Portability(mongoengine.Document):
 
-    class Meta:
-        db_table = 'resumen_factura'
-        verbose_name = 'resumen factura'
-        verbose_name_plural = 'resumenes factura'
+    """Modelo de los numeros portados."""
+
+    number = mongoengine.StringField()
+    company = mongoengine.ReferenceField(Company)
+    _type = mongoengine.IntField()
+    date = mongoengine.DateTimeField()
+    ido = mongoengine.IntField()
 
     def __unicode__(self):
-        return u'Resumen factura {0} desde {1} hasta {2}'.format(
-            self.factura.pk, self.fecha_inicio, self.fecha_fin)
+        return str(self.number)
+
+    @classmethod
+    def upload(cls, filename):
+        numbers = csv.DictReader(filename, delimiter=',')
+
+        def reader_to_portability(reader):
+            for r in reader:
+                yield {
+                    'date': dt.datetime.strptime(
+                        r['fecha'], '%Y%m%d'),
+                    'number': r['numero'],
+                    'ido': int(r['ido']),
+                    '_type': int(r['tipo'])}
+
+        db = MongoClient(settings.MONGODB_URI).gesvoip
+        db.portability.remove()
+        db.portability.insert(reader_to_portability(numbers))
+
+        for c in Company.objects.all():
+            cls.objects.filter(ido__in=c.idoidd).update(set__company=c)
+
+
+class Holiday(mongoengine.Document):
+
+    """Modelo de los feriados."""
+
+    date = mongoengine.DateTimeField(unique=True, verbose_name=u'fecha')
+    reason = mongoengine.StringField(max_length=255, choices=choices.HOLIDAYS)
+
+    meta = {
+        'ordering': ['-date']
+    }
+
+    def __unicode__(self):
+        return str(self.date)
+
+
+class Invoice(mongoengine.Document):
+
+    """Modelo de facturas."""
+
+    company = mongoengine.ReferenceField(Company)
+    cdr = mongoengine.ReferenceField(
+        Cdr, reverse_delete_rule=mongoengine.CASCADE)
+    call_number = mongoengine.IntField()
+    call_duration = mongoengine.IntField()
+    total = mongoengine.FloatField()
+    invoiced = mongoengine.BooleanField(default=False)
+    code = mongoengine.SequenceField()
+
+    def __unicode__(self):
+        return self.get_date()
+
+    def get_date(self):
+        return u'{0}-{1}'.format(self.cdr.year, self.cdr.month)
+
+    def get_total(self):
+        return int(round(self.total)) if self.total else 0
+
+    def get_periods(self):
+        return Period.objects(invoice=self)
+
+
+class Period(mongoengine.Document):
+
+    """Modelo que representa los periodos de las facturas"""
+
+    invoice = mongoengine.ReferenceField(Invoice)
+    start = mongoengine.DateTimeField()
+    end = mongoengine.DateTimeField()
+    call_number = mongoengine.IntField()
+    call_duration = mongoengine.IntField()
+    total = mongoengine.FloatField()
+
+    def __unicode__(self):
+        return self.get_range()
+
+    def get_start(self):
+        return self.start.strftime('%Y-%m-%d')
+
+    def get_end(self):
+        return self.end.strftime('%Y-%m-%d')
+
+    def get_range(self):
+        return u'{0} - {1}'.format(self.get_start(), self.get_end())
+
+    def get_rates(self):
+        return Rate.objects(period=self)
+
+    def get_total(self):
+        return int(round(self.total)) if self.total else 0
+
+
+class Rate(mongoengine.Document):
+
+    """Modelo que representa las tarifas de las compañias"""
+
+    period = mongoengine.ReferenceField(Period)
+    _type = mongoengine.StringField()
+    price = mongoengine.FloatField()
+    call_number = mongoengine.IntField()
+    call_duration = mongoengine.IntField()
+    total = mongoengine.FloatField()
+
+    def __unicode__(self):
+        return self._type
+
+    def get_type(self):
+        return self._type
+
+    def get_total(self):
+        return int(round(self.total)) if self.total else 0
+
+
+class LocalCenter(mongoengine.Document):
+
+    """Modelo que representa los centros locales"""
+
+    company = mongoengine.ReferenceField(Company)
+    code = mongoengine.IntField(unique=True, verbose_name=u'codigo local')
+    name = mongoengine.StringField(
+        max_length=255, verbose_name=u'descripción local')
+
+    def __unicode__(self):
+        return self.name
+
+
+class Ccaa(mongoengine.Document):
+
+    """Modelo que representa los cargos de acceso"""
+
+    month = mongoengine.StringField(
+        max_length=2, choices=choices.MONTHS, verbose_name=u'mes')
+    year = mongoengine.StringField(
+        max_length=4, choices=choices.YEARS, verbose_name=u'año')
+    company = mongoengine.ReferenceField(
+        Company, verbose_name=u'concecionaria interconectada')
+    invoice = mongoengine.IntField(verbose_name=u'número factura')
+    start = mongoengine.DateTimeField(verbose_name=u'fecha inicio')
+    end = mongoengine.DateTimeField(verbose_name=u'fecha fin')
+    invoice_date = mongoengine.DateTimeField(
+        verbose_name=u'fecha emision factura')
+    schedule = mongoengine.StringField(verbose_name=u'tipo horario')
+    call_duration = mongoengine.IntField(verbose_name=u'trafico')
+    total = mongoengine.IntField(verbose_name=u'monto')
+
+    def __unicode__(self):
+        return u'{0} {1}'.format(self.get_date(), self.company)
+
+    def get_date(self):
+        return u'{0}-{1}'.format(self.year, self.month)
+
+    def get_schedule(self):
+        if self.schedule == 'normal':
+            return 'N'
+
+        elif self.schedule == 'reducido':
+            return 'R'
+
+        else:
+            return 'O'
+
+    @classmethod
+    def get_report(cls, year, month):
+        date = year + month
+
+        def report_cb(obj):
+            return [
+                314,
+                date,
+                obj.company.code,
+                obj.invoice,
+                obj.start.strftime('%Y%m%d'),
+                obj.end.strftime('%Y%m%d'),
+                'PCA',
+                obj.invoice_date.strftime('%Y%m%d'),
+                obj.get_schedule(),
+                '',
+                obj.call_duration,
+                obj.total]
+
+        return map(report_cb, cls.objects(year=year, month=month))

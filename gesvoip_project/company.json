@@ -1,0 +1,1586 @@
+[
+{
+    "pk": 1,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 115,
+        "name": "115 TELECOMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 2,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 116,
+        "name": "116 COMPANION S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 3,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 117,
+        "name": "117 TELECOMUNICACIONES S.A. ",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 4,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 764,
+        "name": "ADEXUS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 5,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "ARCH COMUNICACIONES CHILE LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 6,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 173,
+        "name": "ASESORIA ECONOMICA, FINANCIERA E INVERSIONES FOUR GROUP S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 7,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 151,
+        "name": "ASTRO S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 8,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 119,
+        "name": "AT&T CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 9,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 424,
+        "name": "AT&T RED GLOBAL TELECOMUNICACIONES LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 10,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 423,
+        "name": "AUSTRO INTERNET S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 11,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "BERMANN S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 12,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 199,
+        "name": "BGA CHILE COMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 13,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 410,
+        "name": "BLUE TWO CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 14,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 502,
+        "name": "CABLE CENTRAL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 15,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "CABLE HOGAR LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 16,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "CELUPAGO S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 17,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 412,
+        "name": "CHILE.COM",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 18,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 509,
+        "name": "CHILE TV CABLE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 19,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "CIBELES TELECOM S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 20,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 110,
+        "name": "CLARO 110 S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 21,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 155,
+        "name": "CLARO 155 S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 22,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 194,
+        "name": "CLARO CARRIER S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 23,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 204,
+        "name": "CLARO CHILE S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 24,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 303,
+        "name": "CLARO COMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 25,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 433,
+        "name": "CLARO HOLDING S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 26,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 171,
+        "name": "CLARO INFRAESTRUCTURA 171 S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 27,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 306,
+        "name": "COMPANIA DE TELECOMUNICACIONES LLANQUIHUE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 28,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 315,
+        "name": "COMPANIA DE TELEFONOS DE COYHAIQUE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 29,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 322,
+        "name": "COMPANION TELEPHONE S.A",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 30,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "COMPANION VOIP S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 31,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 765,
+        "name": "COMPA\u00d1\u00cdA CHILENA DE COMUNICACIONES PARALLEL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 32,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 302,
+        "name": "COMPA\u00d1\u00cdA NACIONAL DE TEL\u00c9FONOS, TELEF\u00d3NICA DEL SUR S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 33,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 301,
+        "name": "COMPLEJO MANUFACTURERO DE EQUIPOS TELEF\u00d3NICOS S.A.C.I.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 34,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 400,
+        "name": "COMPLEJO MANUFACTURERO EQUIPOS TELEFONICOS S.A.C.I",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 35,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 427,
+        "name": "COMUNICACIONES NETGLOBALIS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 36,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 166,
+        "name": "COMUNICACIONES, TELEFONIA Y TRANSPORTE DE DATOS CHILECALL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 37,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 167,
+        "name": "COMUNICACION GLOBAL MULTICARRIER S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 38,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 305,
+        "name": "COMUNICACI\u00d3N Y TELEFON\u00cdA RURAL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 39,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 157,
+        "name": "CONECT S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 40,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 112,
+        "name": "CONVERGIA CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 41,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 314,
+        "name": "CONVERGIA TELECOM S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 42,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 756,
+        "name": "CORPORACION DE DESARROLLO SOCIAL MUNICIPAL CERRA NAVIA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 43,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 174,
+        "name": "CTR CHILE NETWORKS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 44,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 402,
+        "name": "CYBERCENTER S.A",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 45,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 501,
+        "name": "DIRECTV CHILE TELEVISION LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 46,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 426,
+        "name": "E-MONEY S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 47,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 177,
+        "name": "EMPRESA DE TRANSPORTE DE SENALES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 48,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 184,
+        "name": "EMPRESA G4 S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 49,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 123,
+        "name": "EMPRESA NACIONAL DE TELECOMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 50,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 114,
+        "name": "E-NEW CARRIER.COM CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 51,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 753,
+        "name": "ENLACES REGIONALES DE CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 52,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 125,
+        "name": "EQUANT CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 53,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "FIBERSAT COMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 54,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 158,
+        "name": "FIBERSAT S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 55,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 321,
+        "name": "FULLCOM S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 56,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 816,
+        "name": "GALLYAS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 57,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "GENEVA S.A",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 58,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 405,
+        "name": "GLOBALCOM S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 59,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 852,
+        "name": "GLOBAL CROSSING CHILE S.A ",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 60,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 120,
+        "name": "GLOBUS 120 S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 61,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 124,
+        "name": "GPS CHILE LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 62,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 507,
+        "name": "GTD IMAGEN S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 63,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 403,
+        "name": "GTD INTERNET S.A. ",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 64,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 159,
+        "name": "GTD LARGA DISTANCIA S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 65,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 122,
+        "name": "GTD MANQUEHUE LARGA DISTANCIA S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 66,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 190,
+        "name": "IDT CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 67,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 118,
+        "name": "IFX LARGA DISTANCIA CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 68,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 422,
+        "name": "IFX NETWORKS CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 69,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 411,
+        "name": "IIA INGENIERIA E INFORMATICA ASOCIADA LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 70,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 170,
+        "name": "IMPSAT CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 71,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 429,
+        "name": "INALAMBRICA S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 72,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 416,
+        "name": "INGENIERIA, SERVICIOS Y COMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 73,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "INSTABEEP",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 74,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 417,
+        "name": "INTERCITY S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 75,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 821,
+        "name": "INTEREXPORT TELECOMUNICACIONES E INTEGRACION DE SISTEMAS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 76,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 825,
+        "name": "INTEREXPORT TELECOMUNICACIONES Y PROYECTOS ESPECIALES S.A",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 77,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 754,
+        "name": "INTEREXPORT TELECOMUNICACIONES Y SERVICIOS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 78,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 432,
+        "name": "INTERNET SATELITAL LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 79,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 750,
+        "name": "INTERTEL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 80,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 758,
+        "name": "INTERWINS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 81,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 434,
+        "name": "ISP CONSULTEC SPA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 82,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 420,
+        "name": "LUZLINARES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 83,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 431,
+        "name": "LUZPARRAL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 84,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 755,
+        "name": "MARINE IMAGING SYSTEMS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 85,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 760,
+        "name": "MAURICIO ROBLES Y COMPANIA LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 86,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "MAVI S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 87,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 180,
+        "name": "MERCOPAC S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 88,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 154,
+        "name": "MICARRIER TELECOMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 89,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 822,
+        "name": "MOBILINK S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 90,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 815,
+        "name": "MULTIKOM S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 91,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 324,
+        "name": "NETEL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 92,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 751,
+        "name": "NETLAND CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 93,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "NETLATIN S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 94,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 169,
+        "name": "NETLINE MULTICARRIER S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 95,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 414,
+        "name": "NETLINE TELECOMUNICACIONES CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 96,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 300,
+        "name": "NETLINE TELEFONICA LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 97,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 209,
+        "name": "NETLINE TELEFONICA MOVIL LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 98,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 150,
+        "name": "NEW WAVE COMUNICATIONS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 99,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 126,
+        "name": "NEW WORLD TELECOM S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 100,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 418,
+        "name": "NIVEL 5 S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 101,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 207,
+        "name": "N\u00d3MADE TELECOMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 102,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "OPS INGENIER\u00cdA LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 103,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 504,
+        "name": "PACIFICO CABLE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 104,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 323,
+        "name": "PRONTO IP LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 105,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "QUANTAX S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 106,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 438,
+        "name": "REDVOISS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 107,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 310,
+        "name": "RURAL TELECOMMUNICATIONS CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 108,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 757,
+        "name": "SATEL TELECOMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 109,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "SCHARFTEIN S.A",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 110,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "SEL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 111,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 435,
+        "name": "SERVICIOS DE CONECTIVIDAD RURAL SPA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 112,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 421,
+        "name": "SERVICIOS DE INGENIERIA EN TECNOLOGIA DE LA INFORMACION S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 113,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 401,
+        "name": "SERVICIOS DE INTERNET TUTOPIA.COM DE CHILE LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 114,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 406,
+        "name": "SERVICIOS INTERNET LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 115,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 160,
+        "name": "SERVICIOS TELEMEDIA DE CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 116,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 165,
+        "name": "SMARTEL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 117,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 312,
+        "name": "SOCIEDAD COMERCIAL E INDUSTRIAL MEGACOM LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 118,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "SOCIEDAD COMERCIAL Y DE INGENIER\u00cdA SWEDCOM S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 119,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "SOCIEDAD FALABELLA M\u00d3VIL SPA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 120,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 193,
+        "name": "SOCIEDAD J.A.M TELECOMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 121,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 766,
+        "name": "SOCIEDAD SERVICIOS TECNOLOGICOS Y TELECOMUNICACIONES TELCONOR LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 122,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 759,
+        "name": "SOUTHERN CONE COMMUNICATIONS (CHILE) S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 123,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 761,
+        "name": "SPRINT INTERNATIONAL CHILE LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 124,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 311,
+        "name": "STEL ACCESS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 125,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 153,
+        "name": "STEL CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 126,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 127,
+        "name": "SUR COMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 127,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "SYSTEL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 128,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 326,
+        "name": "TELECO CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 129,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "TELECOMUNICACIONES DOTCOM LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 130,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 419,
+        "name": "TELECOMUNICACIONES INFONET CHILE LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 131,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 179,
+        "name": "TELECOMUNICACIONES INTERNACIONALES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 132,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 191,
+        "name": "TELECOMUNICACIONES LAS PERDICES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 133,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "TELECOMUNICACIONES MAX LTDA.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 134,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 325,
+        "name": "TELECOMUNICACIONES NET UNO LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 135,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 762,
+        "name": "TELECOMUNICACIONES Y ELECTRICIDAD S.A. TELECSA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 136,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 752,
+        "name": "TELEDESIC DE CHILE COMUNICACIONES LIMITADA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 137,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "TELEFONICA DEL SUR S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 138,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 121,
+        "name": "TELEFONICA DEL SUR SERVICIOS INTERMEDIOS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 139,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 503,
+        "name": "TELEFONICA EMPRESAS CHILE S.A",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 140,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 188,
+        "name": "TELEFONICA LARGA DISTANCIA S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 141,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 320,
+        "name": "TELEFONICA MOVIBLE CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 142,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 181,
+        "name": "TELEFONICA MOVILES CHILE LARGA DISTANCIA S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 143,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "TELEF\u00d3NICA VIVA S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 144,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "TELESTAR M\u00d3VIL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 145,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 309,
+        "name": "TELESTAR S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 146,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "TELEVISION INTERACTIVA S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 147,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 508,
+        "name": "TELEVISI\u00d3N POR CABLE HUSACO S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 148,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 404,
+        "name": "TELMEX CHILE INTERNET S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 149,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 129,
+        "name": "TELMEX CHILE WIRELESS S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 150,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 308,
+        "name": "TELMEX CORP S.A",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 151,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 500,
+        "name": "TELMEX TV S.A. (EX ZAP TV)",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 152,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "TELSUR S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 153,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 415,
+        "name": "TERRA NETWORKS CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 154,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 206,
+        "name": "TESAM CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 155,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "Toro Bayo",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 156,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 113,
+        "name": "TRANSAM COMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 157,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 178,
+        "name": "TRANSFER TELECOMUNICACIONES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 158,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 208,
+        "name": "TRIBE MOBILE CHILE SPA",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 159,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 505,
+        "name": "TU VES S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 160,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 506,
+        "name": "TV RED S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 161,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 430,
+        "name": "UNIVERSIDAD DE CHILE",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 162,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": null,
+        "name": "VECTOR S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 163,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 445,
+        "name": "VERIZON CHILE S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 164,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 163,
+        "name": "VOICETEL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 165,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 111,
+        "name": "VTR GLOBALCARRIER S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 166,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 217,
+        "name": "VTR M\u00d3VIL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 167,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 318,
+        "name": "WILL S.A.",
+        "invoicing": ""
+    }
+},
+{
+    "pk": 168,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 317,
+        "name": "VTR BANDA ANCHA (CHILE) S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 169,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 313,
+        "name": "GTD MANQUEHUE S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 170,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 319,
+        "name": "CLARO SERVICIOS EMPRESARIALES S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 171,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 304,
+        "name": "COMPA\u00d1\u00cdA DE TELECOMUNICACIONES DE CHILE S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 172,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 205,
+        "name": "ENTEL PCS TELECOMUNICACIONES S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 173,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 307,
+        "name": "ENTEL TELEFON\u00cdA LOCAL S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 174,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 316,
+        "name": "GTD TELESAT S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 175,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 814,
+        "name": "NEXTEL S.A.",
+        "invoicing": "monthly"
+    }
+},
+{
+    "pk": 176,
+    "model": "gesvoip.company",
+    "fields": {
+        "code": 201,
+        "name": "TELEF\u00d3NICA M\u00d3VILES CHILE S.A.",
+        "invoicing": "monthly"
+    }
+}
+]

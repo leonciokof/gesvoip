@@ -1,0 +1,24 @@
+<!doctype html>
+{% load staticfiles %}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Página no encontrada :(</title>
+  <link rel="stylesheet" href="{% static 'css/404.min.css' %}">
+</head>
+<body>
+  <div class="container">
+    <h1>No se ha encontrado <span>:(</span></h1>
+    <p>Lo sentimos, pero la página que está intentando ver no existe.</p>
+    <p>Parece que este fue el resultado de ya sea:</p>
+    <ul>
+      <li>una dirección mal escrita</li>
+      <li>un vínculo fuera de la fecha</li>
+    </ul>
+    <script>
+      var GOOG_FIXURL_LANG = (navigator.language || '').slice(0,2),GOOG_FIXURL_SITE = location.host;
+    </script>
+    <script src="http://linkhelp.clients.google.com/tbproxy/lh/wm/fixurl.js"></script>
+  </div>
+</body>
+</html>

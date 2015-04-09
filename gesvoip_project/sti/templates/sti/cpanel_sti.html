@@ -18,22 +18,22 @@
       <option selected>Seleccionar Opción</option>
       <option value="{% url 'sti:sti_lineas' %}">Buscar/Modificar Lineas</option>
       <option value="{% url 'sti:sti_informe_lineas' %}">Informe Lineas en Servicio</option>
-      <option value="{% url 'sti:sti_informe_suscriptores' %}">Informe Suscriptores (Voip)</option>
-      <option value="{% url 'sti:sti_ingresa_portado' %}">Ingresa Portado</option>
-      <option value="{% url 'sti:ingresa_rango_portados' %}">Ingresa Rango Portados</option>
+      <option value='sti_informe_lineas.php'>Informe Suscriptores (Voip)</option>
+      <option value='sti_ingresa_portado.php'>Ingresa Portado</option>
+      <option value='ingresa_rango_portados.php'>Ingresa Rango Portados</option>
     </select>
 
     <label>Administracion de CCAA</label>
     <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
       <option selected>Seleccionar Opción</option>
-      <option value="{% url 'sti:sti_ccaa' %}">Ingresar CCAA</option>
-      <option value="{% url 'sti:sti_informe_ccaa' %}">Informe CCAA</option>
+      <option value='sti_ccaa.php'>Ingresar CCAA</option>
+      <option value='sti_informe_ccaa.php'>Informe CCAA</option>
     </select>
 
     <label>Informe de Traficos</label>
     <select name="menu1" onChange="MM_jumpMenu('parent',this,0)">
       <option selected>Seleccionar Opción</option>
-      <option value="{% url 'sti:genera_trafico' %}">Generar informe de trafico</option>
+      <option value='genera_trafico.php'>Generar informe de trafico</option>
     </select>
 
     <label>Administracion de CDR</label>

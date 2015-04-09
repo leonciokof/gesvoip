@@ -20,30 +20,11 @@ class CompaniasAdmin(admin.ModelAdmin):
 
 
 class LineasAdmin(admin.ModelAdmin):
-    list_display = (
-        'numero',
-        'nombre',
-        'tipo_persona',
-        'comentarios',
-        'area',
-        'comuna',
-    )
-    search_fields = ('numero',)
+    pass
 
 
 class PnMtcAdmin(admin.ModelAdmin):
-    list_display = (
-        'numero_telefono',
-        'ip_empresa',
-        'rut_propietario',
-        'tipo_servicio',
-        'modalidad',
-        'deuda_vencida',
-        'estado',
-        'id_documento',
-        'tipo_servicio_especial',
-    )
-    search_fields = ('numero_telefono',)
+    pass
 
 
 admin.site.register(models.Ccaa, CcaaAdmin)

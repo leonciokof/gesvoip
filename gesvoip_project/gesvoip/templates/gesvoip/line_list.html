@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% load pagination_tags %}
+
+{% block title %}Lineas{% endblock title %}
+
+{% block content %}
+<div id="page-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header">Lineas</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              <a href="{% url 'gesvoip:line_create' %}" class="btn btn-primary">Nueva</a>
+              <a href="{% url 'gesvoip:line_range' %}" class="btn btn-primary">Rango</a>
+              <button class="btn btn-success" data-toggle="modal" data-target="#line_service_report_form">
+                Informe Lineas en Servicio
+              </button>
+              <button class="btn btn-success" data-toggle="modal" data-target="#line_subscriber_report_form">
+                Informe Suscriptores
+              </button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12">
+              {% if object_list %}
+              <div class="table-responsive">
+                <div class="row">
+                  <div class="col-lg-12">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Numero</th>
+                          <th>Nombre</th>
+                          <th>Entidad</th>
+                          <th>Area</th>
+                          <th>Comuna</th>
+                          <th>Comentarios</th>
+                          <th>Compañia</th>
+                          <th>RUT</th>
+                          <th>Servicio</th>
+                          <th>Modalidad</th>
+                          <th>Deuda</th>
+                          <th>Activado</th>
+                          <th>Documento</th>
+                          <th>Servicio especial</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for obj in object_list %}
+                        <tr>
+                          <td>{{ obj.number }}</td>
+                          <td>{{ obj.name }}</td>
+                          <td>{{ obj.get_entity_display|default:"" }}</td>
+                          <td>{{ obj.get_zone_display|default:"" }}</td>
+                          <td>{{ obj.get_city_display|default:"" }}</td>
+                          <td>{{ obj.comments|default:"" }}</td>
+                          <td>{{ obj.company }}</td>
+                          <td>{{ obj.rut|default:"---" }}</td>
+                          <td>{{ obj.get_service_display }}</td>
+                          <td>{{ obj.get_mode_display }}</td>
+                          <td>{{ obj.due }}</td>
+                          <td>{{ obj.active|yesno:"Si,No" }}</td>
+                          <td>{{ obj.document|default:"" }}</td>
+                          <td>{{ obj.get_special_service_display|default:"" }}</td>
+                          <td>
+                            <a href="{% url 'gesvoip:line_update' obj.pk %}" class="btn btn-xs">
+                              <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-12">
+                    {% paginate %}
+                  </div>
+                </div>
+              </div>
+              {% else %}
+              <p>No existen registros.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% include 'gesvoip/modals/line_service_report_form.html' %}
+{% include 'gesvoip/modals/line_subscriber_report_form.html' %}
+{% endblock content %}

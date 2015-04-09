@@ -429,22 +429,3 @@ TIPO_PERSONAS = (
     ('Natural', 'Natural'),
     ('Empresa', 'Empresa'),
 )
-
-TIPO_PERSONAS = (
-    ('Natural', 'Natural'),
-    ('Empresa', 'Empresa'),
-)
-
-HORARIOS = (
-    ('N', 'normal'),
-    ('R', 'reducido'),
-    ('O', 'nocturno'),
-)
-
-TRAFICOS = (
-    ('local', 'Trafico local'),
-    ('voip-local', 'Trafico voip-local'),
-    ('movil', 'Trafico movil'),
-    ('voip-movil', 'Trafico voip-movil'),
-    ('distancia', 'Trafico distancia'),
-)

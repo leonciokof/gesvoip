@@ -2,6 +2,9 @@
 
 from django import forms
 
+from crispy_forms.helper import FormHelper
+from mongodbforms import DocumentForm
+
 from . import choices, models
 
 
@@ -15,230 +18,242 @@ class NumberTextInput(forms.widgets.TextInput):
     input_type = 'number'
 
 
-class UsuariosForm(forms.ModelForm):
-
-    class Meta:
-        model = models.Usuarios
-        exclude = ('id_usuario',)
-        labels = {'password': u'Contraseña'}
-        widgets = {
-            'usuario': forms.TextInput(attrs={'required': 'required'}),
-            'password': forms.PasswordInput(attrs={'required': 'required'}),
-            'nombre': forms.TextInput(attrs={'required': 'required'}),
-            'apellido': forms.TextInput(attrs={'required': 'required'}),
-            'correo': EmailTextInput(attrs={'required': 'required'}),
-            'rol': forms.Select(attrs={'required': 'required'}),
-        }
-
-
-class BuscaUserForm(forms.Form):
-
-    usuario = forms.ModelChoiceField(
-        label='Seleccionar usuario',
-        queryset=models.Usuarios.objects.all(),
-        widget=forms.Select(attrs={'required': 'required'}))
-
-
-class CompaniaForm(forms.ModelForm):
-
-    horario_habil_normal_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_habil_normal_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_habil_reducido_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_habil_reducido_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_habil_nocturno_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_habil_nocturno_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_reducido_normal_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_reducido_normal_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_reducido_reducido_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_reducido_reducido_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_reducido_nocturno_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_reducido_nocturno_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_nocturno_normal_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_nocturno_normal_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_nocturno_reducido_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_nocturno_reducido_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_nocturno_nocturno_inicio = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-    horario_nocturno_nocturno_fin = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'time'}))
-
-    class Meta:
-        model = models.Compania
-        exclude = ('id_compania', 'entidad')
-        widgets = {
-            'nombre': forms.TextInput(
-                attrs={'required': 'required', 'class': 'text'}),
-            'rut': forms.TextInput(
-                attrs={
-                    'required': 'required', 'class': 'text',
-                    'placeholder': 'Ingresar RUT sin puntos ni guion'}),
-            'id': forms.TextInput(
-                attrs={'required': 'required', 'class': 'text'}),
-            'codigo': forms.TextInput(
-                attrs={'required': 'required', 'class': 'text'}),
-        }
-
-
-class BuscaCompaniaForm(forms.Form):
-
-    compania = forms.ModelChoiceField(
-        label='Seleccionar compañia',
-        queryset=models.Compania.objects.all(),
-        widget=forms.Select(attrs={'required': 'required'}))
-
-
-class CdrForm(forms.ModelForm):
-
-    class Meta:
-        model = models.Cdr
-        exclude = ('fecha', 'processed')
-        labels = {
-            'month': u'Mes', 'year': u'Año', 'compania': u'Compañia',
-            'source': 'Archivo',
-        }
-        widgets = {
-            'compania': forms.Select(attrs={'required': 'required'}),
-            'month': forms.Select(attrs={'required': 'required'}),
-            'year': forms.Select(attrs={'required': 'required'}),
-            'source': forms.FileInput(attrs={'required': 'required'}),
-        }
-
-
-class ProcesaCdrForm(forms.Form):
-
-    pass
-
-
-class FacturaForm(forms.ModelForm):
-
-    class Meta:
-        model = models.Factura
-        fields = ('compania', 'month', 'year')
-        labels = {
-            'month': u'Mes', 'year': u'Año', 'compania': u'Compañia',
-        }
-        widgets = {
-            'compania': forms.Select(attrs={'required': 'required'}),
-            'month': forms.Select(attrs={'required': 'required'}),
-            'year': forms.Select(attrs={'required': 'required'}),
-        }
-
-
-class BuscaFacturaForm(forms.Form):
-
-    factura = forms.ModelChoiceField(
-        label='Seleccionar factura',
-        queryset=models.Factura.objects.all(),
-        widget=forms.Select(attrs={'required': 'required'}))
-
-
-class FeriadoForm(forms.ModelForm):
-
-    class Meta:
-        model = models.Feriado
-        labels = {'fecha': u'Ingrese fecha'}
-        widgets = {
-            'fecha': forms.TextInput(
-                attrs={'required': 'required', 'autofocus': 'autofocus'}),
-        }
-
-
-class BuscaFeriadoForm(forms.Form):
-
-    feriado = forms.ModelChoiceField(
-        label='Seleccionar feriado',
-        queryset=models.Feriado.objects.all(),
-        widget=forms.Select(attrs={'required': 'required'}))
-
-
-class NuevaTarifaForm(forms.Form):
-
-    compania = forms.ModelChoiceField(
-        queryset=models.Compania.objects.all(),
-        widget=forms.Select(attrs={'required': 'required'}))
-    fecha_inicio = forms.DateField(
-        widget=forms.TextInput(attrs={'required': 'required'}))
-    fecha_fin = forms.DateField(
-        widget=forms.TextInput(attrs={'required': 'required'}))
-    valor_normal = forms.FloatField(
-        label='Valor horario normal ($/seg)',
-        widget=NumberTextInput(attrs={
-            'required': 'required',
-            'min': '0.0001',
-            'step': '0.0001',
-            'placeholder': '0.0001'}))
-    valor_reducido = forms.FloatField(
-        label='Valor horario reducido ($/seg)',
-        widget=NumberTextInput(attrs={
-            'required': 'required',
-            'min': '0.0001',
-            'step': '0.0001',
-            'placeholder': '0.0001'}))
-    valor_nocturno = forms.FloatField(
-        label='Valor horario ncturno ($/seg)',
-        widget=NumberTextInput(attrs={
-            'required': 'required',
-            'min': '0.0001',
-            'step': '0.0001',
-            'placeholder': '0.0001'}))
-
-
-class CompaniaFechaForm(forms.Form):
+class CdrForm(forms.Form):
 
     MONTHS = list(choices.MONTHS)
     MONTHS.insert(0, ('', '---------'))
-    YEARS = list(choices.YEARS)
+    YEARS = choices.YEARS
     YEARS.insert(0, ('', '---------'))
-    compania = forms.ModelChoiceField(
-        queryset=models.Compania.objects.all(),
-        widget=forms.Select(attrs={'required': 'required'}))
     month = forms.ChoiceField(
         label='Mes',
         choices=MONTHS,
-        widget=forms.Select(attrs={'required': 'required'}))
+        widget=forms.Select())
     year = forms.ChoiceField(
         label='Año',
         choices=YEARS,
-        widget=forms.Select(attrs={'required': 'required'}))
+        widget=forms.Select())
+    entel_file = forms.FileField(label='Archivo ENTEL (CSV)')
+    ctc_file = forms.FileField(label='Archivo CTC (CSV)')
+    sti_file = forms.FileField(label='Archivo STI (CSV)')
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.html5_required = True
+        super(CdrForm, self).__init__(*args, **kwargs)
 
 
-class EditaTarifaForm(forms.Form):
+class RateForm(forms.Form):
 
-    id_ingreso = forms.CharField(widget=forms.HiddenInput())
-    valor_normal = forms.FloatField(
+    company = forms.ModelChoiceField(
+        label='Seleccionar compañia',
+        queryset=models.Company.objects.all(),
+        widget=forms.Select(
+            attrs={'required': 'required', 'class': 'select2'}))
+    start = forms.CharField(
+        label='Fecha inicio',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+    end = forms.CharField(
+        label='Fecha fin',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+    normal_price = forms.FloatField(
         label='Valor horario normal ($/seg)',
         widget=NumberTextInput(attrs={
             'required': 'required',
             'min': '0.0001',
             'step': '0.0001',
             'placeholder': '0.0001'}))
-    valor_reducido = forms.FloatField(
+    reduced_price = forms.FloatField(
         label='Valor horario reducido ($/seg)',
         widget=NumberTextInput(attrs={
             'required': 'required',
             'min': '0.0001',
             'step': '0.0001',
             'placeholder': '0.0001'}))
-    valor_nocturno = forms.FloatField(
+    nightly_price = forms.FloatField(
         label='Valor horario ncturno ($/seg)',
         widget=NumberTextInput(attrs={
             'required': 'required',
             'min': '0.0001',
             'step': '0.0001',
             'placeholder': '0.0001'}))
+
+
+class CompanyForm(DocumentForm):
+    bussines_normal_start = forms.CharField(
+        label='Horario habil normal inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_normal_end = forms.CharField(
+        label='Horario habil normal fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_reduced_start = forms.CharField(
+        label='Horario habil reducido inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_reduced_end = forms.CharField(
+        label='Horario habil reducido fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_nightly_start = forms.CharField(
+        label='Horario habil nocturno inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    bussines_nightly_end = forms.CharField(
+        label='Horario habil nocturno fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_normal_start = forms.CharField(
+        label='Horario sabado normal inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_normal_end = forms.CharField(
+        label='Horario sabado normal fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_reduced_start = forms.CharField(
+        label='Horario sabado reducido inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_reduced_end = forms.CharField(
+        label='Horario sabado reducido fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_nightly_start = forms.CharField(
+        label='Horario sabado nocturno inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    saturday_nightly_end = forms.CharField(
+        label='Horario sabado nocturno fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_normal_start = forms.CharField(
+        label='Horario festivo normal inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_normal_end = forms.CharField(
+        label='Horario festivo normal fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_reduced_start = forms.CharField(
+        label='Horario festivo reducido inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_reduced_end = forms.CharField(
+        label='Horario festivo reducido fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_nightly_start = forms.CharField(
+        label='Horario festivo nocturno inicio',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+    festive_nightly_end = forms.CharField(
+        label='Horario festivo nocturno fin',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'timepicker'}))
+
+    class Meta:
+        document = models.Company
+        exclude = ('schedules',)
+
+
+class HolidayForm(DocumentForm):
+    date = forms.CharField(
+        label='Fecha',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+
+    class Meta:
+        document = models.Holiday
+
+
+class LineForm(DocumentForm):
+
+    class Meta:
+        document = models.Line
+        widgets = {
+            'zone': forms.Select(attrs={'class': 'select2'}),
+            'city': forms.Select(attrs={'class': 'select2'}),
+        }
+
+
+class LineRangeForm(DocumentForm):
+    start = forms.IntegerField(
+        label='Inicio',
+        widget=NumberTextInput())
+    end = forms.IntegerField(
+        label='Fin',
+        widget=NumberTextInput())
+
+    class Meta:
+        document = models.Line
+        exclude = ('number',)
+        widgets = {
+            'zone': forms.Select(attrs={'class': 'select2'}),
+            'city': forms.Select(attrs={'class': 'select2'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(LineRangeForm, self).__init__(*args, **kwargs)
+        self.fields.keyOrder = [
+            'start',
+            'end',
+            'rut',
+            'service',
+            'mode',
+            'due',
+            'active',
+            'document',
+            'special_service',
+            'name',
+            'entity',
+            'comments',
+            'zone',
+            'city',
+        ]
+
+
+class ReportForm(forms.Form):
+
+    year = forms.ChoiceField(
+        label='Seleccionar año',
+        choices=choices.YEARS,
+        widget=forms.Select(attrs={'required': 'required'}))
+    month = forms.ChoiceField(
+        label='Seleccionar mes',
+        choices=choices.MONTHS,
+        widget=forms.Select(attrs={'required': 'required'}))
+
+
+class CcaaForm(DocumentForm):
+    start = forms.CharField(
+        label='Fecha inicio',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+    end = forms.CharField(
+        label='Fecha fin',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+    invoice_date = forms.CharField(
+        label='Fecha emision factura',
+        widget=forms.TextInput(
+            attrs={'class': 'datepicker', 'data-date-format': 'YYYY-MM-DD'}))
+
+    class Meta:
+        document = models.Ccaa
+        widgets = {
+            'company': forms.Select(attrs={'class': 'select2'}),
+        }
+
+
+class PortabilityUploadForm(forms.Form):
+
+    file_portability = forms.FileField(label='Archivo (CSV)')
+
+
+class NumerationUploadForm(forms.Form):
+
+    file_numeration = forms.FileField(label='Archivo (CSV)')

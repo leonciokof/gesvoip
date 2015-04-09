@@ -1,0 +1,14 @@
+{
+  "name": "gesvoip",
+  "version": "0.0.1",
+  "dependencies": {
+    "jquery": "^2.1.0",
+    "bootstrap": "^3.2.0",
+    "font-awesome": "^4.0.3",
+    "metisMenu": "^1.0.1",
+    "moment": "^2.7.0",
+    "eonasdan-bootstrap-datetimepicker": "^3.0.0",
+    "bootstrap-3-timepicker": "^0.2.7",
+    "select2": "^3.5.0"
+  }
+}

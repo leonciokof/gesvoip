@@ -2,4 +2,8 @@
 *.db
 *.sqlite3
 *.DS_Store
+*.pid
 media
+node_modules
+bower_components
+.env

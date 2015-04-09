@@ -8,15 +8,14 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('in_db',)
 
 
 class Ccaa(models.Model):
-    id_ccaa = models.AutoField(primary_key=True)
+    id_ccaa = models.IntegerField(primary_key=True)
     periodo = models.CharField(max_length=100, blank=True)
     concecionaria = models.CharField(max_length=100, blank=True)
     n_factura = models.IntegerField(blank=True, null=True)
     fecha_inicio = models.CharField(max_length=100, blank=True)
     fecha_fin = models.CharField(max_length=100, blank=True)
     fecha_fact = models.CharField(max_length=100, blank=True)
-    horario = models.CharField(
-        max_length=100, blank=True, choices=choices.HORARIOS)
+    horario = models.CharField(max_length=100, blank=True)
     trafico = models.IntegerField(blank=True, null=True)
     monto = models.IntegerField(blank=True, null=True)
 
@@ -26,7 +25,7 @@ class Ccaa(models.Model):
 
 
 class Cdr(models.Model):
-    id_log = models.AutoField(primary_key=True)
+    id_log = models.IntegerField()
     ani_number = models.IntegerField(blank=True, null=True)
     ingress_duration = models.IntegerField(blank=True, null=True)
     final_number = models.CharField(max_length=100, blank=True)
@@ -79,21 +78,20 @@ class Lineas(models.Model):
 
 
 class PnMtc(models.Model):
-    ip_empresa = models.CharField(max_length=20, blank=True, default='333')
+    ip_empresa = models.CharField(max_length=20, blank=True)
     rut_propietario = models.CharField(max_length=12, blank=True)
-    numero_telefono = models.CharField(primary_key=True, max_length=12,)
+    numero_telefono = models.CharField(primary_key=True, max_length=12)
     tipo_servicio = models.IntegerField(
-        blank=True, null=True, choices=choices.TIPO_SERVICIOS, default=2)
+        blank=True, null=True, choices=choices.TIPO_SERVICIOS)
     modalidad = models.IntegerField(
-        blank=True, null=True, choices=choices.MODALIDADES, default=1)
+        blank=True, null=True, choices=choices.MODALIDADES)
     deuda_vencida = models.DecimalField(
-        max_digits=19, decimal_places=5, blank=True, null=True, default=0.0000)
+        max_digits=19, decimal_places=5, blank=True, null=True)
     estado = models.IntegerField(
-        blank=True, null=True, choices=choices.ESTADOS, default=1)
+        blank=True, null=True, choices=choices.ESTADOS)
     id_documento = models.CharField(max_length=20)
     tipo_servicio_especial = models.IntegerField(
-        blank=True, null=True, choices=choices.TIPO_SERVICIO_ESPECIALES,
-        default=0)
+        blank=True, null=True, choices=choices.TIPO_SERVICIO_ESPECIALES)
 
     class Meta:
         db_table = 'pn_mtc'

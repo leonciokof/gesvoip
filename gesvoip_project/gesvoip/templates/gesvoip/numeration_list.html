@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% load pagination_tags %}
+
+{% block title %}Numeración{% endblock title %}
+
+{% block content %}
+<div id="page-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header">Numeración</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-12">
+              {% if object_list %}
+              <div class="table-responsive">
+                <div class="row">
+                  <div class="col-lg-12">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Numeración</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for obj in object_list %}
+                        <tr>
+                          <td>{{ obj.numeration }}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-12">
+                    {% paginate %}
+                  </div>
+                </div>
+              </div>
+
+              {% else %}
+              <p>No existen registros.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
