@@ -11,6 +11,11 @@
       <h1 class="page-header">Cargar CDR</h1>
     </div>
   </div>
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-success {{ message.tags }}" role="alert">{{ message }}</div>
+  {% endfor %}
+  {% endif %}
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-default">

@@ -86,7 +86,10 @@ class NewCdrView(generic.FormView):
         cdr.incoming_entel = entel
         cdr.outgoing = sti
         cdr.save()
-        tasks.insert_cdr.delay(str(cdr.id))
+        tasks.insert_cdr.delay(str(cdr.id), self.request.user.email)
+        messages.info(
+            self.request, 'Se están procesando las llamadas. Sera ' +
+            'notificado por email cuando finalice')
 
         return super(NewCdrView, self).form_valid(form)
 
@@ -939,7 +942,7 @@ portability_upload = login_required(PortabilityUploadView.as_view())
 
 class NumerationUploadView(generic.FormView):
 
-    """ Vista de carga de numeracion """
+    """ Vista de carga de numeración """
 
     form_class = forms.NumerationUploadForm
     success_url = reverse_lazy('gesvoip:numeration_upload')
@@ -955,8 +958,8 @@ numeration_upload = login_required(NumerationUploadView.as_view())
 
 
 def cdr_reload(request, pk):
-    tasks.insert_cdr.delay(pk)
+    tasks.insert_cdr.delay(pk, request.user.email)
     messages.info(
-        request, 'Se estan procesando las llamadas. Sera notificado por ' +
-        'email cuando finalize')
+        request, 'Se están procesando las llamadas. Sera notificado por ' +
+        'email cuando finalice')
     return redirect('gesvoip:cdr_list')
