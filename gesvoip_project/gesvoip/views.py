@@ -896,7 +896,7 @@ class NationalTrafficReportView(CSVResponseMixin, generic.TemplateView):
             NationalTrafficReportView, self).get_context_data(**kwargs)
         cdr = get_document_or_404(models.Cdr, pk=kwargs.get('pk'))
         title = 'TL_314_%s_TRF_LD.txt' % cdr.get_date()
-        items = cdr.get_traffic('internacional')
+        items = cdr.get_traffic('nacional')
         context.update({'title': title, 'items': items})
 
         return context
