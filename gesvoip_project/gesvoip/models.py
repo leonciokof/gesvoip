@@ -526,23 +526,23 @@ class Cdr(mongoengine.Document):
 
     def get_ingress_duration_by_type(self, company, _type, schedule):
         return Incoming.objects(
-            cdr=self, company=company, _type=_type, schedule=schedule,
-            entity='Empresa').sum('ingress_duration')
+            cdr=self, company=company, _type=_type,
+            schedule=schedule).sum('ingress_duration')
 
     def get_count_by_type(self, company, _type, schedule):
         return Incoming.objects(
-            cdr=self, company=company, _type=_type, schedule=schedule,
-            entity='Empresa').count()
+            cdr=self, company=company, _type=_type,
+            schedule=schedule).count()
 
     def get_outgoing_ingress_duration(self, company, _type, schedule):
         return Outgoing.objects(
             cdr=self, company=company, _type=_type, schedule=schedule,
-            entity='Empresa').sum('ingress_duration')
+            entity='empresa').sum('ingress_duration')
 
     def get_outgoing_count(self, company, _type, schedule):
         return Outgoing.objects(
             cdr=self, company=company, _type=_type, schedule=schedule,
-            entity='Empresa').count()
+            entity='empresa').count()
 
     def get_traffic(self, _type):
         items = []
