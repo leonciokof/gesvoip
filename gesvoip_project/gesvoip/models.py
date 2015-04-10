@@ -551,8 +551,8 @@ class Cdr(mongoengine.Document):
         for c in Company.objects(invoicing='monthly'):
             for s in map(lambda x: x[0], choices.TIPO_CHOICES):
                 ingress_duration = self.get_ingress_duration_by_type(
-                    self, c, _type, s)
-                count = self.get_count_by_type(self, c, _type, s)
+                    c, _type, s)
+                count = self.get_count_by_type(c, _type, s)
 
                 if ingress_duration > 0 and count > 0:
                     if _type == 'local':
@@ -578,8 +578,8 @@ class Cdr(mongoengine.Document):
                             round(ingress_duration) * 20)
 
                 ingress_duration = self.get_outgoing_ingress_duration(
-                    self, c, _type, s)
-                count = self.get_outgoing_count(self, c, _type, s)
+                    c, _type, s)
+                count = self.get_outgoing_count(c, _type, s)
 
                 if ingress_duration > 0 and count > 0:
                     if _type == 'local':
