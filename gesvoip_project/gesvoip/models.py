@@ -556,26 +556,26 @@ class Cdr(mongoengine.Document):
 
                 if ingress_duration > 0 and count > 0:
                     if _type == 'local':
-                        items.append(
+                        items.append([
                             314, date, 'E', '06', '2', c.code, 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration))
+                            'NOR', '0%s' % s, count, round(ingress_duration)])
 
                     elif _type == 'voip-local':
-                        items.append(
+                        items.append([
                             314, date, 'E', c.code, 'CO', 'NOR',
                             '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20)
+                            round(ingress_duration) * 20])
 
                     elif _type == 'movil':
-                        items.append(
+                        items.append([
                             314, date, 'E', c.code, '06', '2', 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration))
+                            'NOR', '0%s' % s, count, round(ingress_duration)])
 
                     elif _type == 'voip-movil':
-                        items.append(
+                        items.append([
                             314, date, 'E', c.code, 'CO', 'NOR',
                             '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20)
+                            round(ingress_duration) * 20])
 
                 ingress_duration = self.get_outgoing_ingress_duration(
                     c, _type, s)
@@ -583,31 +583,31 @@ class Cdr(mongoengine.Document):
 
                 if ingress_duration > 0 and count > 0:
                     if _type == 'local':
-                        items.append(
+                        items.append([
                             314, date, 'S', '06', '2', c.code, 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration))
+                            'NOR', '0%s' % s, count, round(ingress_duration)])
 
                     elif _type == 'voip-local':
-                        items.append(
+                        items.append([
                             314, date, 'S', c.code, 'CO', 'NOR',
                             '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20)
+                            round(ingress_duration) * 20])
 
                     elif _type == 'movil':
-                        items.append(
+                        items.append([
                             314, date, 'S', c.code, '06', '2', 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration))
+                            'NOR', '0%s' % s, count, round(ingress_duration)])
 
                     elif _type == 'voip-movil':
-                        items.append(
+                        items.append([
                             314, date, 'S', c.code, 'CO', 'NOR',
                             '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20)
+                            round(ingress_duration) * 20])
 
                     elif _type == 'internacional':
-                        items.append(
+                        items.append([
                             314, date, 'LDI', 'S', 112, '06', 2, 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration))
+                            'NOR', '0%s' % s, count, round(ingress_duration)])
 
         return items
 
