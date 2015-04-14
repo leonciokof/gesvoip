@@ -577,34 +577,41 @@ class Cdr(mongoengine.Document):
                             '0%s' % s, count, round(ingress_duration),
                             round(ingress_duration) * 20])
 
+                    elif _type == 'nacional':
+                        items.append([
+                            314, date, 'LDN', 'S', '112', '06', '2', 'TB',
+                            'CO', 'NOR',
+                            '0%s' % s, count, round(ingress_duration)])
+
+                _type2 = 'internacional' if _type == 'nacional' else _type
                 ingress_duration = self.get_outgoing_ingress_duration(
-                    c, _type, s)
-                count = self.get_outgoing_count(c, _type, s)
+                    c, _type2, s)
+                count = self.get_outgoing_count(c, _type2, s)
 
                 if ingress_duration > 0 and count > 0:
-                    if _type == 'local':
+                    if _type2 == 'local':
                         items.append([
                             314, date, 'S', '06', '2', c.code, 'TB', 'CO',
                             'NOR', '0%s' % s, count, round(ingress_duration)])
 
-                    elif _type == 'voip-local':
+                    elif _type2 == 'voip-local':
                         items.append([
                             314, date, 'S', c.code, 'CO', 'NOR',
                             '0%s' % s, count, round(ingress_duration),
                             round(ingress_duration) * 20])
 
-                    elif _type == 'movil':
+                    elif _type2 == 'movil':
                         items.append([
                             314, date, 'S', c.code, '06', '2', 'TB', 'CO',
                             'NOR', '0%s' % s, count, round(ingress_duration)])
 
-                    elif _type == 'voip-movil':
+                    elif _type2 == 'voip-movil':
                         items.append([
                             314, date, 'S', c.code, 'CO', 'NOR',
                             '0%s' % s, count, round(ingress_duration),
                             round(ingress_duration) * 20])
 
-                    elif _type == 'internacional':
+                    elif _type2 == 'internacional':
                         items.append([
                             314, date, 'LDI', 'S', 112, '06', 2, 'TB', 'CO',
                             'NOR', '0%s' % s, count, round(ingress_duration)])
