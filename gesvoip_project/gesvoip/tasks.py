@@ -75,6 +75,9 @@ def insert_cdr(cdr_id, email=None):
         send_message('Carga de llamadas salientes finalizado')
         cdr.processed = True
         cdr.save()
+        send_message('Generar tarifas iniciado iniciado')
+        cdr.set_traffic()
+        send_message('Generar tarifas iniciado finalizado')
 
         if email:
             send_email([email], 'Proceso finalizado', 'gesvoip_success', {})

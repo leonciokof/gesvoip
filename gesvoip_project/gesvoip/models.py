@@ -146,7 +146,7 @@ class Line(mongoengine.Document):
             c = Commune.objects.get(pk=obj.key.get('commune'))
             return [
                 314, date, c.primary, c.area, c.code, 1,
-                'TB', 'RE', 'H', 'PP', 'D', '0', int(obj.value.get('count'))]
+                'TB', 'CO', 'H', 'PP', 'D', '0', int(obj.value.get('count'))]
 
         r_filter = filter(lambda x: x.key.get('commune') is not None, results)
 
@@ -536,87 +536,109 @@ class Cdr(mongoengine.Document):
 
     def get_outgoing_ingress_duration(self, company, _type, schedule):
         return Outgoing.objects(
-            cdr=self, company=company, _type=_type, schedule=schedule,
-            entity='empresa').sum('ingress_duration')
+            cdr=self, company=company, _type=_type,
+            schedule=schedule).sum('ingress_duration')
 
     def get_outgoing_count(self, company, _type, schedule):
         return Outgoing.objects(
-            cdr=self, company=company, _type=_type, schedule=schedule,
-            entity='empresa').count()
+            cdr=self, company=company, _type=_type, schedule=schedule).count()
 
     def get_traffic(self, _type):
-        items = []
+        return [t.values for t in Traffic.objects(cdr=self, _type=_type)]
+
+    def set_traffic(self):
+        Traffic.objects(cdr=self).delete()
+        types = ['local', 'voip-local', 'movil', 'voip-movil', 'nacional']
+        traffics = []
         date = self.get_date()
 
-        for c in Company.objects(invoicing='monthly'):
-            for s in map(lambda x: x[0], choices.TIPO_CHOICES):
-                ingress_duration = self.get_ingress_duration_by_type(
-                    c, _type, s)
-                count = self.get_count_by_type(c, _type, s)
+        for _type in types:
+            for c in Incoming.objects(cdr=self).distinct('company'):
+                for idx, s in choices.TIPO_CHOICES2:
+                    ingress_duration = self.get_ingress_duration_by_type(
+                        c, _type, s)
+                    count = self.get_count_by_type(c, _type, s)
 
-                if ingress_duration > 0 and count > 0:
-                    if _type == 'local':
-                        items.append([
-                            314, date, 'E', '06', '2', c.code, 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration)])
+                    if ingress_duration > 0 and count > 0:
+                        if _type == 'local':
+                            traffics.append(Traffic(
+                                cdr=self, _type='local', values=[
+                                    314, date, 'E', '06', 2, c.code, 'TB',
+                                    'CO', 'NOR', idx, count,
+                                    int(round(ingress_duration))]))
 
-                    elif _type == 'voip-local':
-                        items.append([
-                            314, date, 'E', c.code, 'CO', 'NOR',
-                            '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20])
+                        elif _type == 'voip-local':
+                            traffics.append(Traffic(
+                                cdr=self, _type='voip-local', values=[
+                                    314, date, 'E', c.code, 'CO', 'NOR',
+                                    idx, count, int(round(ingress_duration)),
+                                    int(round(ingress_duration)) * 20]))
 
-                    elif _type == 'movil':
-                        items.append([
-                            314, date, 'E', c.code, '06', '2', 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration)])
+                        elif _type == 'movil':
+                            traffics.append(Traffic(
+                                cdr=self, _type='movil', values=[
+                                    314, date, 'E', c.code, '06', 2, 'TB',
+                                    'CO', 'NOR', idx, count,
+                                    int(round(ingress_duration))]))
 
-                    elif _type == 'voip-movil':
-                        items.append([
-                            314, date, 'E', c.code, 'CO', 'NOR',
-                            '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20])
+                        elif _type == 'voip-movil':
+                            traffics.append(Traffic(
+                                cdr=self, _type='voip-movil', values=[
+                                    314, date, 'E', c.code, 'CO', 'NOR',
+                                    idx, count, int(round(ingress_duration)),
+                                    int(round(ingress_duration)) * 20]))
 
-                    elif _type == 'nacional':
-                        items.append([
-                            314, date, 'LDN', 'S', '112', '06', '2', 'TB',
-                            'CO', 'NOR',
-                            '0%s' % s, count, round(ingress_duration)])
+                        elif _type == 'nacional':
+                            traffics.append(Traffic(
+                                cdr=self, _type='nacional', values=[
+                                    314, date, 'LDN', 'S', 112, '06', 2, 'TB',
+                                    'CO', 'NOR',
+                                    idx, count, int(round(ingress_duration))]))
 
-                _type2 = 'internacional' if _type == 'nacional' else _type
-                ingress_duration = self.get_outgoing_ingress_duration(
-                    c, _type2, s)
-                count = self.get_outgoing_count(c, _type2, s)
+            for c in Outgoing.objects(cdr=self).distinct('company'):
+                for idx, s in choices.TIPO_CHOICES2:
+                    _type2 = 'internacional' if _type == 'nacional' else _type
+                    ingress_duration = self.get_outgoing_ingress_duration(
+                        c, _type2, s)
+                    count = self.get_outgoing_count(c, _type2, s)
 
-                if ingress_duration > 0 and count > 0:
-                    if _type2 == 'local':
-                        items.append([
-                            314, date, 'S', '06', '2', c.code, 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration)])
+                    if ingress_duration > 0 and count > 0:
+                        if _type2 == 'local':
+                            traffics.append(Traffic(
+                                cdr=self, _type='local', values=[
+                                    314, date, 'S', '06', 2, c.code, 'TB',
+                                    'CO', 'NOR', idx, count,
+                                    int(round(ingress_duration))]))
 
-                    elif _type2 == 'voip-local':
-                        items.append([
-                            314, date, 'S', c.code, 'CO', 'NOR',
-                            '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20])
+                        elif _type2 == 'voip-local':
+                            traffics.append(Traffic(
+                                cdr=self, _type='voip-local', values=[
+                                    314, date, 'S', c.code, 'CO', 'NOR',
+                                    idx, count, int(round(ingress_duration)),
+                                    int(round(ingress_duration)) * 20]))
 
-                    elif _type2 == 'movil':
-                        items.append([
-                            314, date, 'S', c.code, '06', '2', 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration)])
+                        elif _type2 == 'movil':
+                            traffics.append(Traffic(
+                                cdr=self, _type='movil', values=[
+                                    314, date, 'S', c.code, '06', 2, 'TB',
+                                    'CO', 'NOR', idx, count,
+                                    int(round(ingress_duration))]))
 
-                    elif _type2 == 'voip-movil':
-                        items.append([
-                            314, date, 'S', c.code, 'CO', 'NOR',
-                            '0%s' % s, count, round(ingress_duration),
-                            round(ingress_duration) * 20])
+                        elif _type2 == 'voip-movil':
+                            traffics.append(Traffic(
+                                cdr=self, _type='voip-movil', values=[
+                                    314, date, 'S', c.code, 'CO', 'NOR',
+                                    idx, count, int(round(ingress_duration)),
+                                    int(round(ingress_duration)) * 20]))
 
-                    elif _type2 == 'internacional':
-                        items.append([
-                            314, date, 'LDI', 'S', 112, '06', 2, 'TB', 'CO',
-                            'NOR', '0%s' % s, count, round(ingress_duration)])
+                        elif _type2 == 'internacional':
+                            traffics.append(Traffic(
+                                cdr=self, _type='nacional', values=[
+                                    314, date, 'LDI', 'S', 112, '06', 2, 'TB',
+                                    'CO', 'NOR', idx, count,
+                                    int(round(ingress_duration))]))
 
-        return items
+        Traffic.objects.insert(traffics, load_bulk=False)
 
 
 class Incoming(mongoengine.Document):
@@ -1052,3 +1074,16 @@ class Ccaa(mongoengine.Document):
                 obj.total]
 
         return map(report_cb, cls.objects(year=year, month=month))
+
+
+class Traffic(mongoengine.Document):
+
+    """Modelo que representa los traficos"""
+
+    cdr = mongoengine.ReferenceField(
+        Cdr, reverse_delete_rule=mongoengine.CASCADE)
+    _type = mongoengine.StringField()
+    values = mongoengine.ListField(mongoengine.StringField(), default=list)
+
+    def __unicode__(self):
+        return self._type

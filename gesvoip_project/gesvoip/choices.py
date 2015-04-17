@@ -456,6 +456,12 @@ TIPO_CHOICES = (
     (NOCTURNO, 'Nocturno')
 )
 
+TIPO_CHOICES2 = (
+    ('04', 'normal'),
+    ('05', 'reducido'),
+    ('06', 'nocturno')
+)
+
 INVOICING = (
     ('monthly', 'Mensual'),
     ('biannual', 'Semestral'),
