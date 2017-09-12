@@ -21,6 +21,6 @@
     "grunt-concurrent": "1.0.1",
     "grunt-shell": "2.1.0",
     "grunt-newer": "0.8.0",
-    "grunt-contrib-stylus": "0.20.0"
+    "grunt-contrib-stylus": "1.2.0"
   }
 }
