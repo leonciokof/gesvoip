@@ -18,7 +18,7 @@
     "grunt-contrib-imagemin": "0.9.4",
     "grunt-contrib-watch": "0.6.1",
     "grunt-nodemon": "0.4.2",
-    "grunt-concurrent": "1.0.1",
+    "grunt-concurrent": "2.3.1",
     "grunt-shell": "2.1.0",
     "grunt-newer": "0.8.0",
     "grunt-contrib-stylus": "0.20.0"
