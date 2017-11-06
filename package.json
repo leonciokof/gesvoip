@@ -8,7 +8,7 @@
     "url": "https://github.com/leonciokof/gesvoip2.git"
   },
   "devDependencies": {
-    "grunt": "0.4.5",
+    "grunt": "1.0.1",
     "grunt-coffeelint": "0.0.16",
     "grunt-contrib-coffee": "2.0.0",
     "grunt-contrib-uglify": "3.1.0",
