@@ -3,7 +3,7 @@ anyjson==0.3.3
 arrow==0.12.1
 billiard==3.5.0.3
 bpython==0.17.1
-celery==3.1.16
+celery==3.1.26.post2
 celerybeat-redis==0.1.5
 dj-static==0.0.6
 django-activelink==0.4
