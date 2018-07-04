@@ -1,7 +1,7 @@
 amqp==1.4.9
 anyjson==0.3.3
 arrow==0.12.1
-billiard==3.3.0.18
+billiard==3.5.0.3
 bpython==0.17.1
 celery==3.1.16
 celerybeat-redis==0.1.5
