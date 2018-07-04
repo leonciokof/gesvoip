@@ -20,7 +20,7 @@ gunicorn==19.9.0
 hiredis==0.1.5
 honcho==0.7.1
 kombu==3.0.23
-logentries==0.7
+logentries==0.17
 moment==0.2.2
 mongodbforms==0.3
 mongoengine==0.8.7
