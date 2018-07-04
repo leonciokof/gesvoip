@@ -4,7 +4,7 @@ arrow==0.4.4
 billiard==3.3.0.18
 bpython==0.13.1
 celery==3.1.16
-celerybeat-redis==0.0.7
+celerybeat-redis==0.1.5
 dj-static==0.0.6
 django-activelink==0.4
 django-celery==3.1.16
