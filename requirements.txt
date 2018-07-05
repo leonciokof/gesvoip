@@ -18,7 +18,7 @@ djrill==1.4.0
 ecdsa==0.13
 gunicorn==19.9.0
 hiredis==0.2.0
-honcho==0.7.1
+honcho==1.0.1
 kombu==3.0.37
 logentries==0.17
 moment==0.8.2
