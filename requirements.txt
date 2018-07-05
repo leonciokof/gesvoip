@@ -28,7 +28,7 @@ mongogeneric==0.1a
 nptime==0.4.1
 paramiko==1.18.5
 pip-tools==0.3.6
-psycopg2==2.5.4
+psycopg2==2.7.5
 pycrypto==2.6.1
 Pygments==2.2.0
 pymongo==2.9.5
