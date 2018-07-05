@@ -34,7 +34,7 @@ Pygments==2.2.0
 pymongo==2.9.5
 pysftp==0.2.9
 python-dateutil==2.7.3
-pytz==2014.9
+pytz==2014.10
 queries==1.10.4
 raven==5.1.1
 redis==2.10.3
