@@ -21,7 +21,7 @@ hiredis==0.2.0
 honcho==0.7.1
 kombu==3.0.37
 logentries==0.17
-moment==0.2.2
+moment==0.8.2
 mongodbforms==0.3
 mongoengine==0.15.0
 mongogeneric==0.1a
