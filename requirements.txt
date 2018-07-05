@@ -26,7 +26,7 @@ mongodbforms==0.3
 mongoengine==0.15.0
 mongogeneric==0.1a
 nptime==0.4.1
-paramiko==1.15.1
+paramiko==1.18.5
 pip-tools==0.3.6
 psycopg2==2.5.4
 pycrypto==2.6.1
