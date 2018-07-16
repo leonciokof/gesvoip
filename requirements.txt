@@ -23,7 +23,7 @@ kombu==3.0.37
 logentries==0.17
 moment==0.8.2
 mongodbforms==0.3
-mongoengine==0.15.0
+mongoengine==0.15.3
 mongogeneric==0.1a
 nptime==0.4.1
 paramiko==1.18.5
