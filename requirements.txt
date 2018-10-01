@@ -35,7 +35,7 @@ pymongo==2.9.5
 pysftp==0.2.9
 python-dateutil==2.7.3
 pytz==2014.10
-queries==1.10.4
+queries==2.0.0
 raven==5.33.0
 redis==2.10.6
 requests==2.19.1
